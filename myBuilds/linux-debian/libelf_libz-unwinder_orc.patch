@@ -1,0 +1,11 @@
+--- Makefile.old	2018-06-26 06:04:29.546203105 +0100
++++ Makefile	2018-06-26 06:05:57.013188265 +0100
+@@ -939,7 +939,7 @@
+ 
+ ifdef CONFIG_STACK_VALIDATION
+   has_libelf := $(call try-run,\
+-		echo "int main() {}" | $(HOSTCC) -xc -o /dev/null -lelf -,1,0)
++		echo "int main() {}" | $(HOSTCC) -xc -o /dev/null -lelf -lz -,1,0)
+   ifeq ($(has_libelf),1)
+     objtool_target := tools/objtool FORCE
+   else

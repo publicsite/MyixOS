@@ -1,0 +1,19 @@
+--- configure.ac.old	2016-06-06 13:27:31.000000000 +0100
++++ configure.ac	2018-07-03 02:03:57.200355674 +0100
+@@ -160,7 +160,7 @@
+ AC_FUNC_CLOSEDIR_VOID
+ 
+ # See if the user wants to add (or not) GNU Guile support
+-PKG_PROG_PKG_CONFIG
++
+ AC_ARG_WITH([guile], [AS_HELP_STRING([--with-guile],
+             [Support GNU Guile for embedded scripting])])
+ 
+@@ -168,6 +168,7 @@
+ # comes with it's own PC file so we have to specify them as individual
+ # packages.  Ugh.
+ AS_IF([test "x$with_guile" != xno],
++PKG_PROG_PKG_CONFIG
+ [ PKG_CHECK_MODULES([GUILE], [guile-2.0], [have_guile=yes],
+   [PKG_CHECK_MODULES([GUILE], [guile-1.8], [have_guile=yes],
+     [have_guile=no])])

@@ -1,0 +1,88 @@
+#!/bin/sh
+perlversion="5.26.1"
+filename="Text-Template-1.52"
+extension=".tar.gz"
+source="http://search.cpan.org/CPAN/authors/id/M/MS/MSCHOUT/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+perl Makefile.PL
+
+make AR="${TARGET}-ar" \
+CC="${TARGET}-gcc" \
+CCCDLFLAGS="-fPIC -Wno-unused-function" \
+FULL_AR="ar" \
+LD="${TARGET}-gcc" \
+LDDLFLAGS="-shared" \
+LDFLAGS="" \
+LIBC="" \
+OSVERS="current" \
+RANLIB="${TARGET}-ranlib" \
+SITELIBEXP="/usr/lib/perl5/site_perl/${perlversion}" \
+SITEARCHEXP="/usr/lib/perl5/site_perl/${perlversion}/${ARCH}-linux" \
+VENDORARCHEXP="" \
+VENDORLIBEXP="" \
+MAN1EXT="1" \
+MAN3EXT="3" \
+SITEPREFIX="/usr" \
+VENDORPREFIX="" \
+INSTALLPRIVLIB="${SYSROOT}/usr/lib/perl5/${perlversion}" \
+INSTALLSITELIB="${SYSROOT}/usr/lib/perl5/site_perl/${perlversion}" \
+INSTALLVENDORLIB="" \
+INSTALLARCHLIB="${SYSROOT}/usr/lib/perl5/${perlversion}/${ARCH}-linux" \
+INSTALLSITEARCH="${SYSROOT}/usr/lib/perl5/site_perl/${perlversion}/${ARCH}-linux" \
+INSTALLVENDORARCH="" \
+INSTALLSITEBIN="/usr/bin" \
+INSTALLVENDORBIN="" \
+INSTALLSITESCRIPT="/usr/bin" \
+INSTALLVENDORSCRIPT="" \
+INSTALLSITEMAN1DIR="/usr/share/man/man1" \
+INSTALLVENDORMAN1DIR="" \
+INSTALLSITEMAN3DIR="/usr/share/man/man3" \
+INSTALLVENDORMAN3DIR="" \
+PERL_LIB="${SYSROOT}/usr/lib/perl5/${perlversion}" \
+PERL_ARCHLIB="${SYSROOT}/usr/lib/perl5/${perlversion}/${ARCH}-linux" \
+PERL_ARCHLIBDEP="${SYSROOT}/usr/lib/perl5/${perlversion}/${ARCH}-linux" \
+PERL_INC="${SYSROOT}/usr/lib/perl5/${perlversion}/${ARCH}-linux/CORE" \
+PERL_INCDEP="${SYSROOT}/usr/lib/perl5/${perlversion}/${ARCH}-linux/CORE" \
+MAKEMAKER="${SYSROOT}/usr/lib/perl5/${perlversion}/ExtUtils/MakeMaker.pm" \
+DESTDIR="${SYSROOT}"
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+
+make install DESTDIR="${SYSROOT}"
+
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

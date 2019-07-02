@@ -1,0 +1,238 @@
+#!/bin/sh
+filename="binutils-2.30"
+extension=".tar.gz"
+source="http://ftp.gnu.org/gnu/binutils/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+checkResultLibDir(){
+#this function checks if the file exists given the user input as argument 1
+
+	if [ "$(find . -name libc.so.* | cut -d "/" -f 2 | while read line; do if [ "$1" = "$line" ]; then printf "yes\n"; fi; done)" = "yes" ]; then
+		return 0
+	else
+		return 101
+	fi
+}
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+
+cd ${SYSROOT}/lib
+
+while true; do
+	printf "\n\n==TYPE THE LIB DIR==\n\n"
+
+	find . -name libc.so.* | cut -d "/" -f 2
+
+	read theLibDir
+
+	checkResultLibDir "$theLibDir"
+
+	if [ "$?" = "0" ]; then
+		break
+	fi
+done
+
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+#this patch is meant to fix "make[3]: *** [Makefile:1933: s-selftest] Error 1" when compiling gcc
+#note, this should be fixed in 2.30.1 (which was in alpha at time of packaging)
+#patch -p1 < "${myBuildHome}"/myBuilds/binutils/binutils-bug-22762.patch
+
+if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+printf "\n\n==Running configure.==\n\n"
+
+if [ "${BITS}" = "64" ]; then
+
+./configure \
+	--bindir=/usr/bin \
+	--program-prefix="${TARGET}-" \
+	--build=$BUILD \
+	--host=$TARGET \
+	--target=$TARGET \
+	--prefix=$PREFIX \
+	--enable-languages=c,c++ \
+	--enable-cxx \
+	--enable-threads \
+	--enable-64-bit-bfd \
+	--with-sysroot="${SYSROOT}" \
+	--enable-multilib
+else
+
+
+./configure \
+	--program-prefix="${TARGET}-" \
+	--build=$BUILD \
+	--host=$TARGET \
+	--target=$TARGET \
+	--prefix=$PREFIX \
+	--enable-languages=c,c++ \
+	--enable-cxx \
+	--enable-threads \
+	--with-build-sysroot="${SYSROOT}" \
+	--libdir=${PREFIX}/lib/${theLibDir} \
+	--enable-multilib
+fi
+
+#	--bindir=/usr/bin \
+#	--with-lib-path="/lib:/lib/${TARGET}:/usr/lib:/usr/lib/${TARGET}" \
+#	--with-lib-path="/lib:/lib/${TARGET}:/usr/lib:/usr/lib/${TARGET}:/lib64:/usr/lib64" \
+#	--with-lib-path="/lib:/lib/${TARGET}:/usr/lib:/usr/lib/${TARGET}" \
+
+#
+#
+
+#	--with-lib-path="/lib:/usr/lib:/usr/lib/${TARGET}:/lib64:/usr/lib64"
+#	--with-lib-path="/lib:/usr/lib:/usr/lib/${TARGET}"
+
+#	
+#	--with-lib-path="/lib:/usr/lib:/lib/${TARGET}:/usr/local/lib/${TARGET}" \
+
+if [ "$?" != "0" ]; then return 1; fi #check for errors
+#	    --with-sysroot=$ROOTFS \
+#	    $WITHPPL \
+
+printf "\n\n==Running make.==\n\n"
+
+make tooldir=${PREFIX} bindir=${PREFIX}/bin
+if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+return "$?"
+}
+
+do_install(){
+	#here you put the installation commands, like make install
+	cd "${myBuildExtractDest}/${filename}"
+	make tooldir=${PREFIX} bindir=${PREFIX}/bin install DESTDIR="${SYSROOT}"
+	mkdir "${SYSROOT}/etc"
+
+	rm -f "${SYSROOT}/etc/ld.so.conf"
+
+#echo "/usr/local/lib/${TARGET}" >> "${SYSROOT}/etc/ld.so.conf"
+#echo "/usr/lib/${TARGET}" >> "${SYSROOT}/etc/ld.so.conf"
+
+	ln -s "${PREFIX}/bin/${TARGET}-ar" "${SYSROOT}/${PREFIX}/bin/ar"
+	ln -s "${PREFIX}/bin/${TARGET}-as" "${SYSROOT}/${PREFIX}/bin/as"
+	ln -s "${PREFIX}/bin/${TARGET}-ld" "${SYSROOT}/${PREFIX}/bin/ld"
+	ln -s "${PREFIX}/bin/${TARGET}-nm" "${SYSROOT}/${PREFIX}/bin/nm"
+	ln -s "${PREFIX}/bin/${TARGET}-objcopy" "${SYSROOT}/${PREFIX}/bin/objcopy"
+	ln -s "${PREFIX}/bin/${TARGET}-objdump" "${SYSROOT}/${PREFIX}/bin/objdump"
+	ln -s "${PREFIX}/bin/${TARGET}-ranlib" "${SYSROOT}/${PREFIX}/bin/ranlib"
+	ln -s "${PREFIX}/bin/${TARGET}-readelf" "${SYSROOT}/${PREFIX}/bin/readelf"
+	ln -s "${PREFIX}/bin/${TARGET}-strip" "${SYSROOT}/${PREFIX}/bin/strip"
+	ln -s "${PREFIX}/bin/${TARGET}-ld.bfd" "${SYSROOT}/${PREFIX}/bin/ld.bfd"
+	ln -s "${PREFIX}/bin/${TARGET}-gprof" "${SYSROOT}/${PREFIX}/bin/gprof"
+	ln -s "${PREFIX}/bin/${TARGET}-addr2line" "${SYSROOT}/${PREFIX}/bin/addr2line"
+	ln -s "${PREFIX}/bin/${TARGET}-c++filt" "${SYSROOT}/${PREFIX}/bin/c++filt"
+	ln -s "${PREFIX}/bin/${TARGET}-size" "${SYSROOT}/${PREFIX}/bin/size"
+	ln -s "${PREFIX}/bin/${TARGET}-elfedit" "${SYSROOT}/${PREFIX}/bin/elfedit"
+
+
+#/sbin/ldconfig -r "${SYSROOT}" -C "${SYSROOT}/etc/ld.so.cache" -f "${SYSROOT}/etc/ld.so.conf" "/lib/${TARGET}"
+#/sbin/ldconfig -r "${SYSROOT}" -C "${SYSROOT}/etc/ld.so.cache" -f "${SYSROOT}/etc/ld.so.conf" "/usr/local/lib/${TARGET}"
+#/sbin/ldconfig -r "${SYSROOT}" -C "${SYSROOT}/etc/ld.so.cache" -f "${SYSROOT}/etc/ld.so.conf" "/usr/lib/${TARGET}"
+#/sbin/ldconfig -r "${SYSROOT}" -C "${SYSROOT}/etc/ld.so.cache" -f "${SYSROOT}/etc/ld.so.conf" "/usr/lib"
+#/sbin/ldconfig -r "${SYSROOT}" -C "${SYSROOT}/etc/ld.so.cache" -f "${SYSROOT}/etc/ld.so.conf" "/lib"
+
+	##make the following directories if they do not exist so ldconfig runs ok##
+	mkdir -p "${SYSROOT}/lib/${TARGET}"
+	mkdir -p "${SYSROOT}/usr/local/lib/${TARGET}"
+	mkdir -p "${SYSROOT}/usr/lib/${TARGET}"
+	mkdir -p "${SYSROOT}/usr/lib"
+	mkdir -p "${SYSROOT}/lib"
+
+
+
+#rm -f "${SYSROOT}/etc/ld.so.cache"
+
+	##the following printf commands add library search paths for ldconfig
+	##    the ones immediately below and commented are automatically added upon installation
+	##    ,  and are only here if ldconfig changes in future
+	#printf "%s\n" "/lib" >> "${SYSROOT}/etc/ld.so.conf"
+	#printf "%s\n" "/lib/${TARGET}" >> "${SYSROOT}/etc/ld.so.conf"
+	#printf "%s\n" "/usr/lib/${TARGET}" >> "${SYSROOT}/etc/ld.so.conf"
+
+	#printf "%s\n" "/usr/lib" >> "${SYSROOT}/etc/ld.so.conf" #ldconfig throws "/sbin/ldconfig: Path `/usr/lib' given more than once", I don't know why. Either way, it doesn't work without this line. And doesn't work with. (at least not atm)
+	printf "%s\n" "/usr/local/lib/${TARGET}" >> "${SYSROOT}/etc/ld.so.conf"
+	#printf "%s\n" "/lib/${TARGET}" >> "${SYSROOT}/etc/ld.so.conf"
+	printf "%s\n" "/usr/${TARGET}/lib" >> "${SYSROOT}/etc/ld.so.conf"
+
+
+#/sbin/ldconfig -v -r "${SYSROOT}" "/lib/${TARGET}"
+#/sbin/ldconfig -v -r "${SYSROOT}" "/usr/local/lib/${TARGET}"
+#/sbin/ldconfig -v -r "${SYSROOT}" "/usr/lib/${TARGET}"
+#/sbin/ldconfig -v -r "${SYSROOT}" "/usr/lib"
+#/sbin/ldconfig -v -r "${SYSROOT}" "/lib"
+
+	if [ "${BITS}" = "64" ]; then
+
+		##	make the following 64 bit directories if they do not exist so ldconfig runs ok	##
+		mkdir -p "${SYSROOT}/usr/lib64"
+		mkdir -p "${SYSROOT}/lib64"
+
+		##this is a 32 bit directory (most probably) but is used on 64 bit systems
+		mkdir -p "${SYSROOT}/libx32"
+
+		##	these printf commands add library search paths for ldconfig, they are 64 bit specific ...	##
+		printf "%s\n" "/usr/lib64" >> "${SYSROOT}/etc/ld.so.conf"
+
+		##    ... this one, immediately below and commented is automatically added upon installation
+		##    ,  and are only here if ldconfig changes in future
+		#printf "%s\n" "/lib64" >> "${SYSROOT}/etc/ld.so.conf"
+
+
+
+
+#/sbin/ldconfig -v -r "${SYSROOT}" "/usr/lib64"
+#/sbin/ldconfig -v -r "${SYSROOT}" "/lib64"
+
+#/sbin/ldconfig -r "${SYSROOT}" -C "${SYSROOT}/etc/ld.so.cache" -f "/etc/ld.so.conf" "/usr/lib64"
+#/sbin/ldconfig -r "${SYSROOT}" -C "${SYSROOT}/etc/ld.so.cache" -f "/etc/ld.so.conf" "/lib64"
+
+#sudo /sbin/ldconfig -r "/home/user/My_Stuff_Kali1/mytool_bootstrap/installDir2" -C "/home/user/My_Stuff_Kali1/mytool_bootstrap/installDir2/etc/ld.so.cache" -f "/home/user/My_Stuff_Kali1/mytool_bootstrap/installDir2/etc/ld.so.conf" "/usr/lib64"
+#/sbin/ldconfig -r "${SYSROOT}" -C "/home/user/My_Stuff_Kali1/mytool_bootstrap/installDir2/etc/ld.so.cache" -f "/home/user/My_Stuff_Kali1/mytool_bootstrap/installDir2/etc/ld.so.conf" "/lib64"
+
+	elif [ "${BITS}" = "32" ]; then
+
+		mkdir -p "${SYSROOT}/libx32"
+
+	fi
+
+##create tempoary cache file for ldconfig in sysroot
+#touch "${SYSROOT}/ld.so.cache~"
+#touch "${SYSROOT}/etc/ld.so.cache"
+
+#-----------------------this command has to be run out of the script but has been left in for if/when it can be removed from readme------------------
+#/sbin/ldconfig -v -r "${SYSROOT}" -C "/etc/ld.so.cache" -f "/etc/ld.so.conf"
+
+	#ln -s "${PREFIX}/bin/${TARGET}-ar" "${PREFIX}/bin/ar"
+
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+	return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}/argumentHelper.sh" "$1" "$0"
+fi

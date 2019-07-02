@@ -1,0 +1,40 @@
+--- configure.ac.old	2018-07-03 03:07:52.891375839 +0100
++++ configure.ac	2018-07-03 03:09:09.055753518 +0100
+@@ -160,7 +160,7 @@
+ AC_FUNC_CLOSEDIR_VOID
+ 
+ # See if the user wants to add (or not) GNU Guile support
+-PKG_PROG_PKG_CONFIG
++
+ AC_ARG_WITH([guile], [AS_HELP_STRING([--with-guile],
+             [Support GNU Guile for embedded scripting])])
+ 
+@@ -168,6 +168,7 @@
+ # comes with it's own PC file so we have to specify them as individual
+ # packages.  Ugh.
+ AS_IF([test "x$with_guile" != xno],
++PKG_PROG_PKG_CONFIG
+ [ PKG_CHECK_MODULES([GUILE], [guile-2.0], [have_guile=yes],
+   [PKG_CHECK_MODULES([GUILE], [guile-1.8], [have_guile=yes],
+     [have_guile=no])])
+@@ -399,10 +400,9 @@
+ #include <glob.h>
+ #include <fnmatch.h>
+ 
+-#define GLOB_INTERFACE_VERSION 1
+ #if !defined _LIBC && defined __GNU_LIBRARY__ && __GNU_LIBRARY__ > 1
+ # include <gnu-versions.h>
+-# if _GNU_GLOB_INTERFACE_VERSION == GLOB_INTERFACE_VERSION
++# if _GNU_GLOB_INTERFACE_VERSION == 1 || _GNU_GLOB_INTERFACE_VERSION == 2
+    gnu glob
+ # endif
+ #endif],
+@@ -511,7 +511,7 @@
+ # We only generate the build.sh if we have a build.sh.in; we won't have
+ # one before we've created a distribution.
+ AS_IF([test -f "$srcdir/build.sh.in"],
+-[ ./config.status --file build.sh
++[ ./config.status --file build.sh;
+   chmod +x build.sh
+ ])
+ 

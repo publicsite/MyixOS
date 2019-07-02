@@ -1,0 +1,240 @@
+#!/bin/sh
+version="4.9.118"
+version1="4.9"
+filename="linux-${version}"
+filename1="deblob-${version1}"
+#filename2="deblob-check"
+#filename3="deblob-main"
+extension=".tar.gz"
+#kernel sources at at cdn.kernel.org
+
+source="https://mirrors.edge.kernel.org/pub/linux/kernel/v4.x/${filename}${extension}"
+source1="https://www.fsfla.org/svn/fsfla/software/linux-libre/scripts/${filename1}"
+#source2="https://www.fsfla.org/svn/fsfla/software/linux-libre/scripts/${filename2}"
+#source3="https://www.fsfla.org/svn/fsfla/software/linux-libre/scripts/${filename3}"
+sumUrl=""
+
+#functions
+
+filetest () {
+  if [ ! -f $1 ]; then
+    die $1 does not exist, something is wrong && return 1
+  fi
+}
+
+clean_kconfig () {
+  #$1 = filename $2 = things to remove
+  case $1 in
+  -f)
+    shift
+    ;;
+  *)
+    if $have_check; then
+      filetest $1 || return 0
+      if sed -n "/^\(menu\)\?config $2$/p" $1 | grep . > /dev/null; then
+	:
+      else
+	die $1 does not contain matches for $2
+      fi      
+      return 0
+    fi
+    ;;
+  esac
+  filetest $1 || return 0
+  sed "/^config \\($2\\)\$/{p;i\
+	depends on NONFREE
+d;}" $1 > $1.deblob
+  check_changed $1 && echo $1: marked config $2 as depending on NONFREE
+}
+
+do_get(){
+	mkdir "${myBuildSourceDest}/linux-deblob"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}/linux-deblob"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source1}" "${myBuildSourceDest}/linux-deblob"
+	#if [ "$?" != "0" ]; then return 1; fi #check for errors
+	#"${myBuildHelpersDir}"/myBuildGet.sh "${source2}" "${myBuildSourceDest}/linux-deblob"
+	#if [ "$?" != "0" ]; then return 1; fi #check for errors
+	#"${myBuildHelpersDir}"/myBuildGet.sh "${source3}" "${myBuildSourceDest}/linux-deblob"
+	#return "$?"
+}
+
+do_extract(){
+	mkdir "${myBuildExtractDest}/linux-deblob"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/linux-deblob/${filename}${extension}" "${myBuildExtractDest}/linux-deblob"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	#copy the script
+	cp "${myBuildSourceDest}/linux-deblob/deblob-"* "${myBuildExtractDest}/linux-deblob/"
+	return "$?"
+}
+
+checkResult(){
+	find . -maxdepth 1 | cut -c 3- | while read line; do
+		if [ "$1" = "$line" ]; then
+			printf "yes\n"
+		fi
+	done
+}
+
+checkResult2(){
+	find arch -name "zImage" | grep -P -o "arch/.*?/" | cut -c 6- | sed 's/.$//' | while read line; do
+		if [ "$1" = "$line" ]; then
+			printf "yes\n"
+			return 0;
+		fi
+	done
+
+	find arch -name "bzImage"  | grep -P -o "arch/.*?/" | cut -c 6-  | sed 's/.$//' | while read line; do
+		if [ "$1" = "$line" ]; then
+			printf "yes\n"
+			return 0;
+		fi
+	done
+}
+
+do_build(){
+#here you put commands like configure and make
+
+
+##This stuff is to deblob, but not disable
+
+cd "${myBuildExtractDest}/linux-deblob/${filename}"
+daswitch=0
+cat ../deblob-"${version1}" | while read line; do
+
+lineCheck="$(printf "%s\n" "$line" | grep -P "^drop_fw_file.*$" | cut -c 14-)"
+if [ "$lineCheck" != "" ]; then
+	if [ "$lineCheck" != "() {" ]; then
+#echo "$lineCheck"
+		toDelete="$(printf "%s\n" "$lineCheck" | grep -P -o "^.* ")"
+	#	echo $toDelete
+		rm -f "$toDelete"
+		daswitch=1
+	fi
+fi
+
+lineCheck="$(printf "%s\n" "$line" | grep -P "^clean_fw.*$" | cut -c 10-)"
+if [ "$lineCheck" != "" ]; then
+	if [ "$lineCheck" != "() {" ]; then
+#echo "$lineCheck"
+		toDelete="$(printf "%s\n" "$lineCheck" | grep -P -o "^.* ")"
+#		echo $toDelete
+		rm -f "$toDelete"
+		daswitch=1
+	fi
+fi
+
+lineCheck="$(printf "%s\n" "$line" | grep -P "^clean_kconfig.*$" | cut -c 15-)"
+if [ "$lineCheck" != "" ] && [ "$daswitch" = "1" ]; then
+	if [ "$lineCheck" != "() {" ]; then
+#echo "$lineCheck"
+		theFile="$(printf "%s\n" "$lineCheck" | grep -P -o "^.* ")"
+		toRemove="$(printf "%s\n" "$lineCheck" | grep -P -o " .*$" | cut -c 2-)"
+	#	echo $theFile
+	#	echo $toRemove
+		clean_kconfig "$theFile" "$toRemove"
+		daswitch=0
+	fi
+fi
+done
+
+rm -f scripts/get_dvb_firmware
+rm -f firmware/keyspan_pda/keyspan_pda.HEX
+rm -f firmware/keyspan_pda/xircom_pgs.HEX
+
+
+##This stuff is to build
+
+mkdir "${SYSROOT}/tmp"
+
+cd "${myBuildExtractDest}/linux-deblob/${filename}/arch/"
+
+while true; do
+	printf "\n\n==TYPE THE ARCHITECTURE==\n\n"
+
+	find . -maxdepth 1 -type d | cut -c 3-
+
+	read theArch
+	test=$(checkResult $theArch)
+
+	if [ "$test" = "yes" ]; then
+		break
+	fi
+done
+
+cd "${myBuildExtractDest}/linux-deblob/${filename}/arch/${theArch}/configs"
+
+while true; do
+	printf "\n\n==TYPE THE DEFCONFIG==\n\n"
+
+	find . -maxdepth 1 -type f | cut -c 3-
+
+	read thedefconfig
+	test=$(checkResult $thedefconfig)
+
+	if [ "$test" = "yes" ]; then
+		break
+	fi
+done
+
+cd ${myBuildExtractDest}/linux-deblob/${filename}
+
+cp arch/${theArch}/configs/${thedefconfig} ${myBuildExtractDest}/linux-deblob/${filename}/.config
+
+printf "\n\n==Running make.==\n\n"
+
+make ARCH=$ARCH CROSS_COMPILE=${TARGET}- oldconfig
+	
+if [ "${ARCH}" = "x86_64" ] || [ "${ARCH}" = "i686" ]; then
+	make ARCH=$ARCH CROSS_COMPILE=${TARGET}- bzImage modules
+	return "$?"
+else
+	make ARCH=$ARCH CROSS_COMPILE=${TARGET}- zImage modules dtbs
+	return "$?"
+fi
+
+}
+
+do_install(){
+#here you put the installation commands, like make install
+
+cd "${myBuildExtractDest}/linux-deblob/${filename}"
+
+mkdir "${SYSROOT}/boot"
+
+while true; do
+
+	printf "\n\n==SELECT YOUR KERNEL IMAGE==\n\n"
+
+	find arch -name zImage | grep -P -o "arch/.*?/" | cut -c 6- | sed 's/.$//'
+	find arch -name bzImage | grep -P -o "arch/.*?/" | cut -c 6- | sed 's/.$//'
+
+	read theArch
+
+	test=$(checkResult2 $theArch)
+
+	if [ "$test" = "yes" ]; then
+		break
+	fi
+done
+
+cp "arch/${theArch}/boot/bzImage" "${SYSROOT}/boot/vmlinuz-linux-dsfg"
+
+make ARCH=${ARCH} CROSS_COMPILE=${TARGET}- INSTALL_MOD_PATH=${SYSROOT} modules_install
+make ARCH=${ARCH} CROSS_COMPILE=${TARGET}- INSTALL_HDR_PATH=${SYSROOT}/usr headers_install
+
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

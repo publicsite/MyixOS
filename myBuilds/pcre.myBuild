@@ -1,0 +1,53 @@
+#!/bin/sh
+filename="pcre-8.42"
+extension=".tar.gz"
+source="https://ftp.pcre.org/pub/pcre/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+./configure \
+    --prefix=${PREFIX} \
+    --build=${BUILD} \
+    --host=${TARGET} \
+    --target=${TARGET} \
+    --enable-unicode-properties       \
+    --enable-pcre16                   \
+    --enable-pcre32
+
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make install DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

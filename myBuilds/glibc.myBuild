@@ -1,0 +1,134 @@
+#!/bin/sh
+filename="glibc-2.28"
+extension=".tar.gz"
+source="http://ftp.gnu.org/gnu/glibc/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	mkdir "${myBuildExtractDest}/glibc"
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}/glibc"
+	return "$?"
+}
+
+do_build(){
+
+cd "${myBuildExtractDest}/glibc/${filename}"
+
+theArch=$(printf "%s" "$TARGET" | cut -d '-' -f1)
+
+theFamily="$(find sysdeps -type d -maxdepth 2 -name $theArch | cut -d "/" -f2)"
+
+newTriplet="$(printf "%s\n" "${TARGET}" | cut -d "-" -f 2-3)"
+
+newTriplet="${theFamily}-${newTriplet}"
+
+#you must build glibc in a seperate build directory
+mkdir "${myBuildExtractDest}/glibc/build_directory"
+cd "${myBuildExtractDest}/glibc/build_directory"
+#here you put commands like configure and make
+
+CFLAGS="-march=$(printf "%s" "$TARGET" | cut -d '-' -f1) -mtune=generic -g -O2" \
+	../${filename}/configure \
+		--prefix=/usr \
+		--build=$BUILD \
+		--target=$TARGET \
+		--with-arch=$theArch \
+		--with-headers="$SYSROOT"/usr/include \
+		--cache-file=config.cache \
+		--enable-add-ons \
+		--with-tls \
+		--enable-multilib \
+		--with-build-sysroot="$SYSROOT" \
+		--exec-prefix=/usr/lib/${TARGET} \
+		--libdir=/usr/lib \
+		libc_cv_slibdir=/lib/${newTriplet}
+
+#fingerprints:
+#exec-prefix contains libexec	which should be in /usr/lib/i386-linux-gnu/libexec
+#slibdir contains libc.so.6 ?	which should be in /lib/i386-linux-gnu/libc.so.6
+#libdir contains crt1.o		which should be in /usr/lib/i386-linux-gnu/crt1.o or /lib/crt1.o
+
+#
+#disable-shared is used as glibc has to be static in order to build gcc, otherwise gcc will complain about stubs
+
+make $J ARCH=${ARCH} cross-compiling=yes bootstrap-headers=yes install-headers install_root=$SYSROOT
+
+make $J ARCH=${ARCH} cross-compiling=yes install_root=$SYSROOT
+
+return "$?"
+}
+
+do_install(){
+
+cd "${myBuildExtractDest}/glibc/${filename}"
+
+theArch=$(printf "%s" "$TARGET" | cut -d '-' -f1)
+
+theFamily="$(find sysdeps -type d -maxdepth 2 -name $theArch | cut -d "/" -f2)"
+
+newTriplet="$(printf "%s\n" "${TARGET}" | cut -d "-" -f 2-3)"
+
+newTriplet="${theFamily}-${newTriplet}"
+
+
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/glibc/build_directory"
+make $J ARCH=${ARCH} cross-compiling=yes install install_root=$SYSROOT
+
+#use sh
+sed -i "1s/.*/\#\!\/bin\/sh/" "${SYSROOT}/usr/bin/ldd"
+
+#make some symlinks
+
+if ! [ -f "$SYSROOT"/lib/ld-linux.so.2 ]; then 
+ln -sf /lib/${newTriplet}/ld-linux.so.2 "$SYSROOT"/lib/ld-linux.so.2
+fi
+
+
+#if ! [ -f "$SYSROOT"/usr/lib/crt1.o ]; then 
+#ln -sf /usr/lib/${TARGET}/crt1.o "$SYSROOT"/usr/lib/crt1.o
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/crti.o ]; then 
+#ln -sf /usr/lib/${TARGET}/crti.o "$SYSROOT"/usr/lib/crti.o
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/crtn.o ]; then 
+#ln -sf /usr/lib/${TARGET}/crtn.o "$SYSROOT"/usr/lib/crtn.o
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/libm.so ]; then
+#ln -sf /usr/lib/${TARGET}/libm.so "$SYSROOT"/usr/lib/libm.so
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/libc.so ]; then
+#cp -a "${SYSROOT}"/usr/lib/${TARGET}/libc.so "$SYSROOT"/usr/lib/libc.so
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/libc.a ]; then
+#ln -sf /usr/lib/${TARGET}/libc.a "$SYSROOT"/usr/lib/libc.a
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/libm.a ]; then
+#ln -sf /usr/lib/${TARGET}/libm.a "$SYSROOT"/usr/lib/libm.a
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/libc_nonshared.a ]; then
+#ln -sf /usr/lib/${TARGET}/libc_nonshared.a "$SYSROOT"/usr/lib/libc_nonshared.a
+#fi
+
+
+
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

@@ -1,0 +1,11 @@
+--- tools/objtool/Makefile.old	2018-03-28 17:23:05.000000000 +0100
++++ tools/objtool/Makefile	2018-06-26 16:56:17.274002837 +0100
+@@ -32,7 +32,7 @@
+ 	    -I$(srctree)/tools/objtool/arch/$(ARCH)/include
+ WARNINGS := $(EXTRA_WARNINGS) -Wno-switch-default -Wno-switch-enum -Wno-packed
+ CFLAGS   += -Wall -Werror $(WARNINGS) -fomit-frame-pointer -O2 -g $(INCLUDES)
+-LDFLAGS  += -lelf $(LIBSUBCMD)
++LDFLAGS  += -lelf -lz $(LIBSUBCMD)
+ 
+ # Allow old libelf to be used:
+ elfshdr := $(shell echo '\#include <libelf.h>' | $(CC) $(CFLAGS) -x c -E - | grep elf_getshdr)

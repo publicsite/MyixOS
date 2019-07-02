@@ -1,0 +1,44 @@
+#!/bin/sh
+filename="glib-2.57.1"
+extension=".tar.xz"
+source="http://ftp.gnome.org/pub/gnome/sources/glib/2.57/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+cd "${myBuildExtractDest}/${filename}"
+#we disable libmount because busybox does not appear to have the library, and it seems that it is usually in util-linux instead
+./configure --build=${BUILD} --host=${TARGET} --target=${TARGET} --prefix=$PREFIX --disable-libmount --with-pcre
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make DESTDIR=${SYSROOT} install
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

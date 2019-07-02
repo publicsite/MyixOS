@@ -1,0 +1,109 @@
+#!/bin/sh
+version="6.1"
+filename="ncurses-${version}"
+extension=".tar.gz"
+source="ftp://ftp.gnu.org/gnu/ncurses/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+#if [ "${BITS}" = "64" ]; then
+
+#note that CPPFLAGS=-P isn't needed on ncurses 6.1, but gcc 7.3.0 requires ncurses 5
+
+CPPFLAGS=-P ./configure \
+    --prefix=${PREFIX} \
+    --with-shared \
+    --build=${BUILD} \
+    --host=${TARGET} \
+    --target=${TARGET} \
+    --without-debug \
+    --without-ada \
+    --enable-overwrite \
+    --with-build-cc=gcc \
+    --with-shared \
+    --enable-widec \
+    --with-pkg-config-libdir=/usr/lib/${TARGET} \
+    --libdir=/usr/lib/${TARGET}
+
+#elif [ "${BITS}" = "32" ]; then
+#
+#    --prefix=${PREFIX} \
+#    --with-shared \
+#    --build=${BUILD} \
+#    --host=${TARGET} \
+#    --without-debug \
+#    --without-ada \
+#    --enable-overwrite \
+#    --with-build-cc=gcc \
+#    --with-pkg-config-libdir=/usr/lib/${TARGET} \
+#    --with-shared \
+#    --libdir=/usr/lib/${TARGET}
+#
+#fi
+
+
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make DESTDIR=${SYSROOT} install
+
+
+#printf "INPUT(-lncursesw)\n" > "${SYSROOT}/usr/lib/${TARGET}/libcursesw.so.${version}"
+
+#ln -sv ../../../usr/lib/"${TARGET}"/libncursesw.so."${version}" "${SYSROOT}/usr/lib/${TARGET}/libncurses.so.${version}"
+
+
+#ldconfig is some crazy program...
+rm -f "${SYSROOT}/usr/lib/${TARGET}/libncurses.so"
+printf "INPUT(-lncursesw)\n" > "${SYSROOT}/usr/lib/${TARGET}/libncurses.so"
+
+#rm -f "${SYSROOT}/usr/lib/${TARGET}/libncurses.so.5"
+#printf "INPUT(-lncursesw)\n" > "${SYSROOT}/usr/lib/${TARGET}/libncurses.so.5"
+
+ln -s "/usr/lib/${TARGET}/libncurses.so" "${SYSROOT}/usr/lib/${TARGET}/libtinfo.so.${version}"
+ln -s "/usr/lib/${TARGET}/libtinfo.so.${version}" "${SYSROOT}/usr/lib/${TARGET}/libtinfo.so"
+
+
+
+
+#ln -sv libncursesw.so "${SYSROOT}/usr/lib/${TARGET}/libtinfo.so.${version}"
+#ln -sv libncursesw.so "${SYSROOT}/usr/lib/${TARGET}/libtinfo.so"
+
+#ln -sv ../../../usr/lib/"${TARGET}"/libncursesw.so."${version}" "${SYSROOT}/usr/lib/${TARGET}/libtinfo.so.${version}"
+#ln -sv ../../../usr/lib/"${TARGET}"/libncursesw.so."${version}" "${SYSROOT}/usr/lib/${TARGET}/libtinfo.so"
+
+#ln -sv ../../../usr/lib/"${TARGET}"/libncursesw.so."${version}" "${SYSROOT}/usr/lib/${TARGET}/libtinfo.so.5"
+
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

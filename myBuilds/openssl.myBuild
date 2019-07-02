@@ -1,0 +1,53 @@
+#!/bin/sh
+filename="openssl-1.1.1-pre4"
+extension=".tar.gz"
+source="https://www.openssl.org/source/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+#./Configure shared -DL_ENDIAN --prefix=/usr --openssldir=/usr/lib linux
+
+./Configure --prefix=/usr --openssldir=/usr/lib --libdir=lib/${TARGET} --cross-compile-prefix=${TARGET}- gcc
+
+#note, it says you shouldn't set INSTALLTOP and OPENSSLDIR directly, but there is no apparent reasonable (and working) way.
+make INSTALLTOP=/usr OPENSSLDIR=/usr/lib
+#make
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make DESTDIR="${SYSROOT}" install
+if [ "$?" != "0" ]; then return 1; fi #check for errors
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

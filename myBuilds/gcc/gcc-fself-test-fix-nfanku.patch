@@ -1,0 +1,15 @@
+--- Makefile.in.old	2018-03-09 15:24:44.000000000 +0000
++++ Makefile.in	2018-12-06 23:35:26.745821041 +0000
+@@ -1894,10 +1894,10 @@
+ quickstrap: all
+ 	cd $(toplevel_builddir) && $(MAKE) all-target-libgcc
+ 
+-all.internal: start.encap rest.encap doc selftest
++all.internal: start.encap rest.encap doc
+ # This is what to compile if making a cross-compiler.
+ all.cross: native gcc-cross$(exeext) cpp$(exeext) specs \
+-	libgcc-support lang.all.cross doc selftest @GENINSRC@ srcextra
++	libgcc-support lang.all.cross doc @GENINSRC@ srcextra
+ # This is what must be made before installing GCC and converting libraries.
+ start.encap: native xgcc$(exeext) cpp$(exeext) specs \
+ 	libgcc-support lang.start.encap @GENINSRC@ srcextra

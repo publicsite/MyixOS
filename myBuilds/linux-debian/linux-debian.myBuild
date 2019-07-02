@@ -1,0 +1,193 @@
+#!/bin/sh
+filename="linux-4.15.14"
+filename1="archive"
+extension=".tar.gz"
+#to update to a new debian kernel first search for commit like "Update to <version>" on salsa.debian.org, paste the cloud download link into source1
+#look at tags at salsa.debian.org
+#then find the matching kernel source for that version from cdn.kernel.org
+
+source="https://mirrors.edge.kernel.org/pub/linux/kernel/v4.x/${filename}${extension}"
+source1="https://salsa.debian.org/kernel-team/linux/repository/debian%2F4.14.17-1/${filename1}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	mkdir "${myBuildSourceDest}/linux-debian"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}/linux-debian"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source1}" "${myBuildSourceDest}/linux-debian"
+	return "$?"
+}
+
+do_extract(){
+	mkdir "${myBuildExtractDest}/linux-debian"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/linux-debian/${filename1}${extension}" "${myBuildExtractDest}/linux-debian"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	#rename the patches to something not clashing with the kernel name
+	mv "${myBuildExtractDest}/linux-debian/linux-"* "${myBuildExtractDest}/linux-debian/debian-patches"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/linux-debian/${filename}${extension}" "${myBuildExtractDest}/linux-debian"
+	return "$?"
+}
+
+checkForDirectoryResult(){
+	ok=false
+	ls -d */ | cut -f1 -d'/' | while read line; do
+		if [ "$1" = "$line" ]; then
+			printf "yes\n"
+		fi
+	done
+}
+
+checkForFileResult(){
+	ok=false
+	ls * | while read line; do
+		#if it's a file
+		if [ -f "$line" ]; then
+			if [ "$1" = "$line" ]; then
+				printf "yes\n"
+			fi
+		fi
+	done
+}
+
+do_build(){
+#here you put commands like configure and make
+
+mkdir "/tmp"
+
+cd "${myBuildExtractDest}/linux-debian/${filename}/arch/${architecture}/configs"
+
+while true; do
+	printf "\n\n==TYPE YOUR DEFCONFIG==\n\n"
+	ls * | while read line; do
+		if [ -f "$line" ]; then
+			printf "${line}\n"
+		fi
+	done
+
+	read defconfig
+	test=$(checkForFileResult $defconfig)
+
+	if [ "$test" = "yes" ]; then
+		break
+	fi
+done
+
+dfsgPatches="${myBuildExtractDest}/linux-debian/debian-patches/debian/patches/debian/dfsg"
+removeList="${myBuildExtractDest}/linux-debian/debian-patches/debian/patches/debian/dfsg/files-1"
+
+cd "${myBuildExtractDest}/linux-debian/${filename}"
+cat "${removeList}" | sh
+
+find ${dfsgPatches} -name "*.patch" | while read line; do
+echo "$line"
+	patch -p1 < "${line}" #did have -f, --no-backup-if-mismatch, -s and -t options
+done
+
+
+#these patches fix a problem with CONFIG_UNWINDER_ORC
+#patch -p0 < "${myBuildHome}/myBuilds/linux-debian/libelf_libz-unwinder_orc.patch"
+#patch -p0 < "${myBuildHome}/myBuilds/linux-debian/libelf_libz-unwinder_orc-2.patch"
+
+
+
+
+
+#These lines were removed in favour of dfsg patches only
+
+#patches="${myBuildExtractDest}/linux-debian/debian-patches/debian/patches/debian"
+#patches2="${myBuildExtractDest}/linux-debian/debian-patches/debian/debian/patches/bugfix/all"
+#patches3="${myBuildExtractDest}/linux-debian/debian-patches/debian/patches/features/all"
+
+#find ${patches} -name "*.patch" | while read line; do
+#echo "$line"
+#	patch -p1 -f -s -t --no-backup-if-mismatch < "${line}"
+#done
+
+#find ${patches2} -name "*.patch" | while read line; do
+#echo "$line"
+#	patch -p1 -f -s -t --no-backup-if-mismatch < "${line}"
+#done
+
+#find ${patches3} -name "*.patch" | while read line; do
+#echo "$line"
+#	patch -p1 -f -s -t --no-backup-if-mismatch < "${line}"
+#done
+
+#cd ${myBuildExtractDest}/${filename}
+#if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+#printf "\n\n==Running configure.==\n\n"
+
+#./configure \
+#	--build=$BUILD \
+#	--prefix=$PREFIX \
+#	--target=$TARGET \
+#	--enable-languages=c,c++ \
+#	--enable-cxx \
+#	--enable-threads \
+#	--enable-64-bit-bfd \
+#	${CONFIG_EXTRA}
+
+cp ${myBuildExtractDest}/linux-debian/${filename}/arch/${architecture}/configs/${defconfig} .config
+
+printf "\n\n==Running make.==\n\n"
+
+make ARCH=$ARCH CROSS_COMPILE=${TARGET}- oldconfig
+	
+if [ "${ARCH}" = "x86_64" ] || [ "${ARCH}" = "i686" ]; then
+	make ARCH=$ARCH CROSS_COMPILE=${TARGET}- bzImage modules
+	return "$?"
+else
+	make ARCH=$ARCH CROSS_COMPILE=${TARGET}- zImage modules dtbs
+	return "$?"
+fi
+
+#if [ "$?" != "0" ]; then return 1; fi #check for errors
+###	    --with-sysroot=$ROOTFS \
+###	    $WITHPPL \
+
+
+
+#make
+#if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+##make install
+##if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+
+}
+
+do_install(){
+#here you put the installation commands, like make install
+
+cd "${myBuildExtractDest}/linux-debian/${filename}"
+
+mkdir "${SYSROOT}/boot"
+
+if [ "${ARCH}" = "x86_64" ] || [ "${ARCH}" = "i686" ]; then
+	cp "arch/${architecture}/boot/bzImage" "${SYSROOT}/boot/vmlinuz-linux-dsfg"
+else
+	cp "arch/${architecture}/boot/zImage" "${SYSROOT}/boot/vmlinuz-linux-dfsg"
+fi
+
+make ARCH=${ARCH} CROSS_COMPILE=${TARGET}- INSTALL_MOD_PATH=${SYSROOT} modules_install
+make ARCH=${ARCH} CROSS_COMPILE=${TARGET}- INSTALL_HDR_PATH=${SYSROOT}/usr headers_install
+
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi
