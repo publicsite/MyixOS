@@ -57,7 +57,7 @@ cd myBuildBootstrap
 
 2) run buildToolchain script to build the toolchain
 
-\./buildToolchain.sh "$PWD" | tee 2>&1 temp.txt
+./buildToolchain.sh "$PWD" | tee 2>&1 temp.txt
 
 ## Testing the system
 
