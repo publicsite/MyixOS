@@ -28,7 +28,7 @@ To answer the question of whether to compile GCC you will need a C++ compiler.
 This much is true.
 
 Which brings us to the next point.
-The more dependencies developers add to the software listed in the buildToolchain and buildBase scripts,
+The more dependencies developers add to the software listed in the buildToolchain script,
 the bigger the requirements for building GNU/Linux as a whole becomes.
 A minimal operating system on a bad day can take that entire day to compile.
 So let this be a warning to the GNU/Linux software ecosystem.
