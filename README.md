@@ -1,4 +1,4 @@
-_____About MyixOS_____
+##About MyixOS
 
 MyixOS is a self-hosted, source reproducable, GNU/Linux distribution; in the sense that when somebody says
 "You can compile GNU/Linux completely from source",
@@ -47,7 +47,7 @@ Maybe soon will be the day that when people say "You can compile GNU/Linux compl
 we will actually know (knowing being different from believing), for sure,
 that it may now take less than a day to prove such a fact.
 
-_____Building the system___________
+##Building the system
 
 MyixOS only currently builds for 32 bit.
 
@@ -59,7 +59,7 @@ cd myBuildBootstrap
 
 ./buildToolchain.sh "$PWD" | tee 2>&1 temp.txt
 
-_____Testing the system____________
+##Testing the system
 
 1) chroot into the system with
 
@@ -70,7 +70,8 @@ sudo chroot installDir /bin/sh
 cd /root/myBuildBootstrap
 
 3) and if you wish, can follow the steps in "Building the system" to perform a repeat clean compilation within the chroot.
-_____________________________________________________________________________________________
+
+##Note
 
 note, if a build fails and you wish to repeat for any reason, you can perform the following steps in order to clean both
 the extract directory (where sources are extracted to and then built), and also the install directory (where the chroot is):
