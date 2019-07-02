@@ -53,21 +53,29 @@ MyixOS only currently builds for 32 bit.
 
 1) cd to the directory containing the scripts
 
+'''
 cd myBuildBootstrap
+'''
 
 2) run buildToolchain script to build the toolchain
 
+'''
 ./buildToolchain.sh "$PWD" | tee 2>&1 temp.txt
+'''
 
 ## Testing the system
 
 1) chroot into the system with
 
+'''
 sudo chroot installDir /bin/sh
+'''
 
 2) you can view the copied source in the chroot by visiting the following directory
 
+'''
 cd /root/myBuildBootstrap
+'''
 
 3) and if you wish, can follow the steps in "Building the system" to perform a repeat clean compilation within the chroot.
 
@@ -76,8 +84,9 @@ cd /root/myBuildBootstrap
 note, if a build fails and you wish to repeat for any reason, you can perform the following steps in order to clean both
 the extract directory (where sources are extracted to and then built), and also the install directory (where the chroot is):
 
+'''
 rm -rf extractdest
 sudo rm -rf installDir
-
+'''
 
 
