@@ -19,7 +19,7 @@ The operating system was designed to follow upstream (too many modifications and
 
 Amongst the things learnt during the writing of MyixOS was the fact that sometimes those documenting the third-party software weren't
 100% accurate on the listing of the dependencies required to build their software.
-Instead of following and installing th dependencies in the READMEs, we meticulously brute forced them ie. we started compilation
+Instead of following and installing the dependencies in the READMEs, we meticulously brute forced them ie. we started compilation
 and installed the dependency only once a build failed.
 
 One example of a misnomer is that GCC requires bash and coreutils.
