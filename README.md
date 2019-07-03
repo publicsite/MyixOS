@@ -5,7 +5,7 @@ MyixOS is a self-hosted, source reproducable, GNU/Linux distribution; in the sen
 we've actually gone and proven that fact;
 not only have we produced an GNU/Linux operating system,
 but we have produced and operating system capable of compiling itself.
-You will see there is an Oroborous logo placed within the sources,
+You will see there is an Ouroboros logo placed within the sources,
 we use this as a kind of 'fun' proof mark:
 If the operating system you currently use can compile MyixOS,
 then you know you'd be safe if you liked computing and was stuck on a desert island;
@@ -28,7 +28,7 @@ To answer the question of whether to compile GCC you will need a C++ compiler.
 This much is true.
 
 Which brings us to the next point.
-The more dependencies developers add to the software listed in the buildToolchain script,
+The more dependencies developers add to the software listed in the buildToolchain and buildBase scripts,
 the bigger the requirements for building GNU/Linux as a whole becomes.
 A minimal operating system on a bad day can take that entire day to compile.
 So let this be a warning to the GNU/Linux software ecosystem.
@@ -41,7 +41,7 @@ When I wrote MyixOS,
 I didn't know where to look.
 I saw lots of sources for packages on servers,
 but rarely found the master build script(s) for the core set of packages,
-by core, I mean an Oroborous-proof core.
+by core, I mean an Ouroboros-proof core.
 It took me about half a year to get to a "working" chroot of the build scripts.
 Maybe soon will be the day that when people say "You can compile GNU/Linux completely from source",
 we will actually know (knowing being different from believing), for sure,
@@ -53,29 +53,21 @@ MyixOS only currently builds for 32 bit.
 
 1) cd to the directory containing the scripts
 
-'''
-cd myBuildBootstrap
-'''
+`cd myBuildBootstrap`
 
 2) run buildToolchain script to build the toolchain
 
-'''
-./buildToolchain.sh "$PWD" | tee 2>&1 temp.txt
-'''
+`./buildToolchain.sh "$PWD" | tee 2>&1 temp.txt`
 
 ## Testing the system
 
 1) chroot into the system with
 
-'''
-sudo chroot installDir /bin/sh
-'''
+`sudo chroot installDir /bin/sh`
 
 2) you can view the copied source in the chroot by visiting the following directory
 
-'''
-cd /root/myBuildBootstrap
-'''
+`cd /root/myBuildBootstrap`
 
 3) and if you wish, can follow the steps in "Building the system" to perform a repeat clean compilation within the chroot.
 
@@ -84,9 +76,6 @@ cd /root/myBuildBootstrap
 note, if a build fails and you wish to repeat for any reason, you can perform the following steps in order to clean both
 the extract directory (where sources are extracted to and then built), and also the install directory (where the chroot is):
 
-'''
-rm -rf extractdest
-sudo rm -rf installDir
-'''
+`rm -rf extractdest && sudo rm -rf installDir`
 
 
