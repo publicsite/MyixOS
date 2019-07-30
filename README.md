@@ -1,10 +1,10 @@
 ## About MyixOS
 
-MyixOS is a self-hosted, source reproducable, GNU/Linux distribution; in the sense that when somebody says
+MyixOS is a self-hosted, source reproducible, GNU/Linux distribution; in the sense that when somebody says
 "You can compile GNU/Linux completely from source",
 we've actually gone and proven that fact;
 not only have we produced an GNU/Linux operating system,
-but we have produced and operating system capable of compiling itself.
+but we have produced an operating system capable of compiling itself.
 You will see there is an Ouroboros logo placed within the sources,
 we use this as a kind of 'fun' proof mark:
 If the operating system you currently use can compile MyixOS,
