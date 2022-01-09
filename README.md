@@ -78,4 +78,8 @@ the extract directory (where sources are extracted to and then built), and also 
 
 `rm -rf extractdest && sudo rm -rf installDir`
 
+## Donate
+
+https://www.paypal.com/donate/?hosted_button_id=SZABYRV48SAXW
+
 
