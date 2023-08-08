@@ -1,0 +1,136 @@
+#!/bin/sh
+actualname="opkg"
+version="lede"
+filename="${actualname}-${version}"
+extension=".tar.gz"
+sumUrl=""
+
+#functions
+
+do_get(){
+	cd "${myBuildSourceDest}"
+	mkdir opkg
+	cd opkg
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=snapshot;h=HEAD;sf=tgz" -O opkg-lede.tar.gz
+	mkdir tomerge
+	cd tomerge
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=blob_plain;f=Makefile.am;h=d2f96a1defc23d22da542be74256523f472024fc;hb=ed3526ddbd12984eca5780e08440480ce2c7bffa" -O Makefile.am
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=blob_plain;f=autogen.sh;h=95b5fbab50332303897dfd3ff23f5fc54740be3d;hb=ed3526ddbd12984eca5780e08440480ce2c7bffa" -O autogen.sh
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=blob_plain;f=configure.ac;h=f65d70467eafd47cccc33f986f7df31ef57716f8;hb=ed3526ddbd12984eca5780e08440480ce2c7bffa" -O configure.ac
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=blob_plain;f=libopkg.pc.in;h=25fe6e959efb3f7f2fa0ad41bb0c20f392fe249a;hb=ed3526ddbd12984eca5780e08440480ce2c7bffa" -O libopkg.pc.in
+	mkdir libbb
+	cd libbb
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=blob_plain;f=libbb/Makefile.am;h=c60cc6d28ac7ac678f55d777e89a775ff1681c01;hb=ed3526ddbd12984eca5780e08440480ce2c7bffa" -O Makefile.am
+	cd ..
+	mkdir libopkg
+	cd libopkg
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=blob_plain;f=libopkg/Makefile.am;h=2953ec4b28e687d699d6ac1cfe02022587cf3b85;hb=ed3526ddbd12984eca5780e08440480ce2c7bffa" -O Makefile.am
+	cd ..
+	mkdir m4
+	cd m4
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=blob_plain;f=m4/pkg.m4;h=0048a3fa0547ad4d0cb04bd961609b5a44c01697;hb=ed3526ddbd12984eca5780e08440480ce2c7bffa" -O pkg.m4
+	cd ..
+	mkdir man
+	cd man
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=blob_plain;f=man/Makefile.am;h=6d0a5357243c75c4cd4e34efb27986c9b6e4891a;hb=ed3526ddbd12984eca5780e08440480ce2c7bffa" -O Makefile.am
+	cd ..
+	mkdir src
+	cd src
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=blob_plain;f=src/Makefile.am;h=aa48befa07da1614a9d89c52fa528b5d2c2738b9;hb=ed3526ddbd12984eca5780e08440480ce2c7bffa" -O Makefile.am
+	cd ..
+	mkdir tests
+	cd tests
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=blob_plain;f=tests/Makefile.am;h=d1d26f76dea20915d8e795f7a57d69c7fb082b02;hb=ed3526ddbd12984eca5780e08440480ce2c7bffa" -O Makefile.am
+	cd ..
+	mkdir utils
+	cd utils
+	wget "https://git.openwrt.org/?p=project/opkg-lede.git;a=blob_plain;f=utils/Makefile.am;h=acac6281068f0570ddc577b95bc0a2b050eae99c;hb=ed3526ddbd12984eca5780e08440480ce2c7bffa" -O Makefile.am
+	cd "${myBuildHome}"
+
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${actualname}/${filename}${extension}" "${myBuildExtractDest}"
+	cp -r "${myBuildSourceDest}/${actualname}/tomerge/"* "${myBuildExtractDest}/opkg-lede-"*/
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/opkg-lede-"*/
+
+patch -p0 < "${myBuildHome}"/myBuilds/opkg/opkg_remove-gpg-curl-dependencies.patch
+patch -p0 < "${myBuildHome}"/myBuilds/opkg/opkg_remove-PATHSPEC.patch
+patch -p0 < "${myBuildHome}"/myBuilds/opkg/opkg_libopkg_Makefile.am.patch
+
+touch NEWS
+touch README
+touch ChangeLog
+
+sed -i "s=VERSION=\"myixos 1\"=g" src/opkg-cl.c
+
+chmod +x autogen.sh
+
+./autogen.sh
+
+if [ "$SYSROOT" = "$TEMP_SYSROOT" ]; then
+# if we are building for temp_sysroot
+	CFLAGS="-I${TEMP_SYSROOT}/build_tools/${PREFIX}/include" LDFLAGS="-L${TEMP_SYSROOT}/build_tools/${PREFIX}/lib" ./configure \
+	    --prefix="${PREFIX}/${TARGET}" \
+	    --build=${BUILD} \
+	    --host=${HOST} \
+	    --target=${TARGET}
+else
+	CFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/include" LDFLAGS="-L${SYSROOT}${PREFIX}/${TARGET}/lib" ./configure \
+	    --prefix="${PREFIX}/${TARGET}" \
+	    --build=${BUILD} \
+	    --host=${HOST} \
+	    --target=${TARGET}
+# if we are building for sysroot
+fi
+
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/opkg-lede-"*/
+make DESTDIR=${SYSROOT} install
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

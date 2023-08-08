@@ -1,0 +1,76 @@
+#!/bin/sh
+actualname="libsepol"
+version="3.5"
+filename="${actualname}-${version}"
+extension=".tar.gz"
+source="https://github.com/SELinuxProject/selinux/releases/download/${version}/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+patch -p0 < "${myBuildHome}"/myBuilds/libsepol/libsepol_symlinks-are-relative-by-default-fix-for-busybox.patch
+
+make CFLAGS="-DHAVE_REALLOCARRAY -I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include" CXXFLAGS="-I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include" CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" CXX="${TARGET}-g++ --sysroot=${TEMP_SYSROOT}" AR="${TARGET}-ar" RANLIB="${TARGET}-ranlib" LD="${TARGET}-ld" DESTDIR="${SYSROOT}" PREFIX="${PREFIX}/${TARGET}" all
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make CFLAGS="-I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include" CXXFLAGS="-I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include" CC="${TARGET}-gcc" CXX="${TARGET}-g++" AR="${TARGET}-ar" RANLIB="${TARGET}-ranlib" LD="${TARGET}-ld" DESTDIR="${SYSROOT}" PREFIX="${PREFIX}/${TARGET}" install
+
+cd ${SYSROOT}/lib
+rm libsepol.so
+$MYIXOS_LINK libsepol.so.1 libsepol.so
+
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

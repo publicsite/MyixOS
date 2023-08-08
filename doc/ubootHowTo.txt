@@ -1,0 +1,49 @@
+Compile u-boot:
+
+See boards.cfg for a list of known board types.
+make 'boardtype' CROSS_COMPILE=arm-linux-gnueabihf-
+
+DD the mbr:
+
+dd if=/boot/u-boot-sunxi-with-spl.bin of=/dev/mmcblk0 bs=1024 seek=8
+
+OR:
+
+dd if=spl/sunxi-spl.bin of=/dev/sdX bs=1024 seek=8
+dd if=u-boot.img of=/dev/sdX bs=1024 seek=40
+
+Create boot.cmd with the following:
+
+
+
+part uuid ${devtype} ${devnum}:${bootpart} uuid
+setenv bootargs console=${console} root=PARTUUID=${uuid} rw rootwait
+
+if load ${devtype} ${devnum}:${bootpart} ${kernel_addr_r} /boot/vmlinuz-linux-deblob; then
+  if load ${devtype} ${devnum}:${bootpart} ${fdt_addr_r} /boot/dtbs/u-boot.dtb; then
+    if load ${devtype} ${devnum}:${bootpart} ${ramdisk_addr_r} /boot/initramfs-linux-deblob.img; then
+      bootz ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr_r};
+    else
+      bootz ${kernel_addr_r} - ${fdt_addr_r};
+    fi;
+  fi;
+fi
+
+if load ${devtype} ${devnum}:${bootpart} 0x48000000 /boot/uImage; then
+  if load ${devtype} ${devnum}:${bootpart} 0x43000000 /boot/script.bin; then
+    setenv bootm_boot_mode sec;
+    bootm 0x48000000;
+  fi;
+fi
+
+
+
+
+Create boot.scr:
+
+mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d boot.cmd boot.scr
+
+Place boot.txt and boot.scr in:
+
+/boot/boot.scr
+/boot/boot.txt

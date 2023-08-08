@@ -1,0 +1,6 @@
+compile x86 without errors (with selinux)			pass
+compile itself in chroot without errors (with selinux)		pass
+compile arm without errors (with selinux)			pass
+compile mingw without errors					pass
+compile x86 without errors (without selinux)			tba
+compile arm without errors (without selinux)			tba

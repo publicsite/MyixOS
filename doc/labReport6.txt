@@ -1,0 +1,21 @@
+#In a sysroot, gcc did not find the correct assembler.
+
+#I then tried
+
+i686-w64-mingw32-gcc -S -I/mingw/include helloworld.c -o helloworld.s
+
+i686-w64-mingw32-as helloworld.s -o helloworld.o
+
+ld -o helloworld.exe helloworld.o /usr/i686-w64-mingw32/lib/dllcrt1.o -L/usr
+/i686-w64-mingw32/lib -lmingw32 -lmingwex -lmoldname -lmsvcrt -ladvapi32 -lshell
+32 -luser32 -lkernel32 -L/usr/lib/gcc/i686-w64-mingw32/8.2.0 -lgcc
+
+#This worked
+
+#The program ran in wine outside of the chroot
+
+#Inside the chroot running
+
+wine helloworld.exe 2>/dev/null
+
+#Also worked.

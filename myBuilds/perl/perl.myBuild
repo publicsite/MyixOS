@@ -1,0 +1,91 @@
+#!/bin/sh
+actualname="perl"
+version="5.36.0"
+filename="${actualname}-${version}"
+version2="1.4"
+filename1="perl-cross-${version2}"
+extension=".tar.gz"
+source="http://www.cpan.org/src/5.0/${filename}${extension}"
+source1="https://github.com/arsv/perl-cross/archive/refs/tags/${version2}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	rm -rf "${myBuildSourceDest}/perl"
+	mkdir "${myBuildSourceDest}/perl"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}/perl"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source1}" "${myBuildSourceDest}/perl"
+	mv "${myBuildSourceDest}/perl/${version2}${extension}" "${myBuildSourceDest}/perl/${filename1}${extension}"
+	return "$?"
+}
+
+do_extract(){
+	rm -rf "${myBuildExtractDest}/perl"
+	mkdir "${myBuildExtractDest}/perl"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/perl/${filename}${extension}" "${myBuildExtractDest}/perl"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/perl/${filename1}${extension}" "${myBuildExtractDest}/perl"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cp -rl "${myBuildExtractDest}/perl/${filename1}/"* "${myBuildExtractDest}/perl/${filename}/" 
+
+cd "${myBuildExtractDest}/perl/${filename}"
+
+CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" ./configure --prefix="${PREFIX}/${TARGET}" --target=${TARGET} -Dusethreads
+
+CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" make
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+
+cd "${myBuildExtractDest}/perl/${filename}"
+make DESTDIR=${SYSROOT} install
+
+printf "%s" "${version}" > "${myBuildExtractDest}/perl/perl_version.txt"
+
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

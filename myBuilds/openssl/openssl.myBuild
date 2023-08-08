@@ -1,0 +1,111 @@
+#!/bin/sh
+actualname="openssl"
+version="1.1.1c"
+filename="${actualname}-${version}"
+extension=".tar.gz"
+source="https://www.openssl.org/source/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+checkResultTarget(){
+#this function checks if the folder exists given the user input as argument 1
+
+	if [ "$(./Configure LIST | while read line; do if [ "$1" = "$line" ]; then printf "yes\n"; fi; done)" = "yes" ]; then
+		return 0
+	else
+		return 101
+	fi
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+#./Configure shared -DL_ENDIAN --prefix="${PREFIX}/${TARGET}" --openssldir=/usr/lib linux
+
+printf \
+"\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n \
+Type the TLS target. Get it right first time. You won't be asked twice!\n \
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n"
+
+while true; do
+	printf "\n\n==TYPE THE TARGET==\n\n"
+
+	./Configure LIST
+
+	read TLS_TARGET
+
+	checkResultTarget "$TLS_TARGET"
+
+	if [ "$?" = "0" ]; then
+		break
+	fi
+done
+
+./Configure --prefix="${PREFIX}/${TARGET}" --openssldir=${PREFIX}/${TARGET}/lib --cross-compile-prefix=${TARGET}- --libdir=lib shared $TLS_TARGET
+
+#--libdir=${TARGET}/lib
+
+#note, it says you shouldn't set INSTALLTOP and OPENSSLDIR directly, but there is no apparent reasonable (and working) way.
+#make INSTALLTOP=/usr OPENSSLDIR=/usr/lib
+
+make CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" CXX="${TARGET}-g++ --sysroot=${TEMP_SYSROOT}"
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make DESTDIR="${SYSROOT}" CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" CXX="${TARGET}-g++ --sysroot=${TEMP_SYSROOT}" install
+if [ "$?" != "0" ]; then return 1; fi #check for errors
+return "$?"
+
+$MYIXOS_LINK libcrypto.so ${SYSROOT}${PREFIX}/${TARGET}/lib/libcrypto.so.1.1
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

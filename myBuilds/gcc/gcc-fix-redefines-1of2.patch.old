@@ -1,0 +1,10 @@
+--- Makefile.in.old	2017-11-28 10:35:37.000000000 +0000
++++ Makefile.in	2019-06-08 02:40:10.432552063 +0100
+@@ -239,7 +239,6 @@
+ 	  -B$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/src/.libs \
+ 	  -B$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/libsupc++/.libs \
+ 	  `if $(LEAN); then echo ' -isystem '; else echo ' -I'; fi`$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/include/$(TARGET_SUBDIR) \
+-	  `if $(LEAN); then echo ' -isystem '; else echo ' -I'; fi`$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/include \
+ 	  `if $(LEAN); then echo ' -isystem '; else echo ' -I'; fi`$$s/libstdc++-v3/libsupc++ \
+ 	  -L$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/src/.libs \
+ 	  -L$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/libsupc++/.libs"; \

@@ -1,0 +1,7 @@
+; File generated automatically from msvcrt.spec; do not edit!
+
+LIBRARY msvcrt.dll
+
+EXPORTS
+  atexit=msvcrt.atexit @1
+  puts=msvcrt.puts @2

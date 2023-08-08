@@ -1,0 +1,10 @@
+--- Makefile.tpl.old	2017-10-27 14:13:05.000000000 +0100
++++ Makefile.tpl	2019-06-08 02:48:02.279771697 +0100
+@@ -242,7 +242,6 @@
+ 	  -B$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/src/.libs \
+ 	  -B$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/libsupc++/.libs \
+ 	  `if $(LEAN); then echo ' -isystem '; else echo ' -I'; fi`$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/include/$(TARGET_SUBDIR) \
+-	  `if $(LEAN); then echo ' -isystem '; else echo ' -I'; fi`$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/include \
+ 	  `if $(LEAN); then echo ' -isystem '; else echo ' -I'; fi`$$s/libstdc++-v3/libsupc++ \
+ 	  -L$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/src/.libs \
+ 	  -L$$r/prev-$(TARGET_SUBDIR)/libstdc++-v3/libsupc++/.libs"; \

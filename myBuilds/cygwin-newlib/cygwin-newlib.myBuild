@@ -1,0 +1,78 @@
+#!/bin/sh
+filename="cygwin-20190302-src"
+extension=".tar.xz"
+source="https://cygwin.com/snapshots/x86/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	mkdir "${myBuildExtractDest}/${filename}"
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}/${filename}"
+	return "$?"
+}
+
+do_build(){
+
+#mkdir "${myBuildExtractDest}/${filename}/cygwin-newlib-build"
+cd "${myBuildExtractDest}/${filename}/"*"/"
+
+patch -p0 < "${myBuildHome}"/myBuilds/binutils/binutils-cygwin-avoid-flock-redefine.patch
+
+#here you put commands like configure and make
+
+
+		CC_FOR_TARGET="${BUILD}-gcc" \
+		AS_FOR_TARGET="${BUILD}-as" \
+		AR_FOR_TARGET="${BUILD}-ar" \
+		LD_FOR_TARGET="${BUILD}-ld" \
+		RANLIB_FOR_TARGET="${BUILD}-ranlib" \
+		CFLAGS_FOR_TARGET="${WINECFLAGS} -D__LARGE64_FILES" \
+		LDFLAGS_FOR_TARGET="-lwine" \
+		./configure \
+		--prefix=/usr \
+		--build=$BUILD \
+		--host=$HOST \
+		--target=$TARGET
+
+
+#		--with-arch=$theArch \
+#		--with-headers="$TEMP_SYSROOT"/usr/include \
+#		--cache-file=config.cache \
+#		--enable-add-ons \
+#		--with-tls \
+#		--enable-multilib \
+#		--with-build-sysroot="$TEMP_SYSROOT" \
+#		--exec-prefix=/usr/lib/${TARGET} \
+#		--libdir=/usr/lib \
+#		libc_cv_slibdir=/lib/${newTriplet}
+
+make all $J DESTDIR="${SYSROOT}"
+
+return "$?"
+}
+
+do_install(){
+
+cd "${myBuildExtractDest}/${filename}/newlib-build"
+
+make $J DESTDIR="${SYSROOT}" install
+
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

@@ -1,0 +1,29 @@
+--- gcc/system.h.old	2018-02-16 09:05:35.000000000 +0000
++++ gcc/system.h	2019-06-08 12:18:17.600617109 +0100
+@@ -492,9 +492,11 @@
+ int setenv(const char *, const char *, int);
+ #endif
+ 
++/*
+ #if defined (HAVE_DECL_STRSTR) && !HAVE_DECL_STRSTR
+ extern char *strstr (const char *, const char *);
+ #endif
++*/
+ 
+ #if defined (HAVE_DECL_STPCPY) && !HAVE_DECL_STPCPY
+ extern char *stpcpy (char *, const char *);
+@@ -534,12 +536,14 @@
+ 
+ /* If the system doesn't provide strsignal, we get it defined in
+    libiberty but no declaration is supplied.  */
++/*
+ #if !defined (HAVE_STRSIGNAL) \
+     || (defined (HAVE_DECL_STRSIGNAL) && !HAVE_DECL_STRSIGNAL)
+ # ifndef strsignal
+ extern const char *strsignal (int);
+ # endif
+ #endif
++*/
+ 
+ #ifdef HAVE_GETRLIMIT
+ # if defined (HAVE_DECL_GETRLIMIT) && !HAVE_DECL_GETRLIMIT

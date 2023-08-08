@@ -1,0 +1,112 @@
+#!/bin/sh
+filename="gnulib"
+extension=".tar.gz"
+source="http://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=snapshot;h=HEAD;sf=tgz"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	mv "${myBuildSourceDest}/"*"p=gnulib.git;a=snapshot;h=HEAD;sf=tgz" "${myBuildSourceDest}/${filename}${extension}"
+	return "$?"
+}
+
+do_extract(){
+	mkdir "${myBuildExtractDest}/gnulib"
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}/gnulib"
+	mv "${myBuildExtractDest}/gnulib/gnulib-"* "${myBuildExtractDest}/gnulib/gnulib"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+mkdir ${myBuildExtractDest}/gnulib/posixlib
+
+cd "${myBuildExtractDest}/gnulib/${filename}"
+
+sed -i "s#, _PC_NAME_MAX#, 255#g" lib/backupfile.c
+sed -i "s#WCHAR#WCHARTWO#g" lib/dfa.c
+
+./gnulib-tool --avoid="idcache" --avoid="userspec" --avoid="pt_chown" --without-tests --lgpl --create-testdir --source-base=lib --dir="${myBuildExtractDest}/gnulib/posixlib" `"${myBuildExtractDest}/gnulib/gnulib/posix-modules" --for-mingw`
+cd ../posixlib
+
+./configure --build=${BUILD} --host=${HOST} --enable-threads=posix libgsasl_la_LDFLAGS="-no-undefined" --enable-shared \
+FORCE_UNSAFE_CONFIGURE=1 \
+LDFLAGS="-B${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib" \
+CPPFLAGS="-I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include"
+
+make DESTDIR=${SYSROOT}
+
+#patch config.h
+#patch -p0 < ../posixlib-config.h.patch
+#cd gllib
+#if the host is lindows we want a dll
+#if [ "$(printf "%s\n" "${HOST}" | cut -d "-" -f 2 )" != "pc" ]; then
+#${TARGET}-gcc -shared -o libgnu.dll *.o libgnu.a -lws2_32
+#fi
+#mv libgnu.a ../
+
+
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/gnulib/posixlib/gllib"
+
+##copy headers
+for fileToCopy in $(find .  -name "*.h" | cut -c 3- ) ; do
+folderName="$(dirname "${fileToCopy}")"
+if ! [ -d "${SYSROOT}${PREFIX}/${TARGET}/include/posixlib/${folderName}" ]; then
+mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/include/posixlib/${folderName}"
+fi
+cp -a "${myBuildExtractDest}/gnulib/posixlib/gllib/$fileToCopy" "${SYSROOT}${PREFIX}/${TARGET}/include/posixlib/${folderName}"
+done
+
+cp -a ../config.h "${SYSROOT}${PREFIX}/${TARGET}/include/posixlib/${folderName}"
+
+#create shared library
+${TARGET}-gcc -shared -Wl,--enable-auto-import,--out-implib=libgnu.a -Wl,--export-all-symbols -o libgnu.dll
+
+cp -a libgnu.dll "${SYSROOT}${PREFIX}/${TARGET}/lib"
+
+#make install DESTDIR=${SYSROOT}/temp
+#make install DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${filename}-w32/${filename}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

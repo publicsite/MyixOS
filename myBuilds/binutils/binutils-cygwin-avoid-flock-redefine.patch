@@ -1,0 +1,21 @@
+--- newlib/libc/include/sys/_default_fcntl.h.old	2019-01-08 21:01:09.000000000 +0000
++++ newlib/libc/include/sys/_default_fcntl.h	2019-04-10 05:10:59.945518427 +0100
+@@ -181,18 +181,6 @@
+ 
+ /*#include <sys/stdtypes.h>*/
+ 
+-#ifndef __CYGWIN__
+-/* file segment locking set data type - information passed to system by user */
+-struct flock {
+-	short	l_type;		/* F_RDLCK, F_WRLCK, or F_UNLCK */
+-	short	l_whence;	/* flag to choose starting offset */
+-	long	l_start;	/* relative offset, in bytes */
+-	long	l_len;		/* length, in bytes; 0 means lock to EOF */
+-	short	l_pid;		/* returned with F_GETLK */
+-	short	l_xxx;		/* reserved for future use */
+-};
+-#endif /* __CYGWIN__ */
+-
+ #if __MISC_VISIBLE
+ /* extended file segment locking set data type */
+ struct eflock {

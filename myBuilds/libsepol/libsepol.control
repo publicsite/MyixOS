@@ -1,0 +1,7 @@
+Package: libsepol
+Provides: sepol-utils, libsepol1, libsepol1-dev 
+Version: 2.9
+Maintainer: J05HYYY
+Homepage: http://userspace.selinuxproject.org/
+Priority: optional
+Description: No description availiable.

@@ -1,0 +1,7 @@
+Package: gawk 
+Provides: gawk
+Version: 1:4.2.1
+Maintainer: J05HYYY
+Homepage: http://www.gnu.org/software/gawk/
+Priority: optional
+Description: No description availiable.

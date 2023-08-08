@@ -1,0 +1,10 @@
+--- arch/x86/Kconfig.old	2019-10-07 22:14:02.000000000 +0100
++++ arch/x86/Kconfig	2019-11-01 03:20:01.278427836 +0000
+@@ -153,7 +153,6 @@
+ config X86_RESET_VECTOR
+ 	bool
+ 	default n
+-	select BINMAN
+ 
+ # The following options control where the 16-bit and 32-bit init lies
+ # If SPL is enabled then it normally holds this init code, and U-Boot proper

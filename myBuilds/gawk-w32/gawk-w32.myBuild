@@ -1,0 +1,66 @@
+#!/bin/sh
+filename="gawk-4.2.1"
+extension=".tar.xz"
+source="http://ftp.gnu.org/gnu/gawk/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+#printf '#include <sys/types.h>\n' >> io.c.new
+#printf '#include <signal.h>\n' >> io.c.new
+#cat io.c >> io.c.new
+#rm io.c
+#mv io.c.new io.c
+
+#patch -p0 < "${myBuildHome}"/myBuilds/gawk-w32/gawk-fix-execvp-conflicting-types-error.patch
+
+#gccinc=$(printf "%s\n" "${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib/gcc/i686-w64-mingw32/"*"/include")
+
+#CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT} -nostdinc -I${gccinc} -I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include" CFLAGS="-DHAVE_STDARG_H"
+
+find pc/ -type f -exec cp -a "{}" "${myBuildExtractDest}/${filename}" \;
+mv Makefile.ext extension/Makefile
+
+#CFLAGS="-D__MINGW32__" ./configure \
+#    --prefix="${PREFIX}/${TARGET}" \
+#    --build=${BUILD} \
+#    --host=${HOST} \
+#    --target=${TARGET} \
+#    --disable-mpfr
+
+make DESTDIR=${SYSROOT} mingw32
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make install DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

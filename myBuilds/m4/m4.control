@@ -1,0 +1,7 @@
+Package: m4
+Provides: m4, m4-doc 
+Version: 1.4.18
+Maintainer: J05HYYY
+Homepage: http://www.gnu.org/software/m4/
+Priority: optional
+Description: No description availiable.

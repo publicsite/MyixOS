@@ -1,0 +1,16 @@
+###https://unix.stackexchange.com/questions/41889/how-can-i-chroot-into-a-filesystem-with-a-different-architechture
+
+
+# This provides the qemu-arm-static binary
+apt-get install qemu-user-static
+
+# Mount my target filesystem on /mnt
+mount -o loop fs.img /mnt
+
+# Copy the static ARM binary that provides emulation
+cp $(which qemu-arm-static) /mnt/usr/bin
+# Or, more simply: cp /usr/bin/qemu-arm-static /mnt/usr/bin
+
+# Finally chroot into /mnt, then run 'qemu-arm-static bash'
+# This chroots; runs the emulator; and the emulator runs bash
+chroot /mnt qemu-arm-static /bin/bash

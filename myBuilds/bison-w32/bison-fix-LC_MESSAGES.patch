@@ -1,0 +1,11 @@
+--- src/getargs.c.old	2019-08-08 20:00:20.244799954 +0100
++++ src/getargs.c	2019-08-08 20:00:53.710152991 +0100
+@@ -363,7 +363,7 @@
+       /* Don't output this redundant message for English locales.
+          Note we still output for 'C' so that it gets included in the
+          man page.  */
+-      const char *lc_messages = setlocale (LC_MESSAGES, NULL);
++      const char *lc_messages = setlocale (LC_ALL, NULL);
+       if (lc_messages && !STREQ (lc_messages, "en_"))
+         /* TRANSLATORS: Replace LANG_CODE in this URL with your language
+            code <http://translationproject.org/team/LANG_CODE.html> to

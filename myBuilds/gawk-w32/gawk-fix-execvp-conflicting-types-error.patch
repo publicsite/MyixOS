@@ -1,0 +1,22 @@
+--- pc/gawkmisc.pc.old	2017-12-14 17:53:45.000000000 +0000
++++ pc/gawkmisc.pc	2019-08-06 19:21:29.964933899 +0100
+@@ -729,7 +729,8 @@
+  * dgawk to compete for the keyboard input.
+  *
+  * This will need work if we ever need a real version of execvp.
+- */
++
++ * We comment this out because there are conflicting type errors whilst building with mingw
+ int execvp(const char *file, const char *const *argv)
+ {
+ 	if (_spawnvp(_P_WAIT, file, (const char * const *)argv) != -1)
+@@ -738,6 +739,9 @@
+ 	return -1;
+ }
+ 
++ *
++*/
++
+ #ifdef DYNAMIC
+ 
+ #include <dlfcn.h>

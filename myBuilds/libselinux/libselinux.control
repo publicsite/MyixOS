@@ -1,0 +1,7 @@
+Package: libselinux
+Package: selinux-utils, libselinux1, libselinux1-dev, libselinux1-udeb, ruby-selinux, python-selinux, python3-selinux 
+Version: 3.0
+Maintainer: J05HYYY
+Homepage: http://userspace.selinuxproject.org/
+Priority: optional
+Description: No description availiable.

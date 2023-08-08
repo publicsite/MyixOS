@@ -1,0 +1,49 @@
+The i686-pc-mingw32 compiler compiled with wine, but when using it, ld asked for the following libraries:
+
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find crt2.o: No such file or directory
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -lmingw32
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -lmoldname
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -lmingwex
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -lmsvcrt
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -ladvapi32
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -lshell32
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -luser32
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -lkernel32
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -lmingw32
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -lmoldname
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -lmingwex
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/crosscompiler/usr/bin/i686-pc-mingw32-ld: cannot find -lmsvcrt
+collect2: error: ld returned 1 exit status
+
+
+
+
+Some of these libraries existed in the following locations:
+
+/usr/lib/wine/advapi32.dll.so
+/usr/lib/wine/shell32.dll.so
+/usr/lib/wine/msvcrt.dll.so
+/usr/lib/wine/user32.dll.so
+/usr/lib/wine/kernel32.dll.so
+
+
+Efforts then moved to attempting to create a i686-pc-cygwin compiler
+
+Note that i686-pc-mingw32 therefore only succeded in that it built the first compiler.
+
+cygwin broke when using the compiler:
+
+i686-pc-cygwin-gcc helloworld.c 
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/crosscompiler/usr/bin/i686-pc-cygwin-ld: cannot find crt0.o: No such file or directory
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/crosscompiler/usr/bin/i686-pc-cygwin-ld: cannot find -lcygwin
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/crosscompiler/usr/bin/i686-pc-cygwin-ld: cannot find -ladvapi32
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/crosscompiler/usr/bin/i686-pc-cygwin-ld: cannot find -lshell32
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/crosscompiler/usr/bin/i686-pc-cygwin-ld: cannot find -luser32
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/crosscompiler/usr/bin/i686-pc-cygwin-ld: cannot find -lkernel32
+
+__________________________________________________________________________________________________________________________
+
+grep -r "lmingw32" gcc-8.2.0/
+gcc-8.2.0/gcc-8.2.0/libgcc/config/i386/t-mingw32:SHLIB_LC = -lmingwthrd -lmingw32 -lmingwex -lmoldname -lmsvcrt -ladvapi32 -lshell32 -luser32 -lkernel32
+gcc-8.2.0/gcc-8.2.0/gcc/config/i386/mingw32.h:  "%{mthreads:-lmingwthrd} -lmingw32 \
+gcc-8.2.0/gcc-8.2.0/gcc/config/i386/crtdll.h:  "%{mthreads:-lmingwthrd} -lmingw32 -lgcc -lcoldname -libmingwex -lcrtdll"

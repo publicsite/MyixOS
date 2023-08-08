@@ -1,132 +1,505 @@
 #!/bin/sh
-filename="binutils-2.30"
+actualname="binutils"
+minorversion="2.38"
+filename="${actualname}-${minorversion}" #was 2.30
+filename1="cygwin-20190302-src"
 extension=".tar.gz"
+extension1=".tar.xz"
 source="http://ftp.gnu.org/gnu/binutils/${filename}${extension}"
+source1="https://cygwin.com/snapshots/x86/${filename1}${extension1}"
 sumUrl=""
 
 #functions
 
+checkResultLibDir(){
+#this function checks if the file exists given the user input as argument 1
+
+	if [ "$(find . -name libc.so.* | cut -d "/" -f 2 | while read line; do if [ "$1" = "$line" ]; then printf "yes\n"; fi; done)" = "yes" ]; then
+		return 0
+	else
+		return 101
+	fi
+}
+
 do_get(){
 	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-6)" = "cygwin" ] ; then
+		"${myBuildHelpersDir}"/myBuildGet.sh "${source1}" "${myBuildSourceDest}"
+	fi
 	return "$?"
 }
 
 do_extract(){
+	rm -rf "${myBuildExtractDest}/${filename}"
 	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+
+	if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-6)" = "cygwin" ] ; then
+		"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename1}${extension1}" "${myBuildExtractDest}"
+	fi
 	return "$?"
 }
 
 do_build(){
+
+theLibDir="$TARGET"
+
+#mkdir "${SYSROOT}/lib/${theLibDir}"
+
+##if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-6)" != "cygwin" ]; then
+#if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 2 )" != "pc" ]; then
+#
+#cd ${SYSROOT}/lib
+#
+#while true; do
+#	printf "\n\n==TYPE THE LIB DIR==\n\n"
+#
+#	find . -name libc.so.* | cut -d "/" -f 2
+#
+#	read theLibDir
+#
+#	checkResultLibDir "$theLibDir"
+#
+#	if [ "$?" = "0" ]; then
+#		break
+#	fi
+#done
+#
+#fi
+
 #here you put commands like configure and make
 
 cd "${myBuildExtractDest}/${filename}"
 
 #this patch is meant to fix "make[3]: *** [Makefile:1933: s-selftest] Error 1" when compiling gcc
 #note, this should be fixed in 2.30.1 (which was in alpha at time of packaging)
-patch -p1 < "${myBuildHome}"/myBuilds/binutils/binutils-bug-22762.patch
+#patch -p1 < "${myBuildHome}"/myBuilds/binutils/binutils-bug-22762.patch
 
 if [ "$?" != "0" ]; then return 1; fi #check for errors
 
 printf "\n\n==Running configure.==\n\n"
 
-if [ "${BITS}" = "64" ]; then
+echo $SHELL
 
-./configure \
-	--with-sysroot="${SYSROOT}" \
-	--with-lib-path="/lib:/usr/lib:/lib/${TARGET}:/usr/local/lib/${TARGET}:/usr/lib/${TARGET}:/lib64:/usr/lib64" \
-	--program-prefix="${TARGET}-" \
-	--build=$BUILD \
-	--target=$TARGET \
-	--prefix=$PREFIX \
-	--enable-languages=c,c++ \
-	--enable-cxx \
-	--enable-threads \
-	--enable-64-bit-bfd
+if [ "$(printf "%s\n" "${BUILD}" | cut -d "-" -f 3 | cut -c 1-7)" = "mingw32" ]; then
+	sed -i "s#SHELL=\${CONFIG_SHELL-/bin/sh}#SHELL=\${CONFIG_SHELL-${TEMP_SYSROOT}/build_tools/bin/sh.exe}#g" configure
+fi
+
+if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+
+	##set exec_prefix
+	##find . -type f -name configure -exec sed -i "s#^exec_prefix=NONE#exec_prefix=${PREFIX}/${TARGET}#g" {} \;
+
+	if [ "${BITS}" = "64" ]; then
+		#this if statement is because when host == build, ld-linux.so.2 segfaults
+		if [ "$HOST" != "$BUILD" ]; then
+
+			./configure \
+				--prefix="${PREFIX}/${TARGET}" \
+				--exec_prefix="${PREFIX}" \
+				--program-prefix="${TARGET}-" \
+				--build=$BUILD \
+				--host=$HOST \
+				--target=$TARGET \
+				--enable-languages=c,c++ \
+				--enable-cxx \
+				--enable-threads \
+				--enable-64-bit-bfd \
+				--with-sysroot="${TEMP_SYSROOT}" \
+				--with-build-sysroot="${TEMP_SYSROOT}" \
+				--libdir=${PREFIX}/${TARGET}/lib \
+				--bindir="${PREFIX}/${TARGET}/bin" \
+				--sbindir="${PREFIX}/${TARGET}/sbin" \
+				--libexecdir="${PREFIX}/${TARGET}/libexec" \
+				--enable-multilib
+		else
+		#because when host == build, ld-linux.so.2 segfaults, we drop the --host option
+
+			./configure \
+				--prefix="${PREFIX}/${TARGET}" \
+				--program-prefix="${TARGET}-" \
+				--build=$BUILD \
+				--target=$TARGET \
+				--enable-languages=c,c++ \
+				--enable-cxx \
+				--enable-threads \
+				--enable-64-bit-bfd \
+				--with-sysroot="${TEMP_SYSROOT}" \
+				--with-build-sysroot="${TEMP_SYSROOT}" \
+				--libdir=${PREFIX}/${TARGET}/lib \
+				--bindir="${PREFIX}/${TARGET}/bin" \
+				--sbindir="${PREFIX}/${TARGET}/sbin" \
+				--libexecdir="${PREFIX}/${TARGET}/libexec" \
+				--enable-multilib
+		fi
+	else
+
+		#this if statement is because when host == build, ld-linux.so.2 segfaults
+		if [ "$HOST" != "$BUILD" ]; then
+
+			./configure \
+				--prefix="${PREFIX}/${TARGET}" \
+				--program-prefix="${TARGET}-" \
+				--build=$BUILD \
+				--host=$HOST \
+				--target=$TARGET \
+				--enable-languages=c,c++ \
+				--enable-cxx \
+				--enable-threads \
+				--enable-64-bit-bfd \
+				--with-sysroot="${TEMP_SYSROOT}" \
+				--with-build-sysroot="${TEMP_SYSROOT}" \
+				--libdir=${PREFIX}/${TARGET}/lib \
+				--bindir="${PREFIX}/${TARGET}/bin" \
+				--sbindir="${PREFIX}/${TARGET}/sbin" \
+				--libexecdir="${PREFIX}/${TARGET}/libexec" \
+				--enable-multilib
+
+		else
+		#because when host == build, ld-linux.so.2 segfaults, we drop the --host option
+
+			./configure \
+				--prefix="${PREFIX}/${TARGET}" \
+				--program-prefix="${TARGET}-" \
+				--build=$BUILD \
+				--target=$TARGET \
+				--enable-languages=c,c++ \
+				--enable-cxx \
+				--enable-threads \
+				--enable-64-bit-bfd \
+				--with-sysroot="${TEMP_SYSROOT}" \
+				--with-build-sysroot="${TEMP_SYSROOT}" \
+				--libdir=${PREFIX}/${TARGET}/lib \
+				--bindir="${PREFIX}/${TARGET}/bin" \
+				--sbindir="${PREFIX}/${TARGET}/sbin" \
+				--libexecdir="${PREFIX}/${TARGET}/libexec" \
+				--enable-multilib \
+
+		fi
+	fi
 
 else
 
+	if [ "${BITS}" = "64" ]; then
+#mingw
+		#this if statement is because when host == build, ld-linux.so.2 segfaults
+		if [ "$HOST" != "$BUILD" ]; then
 
-./configure \
-	--with-sysroot="${SYSROOT}" \
-	--with-lib-path="/lib:/usr/lib:/lib/${TARGET}:/usr/local/lib/${TARGET}:/usr/lib/${TARGET}" \
-	--program-prefix="${TARGET}-" \
-	--build=$BUILD \
-	--target=$TARGET \
-	--prefix=$PREFIX \
-	--enable-languages=c,c++ \
-	--enable-cxx \
-	--enable-threads
+			./configure \
+			--prefix="${PREFIX}/${TARGET}" \
+			--exec_prefix="${PREFIX}" \
+			--program-prefix="${TARGET}-" \
+			--build=$BUILD \
+			--host=$HOST \
+			--target=$TARGET \
+			--enable-languages=c,c++ \
+			--enable-cxx \
+			--enable-threads \
+			--enable-64-bit-bfd \
+			--with-sysroot="${TEMP_SYSROOT}" \
+			--with-build-sysroot="${TEMP_SYSROOT}" \
+			--disable-multilib \
+			--libdir="${PREFIX}/${TARGET}/lib" \
+			--bindir="${PREFIX}/${TARGET}/bin" \
+			--sbindir="${PREFIX}/${TARGET}/sbin" \
+			--libexecdir="${PREFIX}/${TARGET}/libexec" \
+			CPPFLAGS="--sysroot=${TEMP_SYSROOT}"
+		else
+		#because when host == build, ld-linux.so.2 segfaults, we drop the --host option
+			./configure \
+			--prefix="${PREFIX}/${TARGET}" \
+			--exec_prefix="${PREFIX}" \
+			--program-prefix="${TARGET}-" \
+			--build=$BUILD \
+			--target=$TARGET \
+			--enable-languages=c,c++ \
+			--enable-cxx \
+			--enable-threads \
+			--enable-64-bit-bfd \
+			--with-sysroot="${TEMP_SYSROOT}" \
+			--with-build-sysroot="${TEMP_SYSROOT}" \
+			--disable-multilib \
+			--libdir="${PREFIX}/${TARGET}/lib" \
+			--bindir="${PREFIX}/${TARGET}/bin" \
+			--sbindir="${PREFIX}/${TARGET}/sbin" \
+			--libexecdir="${PREFIX}/${TARGET}/libexec" \
+			CPPFLAGS="--sysroot=${TEMP_SYSROOT}"
 
+		#we also add a symlink in ${SYSROOT}/lib to ld, if host == target
+			cd "${SYSROOT}/lib"
+			$MYIXOS_LINK ..${PREFIX}/${TARGET}/lib/ld-*.so ld-linux.so.2
+			cd "${myBuildExtractDest}/${filename}"
+		fi
+	else
+#mingw
+		#this if statement is because when host == build, ld-linux.so.2 segfaults
+		if [ "$HOST" != "$BUILD" ]; then
+			./configure \
+			--prefix="${PREFIX}/${TARGET}" \
+			--exec_prefix="${PREFIX}" \
+			--program-prefix="${TARGET}-" \
+			--build=$BUILD \
+			--host=$HOST \
+			--target=$TARGET \
+			--enable-languages=c,c++ \
+			--enable-cxx \
+			--enable-threads \
+			--with-sysroot="${TEMP_SYSROOT}" \
+			--with-build-sysroot="${TEMP_SYSROOT}" \
+			--disable-multilib \
+			--libdir="${PREFIX}/${TARGET}/lib" \
+			--bindir="${PREFIX}/${TARGET}/bin" \
+			--sbindir="${PREFIX}/${TARGET}/sbin" \
+			--libexecdir="${PREFIX}/${TARGET}/libexec"
+		else
+		#because when host == build, ld-linux.so.2 segfaults, we drop the --host option
+			./configure \
+			--prefix="${PREFIX}/${TARGET}" \
+			--exec_prefix="${PREFIX}" \
+			--program-prefix="${TARGET}-" \
+			--build=$BUILD \
+			--target=$TARGET \
+			--enable-languages=c,c++ \
+			--enable-cxx \
+			--enable-threads \
+			--with-sysroot="${TEMP_SYSROOT}" \
+			--with-build-sysroot="${TEMP_SYSROOT}" \
+			--disable-multilib \
+			--libdir="${PREFIX}/${TARGET}/lib" \
+			--bindir="${PREFIX}/${TARGET}/bin" \
+			--sbindir="${PREFIX}/${TARGET}/sbin" \
+			--libexecdir="${PREFIX}/${TARGET}/libexec" \
+
+
+		#we also add a symlink in ${SYSROOT}/lib to ld, if host == target
+			cd "${SYSROOT}/lib"
+			$MYIXOS_LINK ..${PREFIX}/${TARGET}/lib/ld-*.so ld-linux.so.2
+			cd "${myBuildExtractDest}/${filename}"
+		fi
+	fi
+
+#if cygwin
+
+#cd "${myBuildExtractDest}/cygwin-snapshot-"*
+
+#patch -p0 < "${myBuildHome}"/myBuilds/binutils/binutils-cygwin-avoid-flock-redefine.patch
+
+#cd "${myBuildExtractDest}/${filename}"
+
+#cp -alf "${myBuildExtractDest}/cygwin-snapshot-"*/newlib "${myBuildExtractDest}/${filename}/"
+#cp -alf "${myBuildExtractDest}/cygwin-snapshot-"*/winsup "${myBuildExtractDest}/${filename}/"
+
+#	if [ "${TARGET}" = "${HOST}" ]; then
+#	#if we are compiling a win32 toolchain AND...
+#	#we are compiling using a sysroot [ie. using sysroot libc headers]
+
+#		patch -p0 < "${myBuildHome}"/myBuilds/binutils/binutils-fix-headers-path-sysroot.patch
+
+#		if [ "${BITS}" = "64" ]; then
+
+#		./configure \
+#			--bindir=/usr/bin \
+#			--program-prefix="${TARGET}-" \
+#			--build=$BUILD \
+#			--host=$HOST \
+#			--target=$TARGET \
+#			--prefix=$PREFIX \
+#			--enable-languages=c,c++ \
+#			--enable-cxx \
+#			--enable-threads \
+#			--enable-64-bit-bfd \
+#			--with-sysroot="${TEMP_SYSROOT}" \
+#			--with-build-sysroot="${TOOLCHAINDIR}" \
+#			--includedir="${TOOLCHAINDIR}${PREFIX}/${TARGET}/include" \
+#			--oldincludedir="${TOOLCHAINDIR}${PREFIX}/${TARGET}/include" \
+#			--libdir=${PREFIX}/${TARGET}/lib \
+#			--enable-multilib
+#		else
+
+#		CFLAGS="$CFLAGS --sysroot=${TOOLCHAINDIR}" ./configure \
+#			--program-prefix="${TARGET}-" \
+#			--build=$BUILD \
+#			--host=$HOST \
+#			--target=$TARGET \
+#			--prefix=$PREFIX \
+#			--enable-languages=c,c++ \
+#			--enable-cxx \
+#			--enable-threads \
+#			--libdir=${PREFIX}/${TARGET}/lib \
+#			--enable-multilib
+
+#		#./configure \
+#		#	--program-prefix="${TARGET}-" \
+#		#	--build=$BUILD \
+#		#	--host=$HOST \
+#		#	--target=$TARGET \
+#		#	--prefix=$PREFIX \
+#		#	--enable-languages=c,c++ \
+#		#	--enable-cxx \
+#		#	--enable-threads \
+#		#	--with-sysroot="${TEMP_SYSROOT}" \
+#		#	--with-build-sysroot="${TOOLCHAINDIR}" \
+#		#	--includedir="${TOOLCHAINDIR}${PREFIX}/${TARGET}/include" \
+#		#	--oldincludedir="${TOOLCHAINDIR}${PREFIX}/${TARGET}/include" \
+#		#	--libdir=${PREFIX}/${TARGET}/lib \
+#		#	--enable-multilib
+#		fi
+#	else
+#	#if we are compiling a win32 toolchain AND...
+#	#we are not compiling using a sysroot [ie. not using sysroot libc headers]
+
+#		if [ "${BITS}" = "64" ]; then
+
+#		./configure \
+#			--bindir=/usr/bin \
+#			--program-prefix="${TARGET}-" \
+#			--build=$BUILD \
+#			--host=$HOST \
+#			--target=$TARGET \
+#			--prefix=$PREFIX \
+#			--enable-languages=c,c++ \
+#			--enable-cxx \
+#			--enable-threads \
+#			--enable-64-bit-bfd \
+#			--with-sysroot="${TEMP_SYSROOT}" \
+#			--libdir=${PREFIX}/${TARGET}/lib \
+#			--enable-multilib
+#		else
+
+#		CC_FOR_TARGET="${BUILD}-gcc" CFLAGS="$WINECFLAGS" ./configure \
+#			--program-prefix="${TARGET}-" \
+#			--build=$BUILD \
+#			--host=$HOST \
+#			--target=$TARGET \
+#			--prefix=$PREFIX \
+#			--enable-languages=c,c++ \
+#			--enable-cxx \
+#			--enable-threads \
+#			--with-sysroot="${TEMP_SYSROOT}" \
+#			--with-cross-bootstrap \
+#			--libdir=${PREFIX}/${TARGET}/lib \
+#			--enable-multilib
+
+#		#./configure \
+#		#	--program-prefix="${TARGET}-" \
+#		#	--build=$BUILD \
+#		#	--host=$HOST \
+#		#	--target=$TARGET \
+#		#	--prefix=$PREFIX \
+#		#	--enable-languages=c,c++ \
+#		#	--enable-cxx \
+#		#	--enable-threads \
+#		#	--with-sysroot="${TEMP_SYSROOT}" \
+#		#	--libdir=${PREFIX}/${TARGET}/lib \
+#		#	--enable-multilib
+
+
+#		fi
+#	fi
 fi
 
+
+#		--with-lib-path="/usr/local/lib/${TARGET}:/lib/${TARGET}:/usr/lib/${TARGET}:/usr/local/lib:/lib:/usr/lib:/usr/${TARGET}/lib" \
+
+#	--bindir=/usr/bin \
+#	--with-lib-path="/lib:/lib/${TARGET}:/usr/lib:/usr/lib/${TARGET}" \
+#	--with-lib-path="/lib:/lib/${TARGET}:/usr/lib:/usr/lib/${TARGET}:/lib64:/usr/lib64" \
+#	--with-lib-path="/lib:/lib/${TARGET}:/usr/lib:/usr/lib/${TARGET}" \
+
+#
+#
+
+#	--with-lib-path="/lib:/usr/lib:/usr/lib/${TARGET}:/lib64:/usr/lib64"
+#	--with-lib-path="/lib:/usr/lib:/usr/lib/${TARGET}"
+
+#	
+#	--with-lib-path="/lib:/usr/lib:/lib/${TARGET}:/usr/local/lib/${TARGET}" \
 
 if [ "$?" != "0" ]; then return 1; fi #check for errors
 #	    --with-sysroot=$ROOTFS \
 #	    $WITHPPL \
 
+#LIB_PATH=/lib/${TARGET}
+
 printf "\n\n==Running make.==\n\n"
 
-make
+make tooldir=${PREFIX}
 if [ "$?" != "0" ]; then return 1; fi #check for errors
 
 return "$?"
 }
 
 do_install(){
-#here you put the installation commands, like make install
-cd "${myBuildExtractDest}/${filename}"
-make install DESTDIR="${SYSROOT}"
-mkdir "${SYSROOT}/etc"
-echo "/usr/local/lib/${TARGET}" >> "${SYSROOT}/etc/ld.so.conf"
-echo "/usr/lib/${TARGET}" >> "${SYSROOT}/etc/ld.so.conf"
+	#here you put the installation commands, like make install
 
-ln -s "${PREFIX}/bin/${TARGET}-ar" "${SYSROOT}/${PREFIX}/bin/ar"
-ln -s "${PREFIX}/bin/${TARGET}-as" "${SYSROOT}/${PREFIX}/bin/as"
-ln -s "${PREFIX}/bin/${TARGET}-ld" "${SYSROOT}/${PREFIX}/bin/ld"
-ln -s "${PREFIX}/bin/${TARGET}-gprof" "${SYSROOT}/${PREFIX}/bin/gprof"
-ln -s "${PREFIX}/bin/${TARGET}-addr2line" "${SYSROOT}/${PREFIX}/bin/addr2line"
-ln -s "${PREFIX}/bin/${TARGET}-c++filt" "${SYSROOT}/${PREFIX}/bin/c++filt"
-ln -s "${PREFIX}/bin/${TARGET}-nm" "${SYSROOT}/${PREFIX}/bin/nm"
-ln -s "${PREFIX}/bin/${TARGET}-objcopy" "${SYSROOT}/${PREFIX}/bin/objcopy"
-ln -s "${PREFIX}/bin/${TARGET}-objdump" "${SYSROOT}/${PREFIX}/bin/objdump"
-ln -s "${PREFIX}/bin/${TARGET}-ranlib" "${SYSROOT}/${PREFIX}/bin/ranlib"
-ln -s "${PREFIX}/bin/${TARGET}-readelf" "${SYSROOT}/${PREFIX}/bin/readelf"
-ln -s "${PREFIX}/bin/${TARGET}-size" "${SYSROOT}/${PREFIX}/bin/size"
-ln -s "${PREFIX}/bin/${TARGET}-strip" "${SYSROOT}/${PREFIX}/bin/strip"
-ln -s "${PREFIX}/bin/${TARGET}-elfedit" "${SYSROOT}/${PREFIX}/bin/elfedit"
-ln -s "${PREFIX}/bin/${TARGET}-ld.bfd" "${SYSROOT}/${PREFIX}/bin/ld.bfd"
+	cd "${myBuildExtractDest}/${filename}"
 
-printf "%s\n" "/lib/${TARGET}" >> "${SYSROOT}/etc/ld.so.conf"
-printf "%s\n" "/usr/local/lib/${TARGET}" >> "${SYSROOT}/etc/ld.so.conf"
-printf "%s\n" "/usr/lib/${TARGET}" >> "${SYSROOT}/etc/ld.so.conf"
-printf "%s\n" "/usr/lib" >> "${SYSROOT}/etc/ld.so.conf"
-printf "%s\n" "/lib" >> "${SYSROOT}/etc/ld.so.conf"
+#we set tooldir to ${PREFIX}/${TARGET}/lib, as gas, ld etc should go in there rather than ${prefix}/${target}/usr/lib or ${prefix}/${target}/usr/${prefix}/${target}...
+#this prevents gcc from looking for "as" rather than ${target}-as when cross compiling
+	make install tooldir="${PREFIX}/${TARGET}" DESTDIR="${SYSROOT}"
 
-/sbin/ldconfig -r "${SYSROOT}" "/lib/${TARGET}"
-/sbin/ldconfig -r "${SYSROOT}" "/usr/local/lib/${TARGET}"
-/sbin/ldconfig -r "${SYSROOT}" "/usr/lib/${TARGET}"
-/sbin/ldconfig -r "${SYSROOT}" "/usr/lib"
-/sbin/ldconfig -r "${SYSROOT}" "/lib"
+	if [ ! -d "${SYSROOT}/etc" ]; then
+		mkdir "${SYSROOT}/etc"
+	fi
 
-if [ "${BITS}" = "64" ]; then
+	rm -f "${SYSROOT}${PREFIX}/${TARGET}/etc/ld.so.conf"
 
-printf "%s\n" "/usr/lib64" >> "${SYSROOT}/etc/ld.so.conf"
-printf "%s\n" "/lib64" >> "${SYSROOT}/etc/ld.so.conf"
+	##make the following directories if they do not exist so ldconfig runs ok##
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/lib"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/lib"
 
-/sbin/ldconfig -r "${SYSROOT}" "/usr/lib64"
-/sbin/ldconfig -r "${SYSROOT}" "/lib64"
+	printf "%s\n" "${PREFIX}/${TARGET}/lib" >> "${SYSROOT}${PREFIX}/${TARGET}/etc/ld.so.conf"
+	printf "%s\n" "${PREFIX}/${TARGET}/lib" >> "${SYSROOT}${PREFIX}/${TARGET}/etc/ld.so.conf"
 
-fi
+	if [ "${HOST}" = "${TARGET}" ]; then
+		#we also add a symlink in ${SYSROOT}/lib to ld, if host == target
+		cd "${SYSROOT}/lib"
+		$MYIXOS_LINK ../usr/${TARGET}/lib/ld-*.so ld-linux.so.2
+		cd "${myBuildExtractDest}/${filename}"
+	fi
 
+	#make sure gcc can find ld
+	if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" = "mingw32" ]; then
+		cd "${SYSROOT}${PREFIX}/${TARGET}/bin"
+		ln ${TARGET}-ld.exe ld.exe
+	else
+		cd "${SYSROOT}${PREFIX}/${TARGET}/bin"
+		ln -s ${TARGET}-ld ld
+	fi
 
-ln -s "${PREFIX}/bin/${TARGET}-ar" "${PREFIX}/bin/ar"
-if [ "$?" != "0" ]; then return 1; fi #check for errors
-return "$?"
+	if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+	return "$?"
 }
 
 do_package(){
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+
 #here you package the files
-echo "package!"
+
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
 return "$?"
 }
 

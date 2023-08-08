@@ -1,0 +1,2 @@
+mingwex looks to be a libc implementation, and should be in wine to an extent
+include looks to be include files, and should be in wine

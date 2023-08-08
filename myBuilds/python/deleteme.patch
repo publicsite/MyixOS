@@ -1,0 +1,29 @@
+--- setup.py.old	2019-11-25 06:43:55.688160670 +0000
++++ setup.py	2019-11-25 06:45:52.539360927 +0000
+@@ -2027,20 +2027,26 @@
+ 
+         ffi_inc = [sysconfig.get_config_var("LIBFFI_INCLUDEDIR")]
+         if not ffi_inc or ffi_inc[0] == '':
++            print("doh1")
+             ffi_inc = find_file('ffi.h', [], inc_dirs)
+         if ffi_inc is not None:
++            print("doh2")
+             ffi_h = ffi_inc[0] + '/ffi.h'
+             if not os.path.exists(ffi_h):
++                print("doh3")
+                 ffi_inc = None
+                 print('Header file {} does not exist'.format(ffi_h))
+         ffi_lib = None
+         if ffi_inc is not None:
++            print("doh4")
+             for lib_name in ('ffi', 'ffi_pic'):
+                 if (self.compiler.find_library_file(lib_dirs, lib_name)):
++                    print("doh5")
+                     ffi_lib = lib_name
+                     break
+ 
+         if ffi_inc and ffi_lib:
++            print("doh6")
+             ext.include_dirs.extend(ffi_inc)
+             ext.libraries.append(ffi_lib)
+             self.use_system_libffi = True

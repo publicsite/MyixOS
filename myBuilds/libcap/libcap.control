@@ -1,0 +1,7 @@
+Package: libcap
+Provides: libcap2, libcap2-bin, libcap-dev
+Version: 2.27
+Maintainer: J05HYYY
+Homepage: https://www.gnu.org/software/automake/
+Priority: optional
+Description: No description availiable.

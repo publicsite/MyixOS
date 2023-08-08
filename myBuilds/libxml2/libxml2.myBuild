@@ -1,0 +1,48 @@
+#!/bin/sh
+filename="libxml2-2.9.9"
+extension=".tar.gz"
+source="ftp://xmlsoft.org/libxml2/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+cd "${myBuildExtractDest}/${filename}"
+
+#patch -p0 < "${myBuildHome}"/myBuilds/libxml2/libxml2_fix-rpath-libtool-relink.patch
+#patch -p0 < "${myBuildHome}"/myBuilds/libxml2/libxml2_allow_installation_into_the_correct_place.patch
+
+./configure --build=${BUILD} --host=${HOST} --target=${TARGET} --prefix="${PREFIX}/${TARGET}" --enable-shared #--with-python_install_dir="${PREFIX}/${TARGET}/lib/python2.7/dist-packages"
+
+make DESTDIR=${SYSROOT} LIBDIR="${PREFIX}/${TARGET}/lib"
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make DESTDIR=${SYSROOT} install
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

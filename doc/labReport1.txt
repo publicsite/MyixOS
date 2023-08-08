@@ -1,0 +1,15 @@
+Both mingw and cygwin toolchains require a dynamic include to windows.h
+
+ie.
+
+#include <windows.h>
+
+This is whether using the set of 'w64' toolchains for mingw/cygwin, or 'pc' for just cygwin, it is a depedency.
+
+As of such, they both error out.
+
+This might be able to be fixed by building with wine.
+
+Wine is LGPL software according to wikipedia.
+
+Wine may also be required to build perl 5 for windows as it stands.

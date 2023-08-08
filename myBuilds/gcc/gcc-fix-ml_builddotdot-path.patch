@@ -1,0 +1,11 @@
+--- config-ml.in.old	2016-11-15 16:34:02.000000000 +0000
++++ config-ml.in	2019-04-04 22:20:40.383044152 +0100
+@@ -588,7 +588,7 @@
+ else
+   ml_subdir="/${with_multisubdir}"
+   # The '[^/][^/]*' appears that way to work around a SunOS sed bug.
+-  ml_builddotdot=`echo ${with_multisubdir} | sed -e 's:[^/][^/]*:..:g'`/
++  ml_builddotdot=`echo ${with_multisubdir} | sed -e 's:[^/][^/]*:..:g' | cut -c 2-`/
+   if [ "$srcdir" = "." ]; then
+     ml_srcdotdot=${ml_srcdotdot}${ml_builddotdot}
+   else

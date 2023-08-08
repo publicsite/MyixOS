@@ -1,0 +1,11 @@
+--- libopkg/opkg_cmd.c.old	2020-02-24 05:57:40.000000000 +0000
++++ libopkg/opkg_cmd.c	2020-02-24 05:58:07.099366511 +0000
+@@ -216,7 +216,7 @@
+ 	ctx->oldpath = xstrdup(getenv("PATH"));
+ 
+ 	sprintf_alloc(&newpath, "%s/opkg/intercept:%s", DATADIR,
+-	              ctx->oldpath ? ctx->oldpath : PATH_SPEC);
++	              ctx->oldpath);
+ 
+ 	sprintf_alloc(&ctx->statedir, "%s/opkg-intercept-XXXXXX",
+ 	              conf->tmp_dir);

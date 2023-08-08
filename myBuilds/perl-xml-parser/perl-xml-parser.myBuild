@@ -1,0 +1,58 @@
+#!/bin/sh
+filename="XML-Parser-2.44"
+extension=".tar.gz"
+source="https://cpan.metacpan.org/authors/id/T/TO/TODDR/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+perl_minor_version="$(cat "${myBuildExtractDest}/perl/perl_version.txt")"
+perl_major_version="$(printf "%s" "${perl_minor_version}" | cut -d. -f 1-2)"
+
+perl Makefile.PL PREFIX="${PREFIX}/${TARGET}" INSTALLDIRS=site
+
+sed -i 's#^INSTALLPRIVLIB = .*$#INSTALLPRIVLIB = \$(PERLPREFIX)\/lib\/perl5\/'${perl_minor_version}'#g' Makefile
+sed -i 's#^INSTALLSITELIB = .*$#INSTALLSITELIB = \$(SITEPREFIX)\/lib\/perl5\/site_perl\/'${perl_minor_version}'#g' Makefile
+sed -i 's#^INSTALLARCHLIB = .*$#INSTALLARCHLIB = \$(PERLPREFIX)\/lib\/perl5\/'${perl_minor_version}'\/'$(printf "%s" "${TARGET}" | cut -d- -f 1-2)'#g' Makefile
+sed -i 's#^INSTALLSITEARCH = .*$#INSTALLSITEARCH = \$(SITEPREFIX)\/lib\/perl5\/site_perl\/'${perl_minor_version}'\/'$(printf "%s" "${TARGET}" | cut -d- -f 1-2)'#g' Makefile
+sed -i 's#^INSTALLVENDORARCH = .*$#INSTALLVENDORARCH = \$(VENDORPREFIX)\/lib\/perl5\/'${perl_minor_version}'\/'$(printf "%s" "${TARGET}" | cut -d- -f 1-2)'#g' Makefile
+sed -i 's#^INSTALLVENDORLIB = .*$#INSTALLVENDORLIB = $(VENDORPREFIX)/lib/perl5#g' Makefile
+sed -i 's#^PERL_LIB = .*$#PERL_LIB = \/usr\/'${TARGET}'\/usr\/lib\/perl5\/'${perl_minor_version}'#g' Makefile
+
+make CC=${TARGET}-gcc CXX=${TARGET}-g++ AR=${TARGET}-ar RANLIB=${TARGET}-ranlib
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make DESTDIR=${SYSROOT} install
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

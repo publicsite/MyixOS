@@ -1,0 +1,18 @@
+--- include/uapi/linux/mount.h.old	2022-12-21 16:48:12.000000000 +0000
++++ include/uapi/linux/mount.h	2023-04-12 02:36:48.503587400 +0100
+@@ -123,6 +123,7 @@
+ #define MOUNT_ATTR_IDMAP	0x00100000 /* Idmap mount to @userns_fd in struct mount_attr. */
+ #define MOUNT_ATTR_NOSYMFOLLOW	0x00200000 /* Do not follow symlinks */
+ 
++#ifndef MOUNT_ATTR_SIZE_VER0
+ /*
+  * mount_setattr()
+  */
+@@ -132,6 +133,7 @@
+ 	__u64 propagation;
+ 	__u64 userns_fd;
+ };
++#endif
+ 
+ /* List of all mount_attr versions. */
+ #define MOUNT_ATTR_SIZE_VER0	32 /* sizeof first published struct */

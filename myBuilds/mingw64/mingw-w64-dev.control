@@ -1,0 +1,7 @@
+Package: mingw-w64-dev
+Provides: mingw-w64-i686-dev, mingw-w64-x86-64-dev 
+Version: 6.0.0
+Maintainer: J05HYYY
+Homepage: http://mingw-w64.sf.net
+Priority: optional
+Description: No description availiable.

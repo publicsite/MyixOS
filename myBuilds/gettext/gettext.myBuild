@@ -1,0 +1,126 @@
+#!/bin/sh
+actualname="gettext"
+version="0.21"
+filename="${actualname}-${version}"
+extension=".tar.xz"
+source="http://ftp.gnu.org/gnu/gettext/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+checkResultLibDir(){
+#this function checks if the file exists given the user input as argument 1
+
+	if [ "$(find . -name libc.so.* | cut -d "/" -f 2 | while read line; do if [ "$1" = "$line" ]; then printf "yes\n"; fi; done)" = "yes" ]; then
+		return 0
+	else
+		return 101
+	fi
+}
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+
+#theLibDir="$TARGET"
+
+#cd ${SYSROOT}/lib
+#
+#if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 2 )" != "pc" ]; then
+#
+#	while true; do
+#		printf "\n\n==TYPE THE LIB DIR==\n\n"
+#
+#		find . -name libc.so.* | cut -d "/" -f 2
+#
+#		read theLibDir
+#
+#		checkResultLibDir "$theLibDir"
+#
+#		if [ "$?" = "0" ]; then
+#			break
+#		fi
+#	done
+#
+#fi
+
+#here you put commands like configure and make
+
+mkdir "${SYSROOT}/lib/${TARGET}"
+
+cd "${myBuildExtractDest}/${filename}"
+
+sed -i 's|hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' gettext-runtime/libtool
+sed -i 's|runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' gettext-runtime/libtool
+sed -i 's|hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' gettext-runtime/configure
+sed -i 's|runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' gettext-runtime/configure
+
+#./autogen.sh
+
+            CC="${TARGET}-gcc -Wl,--sysroot=${TEMP_SYSROOT} -L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib" \
+            CXX="${TARGET}-g++ -Wl,--sysroot=${TEMP_SYSROOT} -L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib" \
+            ./configure \
+	    --prefix="${PREFIX}/${TARGET}" \
+	    --build=${BUILD} \
+	    --host=${HOST} \
+	    --target=${TARGET} \
+	    --disable-curses \
+	    --libdir=${PREFIX}/${TARGET}/lib \
+            --disable-rpath \
+            --with-sysroot="${TEMP_SYSROOT}" \
+            ac_cv_prog_cc_c99=no
+
+make
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+
+make install DESTDIR=${SYSROOT}
+
+#libgettextsrc-0.19.8.1.so
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

@@ -1,0 +1,27 @@
+--- a/lib/init.c	2022-08-08 16:38:33.000000000 +0100
++++ b/lib/init.c	2022-12-26 00:42:21.320725221 +0000
+@@ -191,24 +191,3 @@
+ #ifndef __SIZE_TYPE__
+ #define __SIZE_TYPE__ UINTN
+ #endif
+-
+-void *memset(void *s, int c, __SIZE_TYPE__ n)
+-{
+-    unsigned char *p = s;
+-
+-    while (n--)
+-        *p++ = c;
+-
+-    return s;
+-}
+-
+-void *memcpy(void *dest, const void *src, __SIZE_TYPE__ n)
+-{
+-    const unsigned char *q = src;
+-    unsigned char *p = dest;
+-
+-    while (n--)
+-        *p++ = *q++;
+-
+-    return dest;
+-}

@@ -1,0 +1,284 @@
+--- src/Makefile.in.old	2018-09-27 13:05:09.000000000 +0100
++++ src/Makefile.in	2019-08-21 18:58:42.210759485 +0100
+@@ -175,7 +175,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_composite_la_LDFLAGS) \
+ 	$(LDFLAGS) -o $@
+-@BUILD_COMPOSITE_TRUE@am_libxcb_composite_la_rpath = -rpath $(libdir)
++@BUILD_COMPOSITE_TRUE@am_libxcb_composite_la_rpath = 
+ @BUILD_DAMAGE_TRUE@libxcb_damage_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_DAMAGE_TRUE@nodist_libxcb_damage_la_OBJECTS = damage.lo
+ libxcb_damage_la_OBJECTS = $(nodist_libxcb_damage_la_OBJECTS)
+@@ -183,7 +183,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_damage_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_DAMAGE_TRUE@am_libxcb_damage_la_rpath = -rpath $(libdir)
++@BUILD_DAMAGE_TRUE@am_libxcb_damage_la_rpath = 
+ @BUILD_DPMS_TRUE@libxcb_dpms_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_DPMS_TRUE@nodist_libxcb_dpms_la_OBJECTS = dpms.lo
+ libxcb_dpms_la_OBJECTS = $(nodist_libxcb_dpms_la_OBJECTS)
+@@ -191,7 +191,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_dpms_la_LDFLAGS) $(LDFLAGS) -o \
+ 	$@
+-@BUILD_DPMS_TRUE@am_libxcb_dpms_la_rpath = -rpath $(libdir)
++@BUILD_DPMS_TRUE@am_libxcb_dpms_la_rpath = 
+ @BUILD_DRI2_TRUE@libxcb_dri2_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_DRI2_TRUE@nodist_libxcb_dri2_la_OBJECTS = dri2.lo
+ libxcb_dri2_la_OBJECTS = $(nodist_libxcb_dri2_la_OBJECTS)
+@@ -199,7 +199,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_dri2_la_LDFLAGS) $(LDFLAGS) -o \
+ 	$@
+-@BUILD_DRI2_TRUE@am_libxcb_dri2_la_rpath = -rpath $(libdir)
++@BUILD_DRI2_TRUE@am_libxcb_dri2_la_rpath = 
+ @BUILD_DRI3_TRUE@libxcb_dri3_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_DRI3_TRUE@nodist_libxcb_dri3_la_OBJECTS = dri3.lo
+ libxcb_dri3_la_OBJECTS = $(nodist_libxcb_dri3_la_OBJECTS)
+@@ -207,21 +207,21 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_dri3_la_LDFLAGS) $(LDFLAGS) -o \
+ 	$@
+-@BUILD_DRI3_TRUE@am_libxcb_dri3_la_rpath = -rpath $(libdir)
++@BUILD_DRI3_TRUE@am_libxcb_dri3_la_rpath = 
+ @BUILD_GE_TRUE@libxcb_ge_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_GE_TRUE@nodist_libxcb_ge_la_OBJECTS = ge.lo
+ libxcb_ge_la_OBJECTS = $(nodist_libxcb_ge_la_OBJECTS)
+ libxcb_ge_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+ 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+ 	$(libxcb_ge_la_LDFLAGS) $(LDFLAGS) -o $@
+-@BUILD_GE_TRUE@am_libxcb_ge_la_rpath = -rpath $(libdir)
++@BUILD_GE_TRUE@am_libxcb_ge_la_rpath = 
+ @BUILD_GLX_TRUE@libxcb_glx_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_GLX_TRUE@nodist_libxcb_glx_la_OBJECTS = glx.lo
+ libxcb_glx_la_OBJECTS = $(nodist_libxcb_glx_la_OBJECTS)
+ libxcb_glx_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+ 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+ 	$(libxcb_glx_la_LDFLAGS) $(LDFLAGS) -o $@
+-@BUILD_GLX_TRUE@am_libxcb_glx_la_rpath = -rpath $(libdir)
++@BUILD_GLX_TRUE@am_libxcb_glx_la_rpath = 
+ @BUILD_PRESENT_TRUE@libxcb_present_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_PRESENT_TRUE@nodist_libxcb_present_la_OBJECTS = present.lo
+ libxcb_present_la_OBJECTS = $(nodist_libxcb_present_la_OBJECTS)
+@@ -229,7 +229,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_present_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_PRESENT_TRUE@am_libxcb_present_la_rpath = -rpath $(libdir)
++@BUILD_PRESENT_TRUE@am_libxcb_present_la_rpath = 
+ @BUILD_RANDR_TRUE@libxcb_randr_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_RANDR_TRUE@nodist_libxcb_randr_la_OBJECTS = randr.lo
+ libxcb_randr_la_OBJECTS = $(nodist_libxcb_randr_la_OBJECTS)
+@@ -237,7 +237,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_randr_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_RANDR_TRUE@am_libxcb_randr_la_rpath = -rpath $(libdir)
++@BUILD_RANDR_TRUE@am_libxcb_randr_la_rpath = 
+ @BUILD_RECORD_TRUE@libxcb_record_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_RECORD_TRUE@nodist_libxcb_record_la_OBJECTS = record.lo
+ libxcb_record_la_OBJECTS = $(nodist_libxcb_record_la_OBJECTS)
+@@ -245,7 +245,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_record_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_RECORD_TRUE@am_libxcb_record_la_rpath = -rpath $(libdir)
++@BUILD_RECORD_TRUE@am_libxcb_record_la_rpath = 
+ @BUILD_RENDER_TRUE@libxcb_render_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_RENDER_TRUE@nodist_libxcb_render_la_OBJECTS = render.lo
+ libxcb_render_la_OBJECTS = $(nodist_libxcb_render_la_OBJECTS)
+@@ -253,14 +253,14 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_render_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_RENDER_TRUE@am_libxcb_render_la_rpath = -rpath $(libdir)
++@BUILD_RENDER_TRUE@am_libxcb_render_la_rpath = 
+ @BUILD_RESOURCE_TRUE@libxcb_res_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_RESOURCE_TRUE@nodist_libxcb_res_la_OBJECTS = res.lo
+ libxcb_res_la_OBJECTS = $(nodist_libxcb_res_la_OBJECTS)
+ libxcb_res_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+ 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+ 	$(libxcb_res_la_LDFLAGS) $(LDFLAGS) -o $@
+-@BUILD_RESOURCE_TRUE@am_libxcb_res_la_rpath = -rpath $(libdir)
++@BUILD_RESOURCE_TRUE@am_libxcb_res_la_rpath = 
+ @BUILD_SCREENSAVER_TRUE@libxcb_screensaver_la_DEPENDENCIES =  \
+ @BUILD_SCREENSAVER_TRUE@	$(XCB_LIBS)
+ @BUILD_SCREENSAVER_TRUE@nodist_libxcb_screensaver_la_OBJECTS =  \
+@@ -271,8 +271,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_screensaver_la_LDFLAGS) \
+ 	$(LDFLAGS) -o $@
+-@BUILD_SCREENSAVER_TRUE@am_libxcb_screensaver_la_rpath = -rpath \
+-@BUILD_SCREENSAVER_TRUE@	$(libdir)
++@BUILD_SCREENSAVER_TRUE@am_libxcb_screensaver_la_rpath = 
+ @BUILD_SHAPE_TRUE@libxcb_shape_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_SHAPE_TRUE@nodist_libxcb_shape_la_OBJECTS = shape.lo
+ libxcb_shape_la_OBJECTS = $(nodist_libxcb_shape_la_OBJECTS)
+@@ -280,14 +279,14 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_shape_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_SHAPE_TRUE@am_libxcb_shape_la_rpath = -rpath $(libdir)
++@BUILD_SHAPE_TRUE@am_libxcb_shape_la_rpath = 
+ @BUILD_SHM_TRUE@libxcb_shm_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_SHM_TRUE@nodist_libxcb_shm_la_OBJECTS = shm.lo
+ libxcb_shm_la_OBJECTS = $(nodist_libxcb_shm_la_OBJECTS)
+ libxcb_shm_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+ 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+ 	$(libxcb_shm_la_LDFLAGS) $(LDFLAGS) -o $@
+-@BUILD_SHM_TRUE@am_libxcb_shm_la_rpath = -rpath $(libdir)
++@BUILD_SHM_TRUE@am_libxcb_shm_la_rpath = 
+ @BUILD_SYNC_TRUE@libxcb_sync_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_SYNC_TRUE@nodist_libxcb_sync_la_OBJECTS = sync.lo
+ libxcb_sync_la_OBJECTS = $(nodist_libxcb_sync_la_OBJECTS)
+@@ -295,7 +294,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_sync_la_LDFLAGS) $(LDFLAGS) -o \
+ 	$@
+-@BUILD_SYNC_TRUE@am_libxcb_sync_la_rpath = -rpath $(libdir)
++@BUILD_SYNC_TRUE@am_libxcb_sync_la_rpath = 
+ @BUILD_XEVIE_TRUE@libxcb_xevie_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_XEVIE_TRUE@nodist_libxcb_xevie_la_OBJECTS = xevie.lo
+ libxcb_xevie_la_OBJECTS = $(nodist_libxcb_xevie_la_OBJECTS)
+@@ -303,7 +302,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_xevie_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_XEVIE_TRUE@am_libxcb_xevie_la_rpath = -rpath $(libdir)
++@BUILD_XEVIE_TRUE@am_libxcb_xevie_la_rpath = 
+ @BUILD_XFREE86_DRI_TRUE@libxcb_xf86dri_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_XFREE86_DRI_TRUE@nodist_libxcb_xf86dri_la_OBJECTS = xf86dri.lo
+ libxcb_xf86dri_la_OBJECTS = $(nodist_libxcb_xf86dri_la_OBJECTS)
+@@ -311,7 +310,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_xf86dri_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_XFREE86_DRI_TRUE@am_libxcb_xf86dri_la_rpath = -rpath $(libdir)
++@BUILD_XFREE86_DRI_TRUE@am_libxcb_xf86dri_la_rpath = 
+ @BUILD_XFIXES_TRUE@libxcb_xfixes_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_XFIXES_TRUE@nodist_libxcb_xfixes_la_OBJECTS = xfixes.lo
+ libxcb_xfixes_la_OBJECTS = $(nodist_libxcb_xfixes_la_OBJECTS)
+@@ -319,7 +318,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_xfixes_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_XFIXES_TRUE@am_libxcb_xfixes_la_rpath = -rpath $(libdir)
++@BUILD_XFIXES_TRUE@am_libxcb_xfixes_la_rpath = 
+ @BUILD_XINERAMA_TRUE@libxcb_xinerama_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_XINERAMA_TRUE@nodist_libxcb_xinerama_la_OBJECTS = xinerama.lo
+ libxcb_xinerama_la_OBJECTS = $(nodist_libxcb_xinerama_la_OBJECTS)
+@@ -327,7 +326,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_xinerama_la_LDFLAGS) \
+ 	$(LDFLAGS) -o $@
+-@BUILD_XINERAMA_TRUE@am_libxcb_xinerama_la_rpath = -rpath $(libdir)
++@BUILD_XINERAMA_TRUE@am_libxcb_xinerama_la_rpath = 
+ @BUILD_XINPUT_TRUE@libxcb_xinput_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_XINPUT_TRUE@nodist_libxcb_xinput_la_OBJECTS = xinput.lo
+ libxcb_xinput_la_OBJECTS = $(nodist_libxcb_xinput_la_OBJECTS)
+@@ -335,14 +334,14 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_xinput_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_XINPUT_TRUE@am_libxcb_xinput_la_rpath = -rpath $(libdir)
++@BUILD_XINPUT_TRUE@am_libxcb_xinput_la_rpath = 
+ @BUILD_XKB_TRUE@libxcb_xkb_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_XKB_TRUE@nodist_libxcb_xkb_la_OBJECTS = xkb.lo
+ libxcb_xkb_la_OBJECTS = $(nodist_libxcb_xkb_la_OBJECTS)
+ libxcb_xkb_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+ 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+ 	$(libxcb_xkb_la_LDFLAGS) $(LDFLAGS) -o $@
+-@BUILD_XKB_TRUE@am_libxcb_xkb_la_rpath = -rpath $(libdir)
++@BUILD_XKB_TRUE@am_libxcb_xkb_la_rpath = 
+ @BUILD_XPRINT_TRUE@libxcb_xprint_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_XPRINT_TRUE@nodist_libxcb_xprint_la_OBJECTS = xprint.lo
+ libxcb_xprint_la_OBJECTS = $(nodist_libxcb_xprint_la_OBJECTS)
+@@ -350,7 +349,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_xprint_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_XPRINT_TRUE@am_libxcb_xprint_la_rpath = -rpath $(libdir)
++@BUILD_XPRINT_TRUE@am_libxcb_xprint_la_rpath = 
+ @BUILD_SELINUX_TRUE@libxcb_xselinux_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_SELINUX_TRUE@nodist_libxcb_xselinux_la_OBJECTS = xselinux.lo
+ libxcb_xselinux_la_OBJECTS = $(nodist_libxcb_xselinux_la_OBJECTS)
+@@ -358,7 +357,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_xselinux_la_LDFLAGS) \
+ 	$(LDFLAGS) -o $@
+-@BUILD_SELINUX_TRUE@am_libxcb_xselinux_la_rpath = -rpath $(libdir)
++@BUILD_SELINUX_TRUE@am_libxcb_xselinux_la_rpath = 
+ @BUILD_XTEST_TRUE@libxcb_xtest_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_XTEST_TRUE@nodist_libxcb_xtest_la_OBJECTS = xtest.lo
+ libxcb_xtest_la_OBJECTS = $(nodist_libxcb_xtest_la_OBJECTS)
+@@ -366,14 +365,14 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_xtest_la_LDFLAGS) $(LDFLAGS) \
+ 	-o $@
+-@BUILD_XTEST_TRUE@am_libxcb_xtest_la_rpath = -rpath $(libdir)
++@BUILD_XTEST_TRUE@am_libxcb_xtest_la_rpath = 
+ @BUILD_XV_TRUE@libxcb_xv_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_XV_TRUE@nodist_libxcb_xv_la_OBJECTS = xv.lo
+ libxcb_xv_la_OBJECTS = $(nodist_libxcb_xv_la_OBJECTS)
+ libxcb_xv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+ 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+ 	$(libxcb_xv_la_LDFLAGS) $(LDFLAGS) -o $@
+-@BUILD_XV_TRUE@am_libxcb_xv_la_rpath = -rpath $(libdir)
++@BUILD_XV_TRUE@am_libxcb_xv_la_rpath = 
+ @BUILD_XVMC_TRUE@libxcb_xvmc_la_DEPENDENCIES = $(XCB_LIBS)
+ @BUILD_XVMC_TRUE@nodist_libxcb_xvmc_la_OBJECTS = xvmc.lo
+ libxcb_xvmc_la_OBJECTS = $(nodist_libxcb_xvmc_la_OBJECTS)
+@@ -381,7 +380,7 @@
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(AM_CFLAGS) $(CFLAGS) $(libxcb_xvmc_la_LDFLAGS) $(LDFLAGS) -o \
+ 	$@
+-@BUILD_XVMC_TRUE@am_libxcb_xvmc_la_rpath = -rpath $(libdir)
++@BUILD_XVMC_TRUE@am_libxcb_xvmc_la_rpath = 
+ am__DEPENDENCIES_1 =
+ libxcb_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+ am_libxcb_la_OBJECTS = xcb_conn.lo xcb_out.lo xcb_in.lo xcb_ext.lo \
+@@ -683,6 +682,18 @@
+ 	$(am__append_24) $(am__append_25) $(am__append_26) \
+ 	$(am__append_27)
+ 
++lib_LTLIBRARIES_INST = ../libxcb.la ../$(am__append_1) ../$(am__append_2) \
++	../$(am__append_3) ../$(am__append_4) ../$(am__append_5) \
++	../$(am__append_6) ../$(am__append_7) ../$(am__append_8) \
++	../$(am__append_9) ../$(am__append_10) ../$(am__append_11) \
++	../$(am__append_12) ../$(am__append_13) ../$(am__append_14) \
++	../$(am__append_15) ../$(am__append_16) ../$(am__append_17) \
++	../$(am__append_18) ../$(am__append_19) ../$(am__append_20) \
++	../$(am__append_21) ../$(am__append_22) ../$(am__append_23) \
++	../$(am__append_24) ../$(am__append_25) ../$(am__append_26) \
++	../$(am__append_27)
++
++
+ # FIXME: find a way to autogenerate this from the XML files.
+ EXTSOURCES = xproto.c bigreq.c xc_misc.c composite.c damage.c dpms.c \
+ 	dri2.c dri3.c present.c glx.c randr.c record.c render.c res.c \
+@@ -849,13 +860,14 @@
+ 
+ install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+ 	@$(NORMAL_INSTALL)
+-	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
++	@list='$(lib_LTLIBRARIES_INST)'; test -n "$(libdir)" || list=; \
+ 	list2=; for p in $$list; do \
+ 	  if test -f $$p; then \
+ 	    list2="$$list2 $$p"; \
+ 	  else :; fi; \
+ 	done; \
+ 	test -z "$$list2" || { \
++	  echo ">>>>>>>>>>>>>$$list2"; \
+ 	  echo " $(MKDIR_P) '$(DESTDIR)$(libdir)'"; \
+ 	  $(MKDIR_P) "$(DESTDIR)$(libdir)" || exit 1; \
+ 	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(libdir)'"; \
+@@ -964,7 +976,7 @@
+ 	$(AM_V_CCLD)$(libxcb_xvmc_la_LINK) $(am_libxcb_xvmc_la_rpath) $(libxcb_xvmc_la_OBJECTS) $(libxcb_xvmc_la_LIBADD) $(LIBS)
+ 
+ libxcb.la: $(libxcb_la_OBJECTS) $(libxcb_la_DEPENDENCIES) $(EXTRA_libxcb_la_DEPENDENCIES) 
+-	$(AM_V_CCLD)$(libxcb_la_LINK) -rpath $(libdir) $(libxcb_la_OBJECTS) $(libxcb_la_LIBADD) $(LIBS)
++	$(AM_V_CCLD)$(libxcb_la_LINK)  $(libxcb_la_OBJECTS) $(libxcb_la_LIBADD) $(LIBS)
+ 
+ mostlyclean-compile:
+ 	-rm -f *.$(OBJEXT)

@@ -1,0 +1,6 @@
+Package: python
+Provides: python3, python3.7, python3.7-venv, libpython3.7-stdlib, python3.7-minimal, libpython3.7-minimal, libpython3.7, python3.7-examples, python3.7-dev, libpython3.7-dev, libpython3.7-testsuite, idle-python3.7, python3.7-doc, python3.7-dbg, libpython3.7-dbg 
+Version: 3.7.4
+Maintainer: J05HYYY
+Priority: optional
+Description: No description availiable.

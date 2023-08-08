@@ -1,0 +1,7 @@
+Package: make
+Provides: make
+Version: 4.2.1
+Maintainer: J05HYYY
+Homepage: http://gcc.gnu.org/
+Priority: optional
+Description: No description availiable.

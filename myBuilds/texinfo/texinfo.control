@@ -1,0 +1,7 @@
+Package: texinfo
+Provides: texinfo, info, install-info 
+Version: 6.7.0
+Maintainer: J05HYYY
+Homepage: https://www.gnu.org/software/texinfo/
+Priority: optional
+Description: No description availiable.

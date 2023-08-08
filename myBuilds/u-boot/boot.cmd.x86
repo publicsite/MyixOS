@@ -1,0 +1,4 @@
+setenv bootargs console=ttyS0,115200 root=/dev/sda2 console=tty0 rw rootwait
+ide reset
+fatload ide 0:2 0x1000000 /boot/vmlinuz-linux-deblob || ext2load ide 0:2 0x1000000 /boot/vmlinuz-linux-deblob
+zboot 0x48000000

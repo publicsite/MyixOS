@@ -1,0 +1,118 @@
+#!/bin/sh
+actualname="ncurses"
+version="6.1"
+filename="${actualname}-${version}"
+extension=".tar.gz"
+source="ftp://ftp.gnu.org/gnu/ncurses/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	rm -rf "${myBuildExtractDest}/${filename}"
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+#if [ "${BITS}" = "64" ]; then
+
+#note that CPPFLAGS=-P isn't needed on ncurses 6.1, but gcc 7.3.0 requires ncurses 5
+
+if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+CPPFLAGS="-P" \
+./configure \
+    --prefix=${PREFIX}/${TARGET} \
+    --with-shared \
+    --build=${BUILD} \
+    --host=${HOST} \
+    --target=${TARGET} \
+    --without-debug \
+    --without-ada \
+    --enable-overwrite \
+    --with-pkg-config-libdir=${PREFIX}/${TARGET}/lib \
+    --libdir=${PREFIX}/${TARGET}/lib
+else
+CPPFLAGS="-P" \
+./configure \
+    --prefix=${PREFIX}/${TARGET} \
+    --with-shared \
+    --build=${BUILD} \
+    --host=${HOST} \
+    --target=${TARGET} \
+    --without-debug \
+    --without-ada \
+    --enable-overwrite \
+    --with-pkg-config-libdir=${PREFIX}/${TARGET}/lib \
+    --libdir=${PREFIX}/${TARGET}/lib \
+    --disable-home-terminfo \
+    --enable-database \
+    --disable-termcap \
+    --enable-sp-funcs \
+    --enable-term-driver \
+    --enable-interop
+fi
+
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+
+OLD_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+
+if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+	export LD_LIBRARY_PATH="${TEMP_SYSROOT}${PREFIX}/${BUILD}/lib:${LD_LIBRARY_PATH}"
+else
+	export LD_LIBRARY_PATH="${TEMP_SYSROOT}${PREFIX}/${BUILD}/lib;${LD_LIBRARY_PATH}"
+fi
+
+make DESTDIR=${SYSROOT} install
+
+export LD_LIBRARY_PATH="$OLD_LD_LIBRARY_PATH"
+
+cd "${SYSROOT}${PREFIX}/${TARGET}/bin"
+$MYIXOS_LINK "${TARGET}-tic" tic
+
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}/*"
+rm -rf "${SYSROOT}/*"
+rm -rf "${BUILDDIR}/debian-binary"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

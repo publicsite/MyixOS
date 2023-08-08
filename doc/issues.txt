@@ -1,0 +1,14 @@
+wayland depends on libxcb and meson which depends on python
+mesa depends on meson
+xorg depends on libxcb which depends on python, and mesa, which depends on meson
+automake is written in perl
+linux also depends on perl (I think)
+gcc requires a C++ compiler
+
+These issues mean we have multiple build systems and multiple scripting languages
+	instead of one build system and one scripting language.
+
+We also have a C++ compiler, which you have to bootstrap from,
+	which is unneccessary when you could just use C (not all systems have C++).
+
+It's ugly.

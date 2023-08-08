@@ -1,0 +1,84 @@
+#!/bin/sh
+version="0.51.1"
+filename="meson-${version}"
+extension=".tar.gz"
+source="https://github.com/mesonbuild/meson/archive/${version}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	mv "${myBuildSourceDest}/${version}${extension}" "${myBuildSourceDest}/${filename}${extension}"
+	return "$?"
+}
+
+do_extract(){
+	mkdir "${myBuildExtractDest}/meson"
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}/meson"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/meson/${filename}"
+
+CC=${TARGET}-cc CXX=${TARGET}-g++ AR=${TARGET}-ar python3 ./setup.py build
+
+#./configure \
+#    --prefix="${PREFIX}/${TARGET}" \
+#    --build=${BUILD} \
+#    --host=${HOST} \
+#    --target=${TARGET}
+
+#make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/meson/${filename}"
+python3 ./setup.py install --prefix="${PREFIX}/${TARGET}" --root="${SYSROOT}"
+
+cd "${myBuildExtractDest}/meson"
+
+#compile program with target compiler to test endianness
+rm "${myBuildExtractDest}/meson/testEndianness.c"
+printf "int main(){return 0;}" >> "${myBuildExtractDest}/meson/testEndianness.c"
+${TARGET}-gcc "${myBuildExtractDest}/meson/testEndianness.c" -o testEndiannessResult
+
+rm "${myBuildExtractDest}/meson/mesoncross.txt"
+printf "[binaries]\n" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+printf "c = '%s'\n" "$(which ${TARGET}-gcc)" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+printf "cpp = '%s'\n" "$(which ${TARGET}-g++)" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+printf "ar = '%s'\n" "$(which ${TARGET}-ar)" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+printf "strip = '%s'\n" "$(which ${TARGET}-strip)" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+printf "pkgconfig = '%s'\n" "$(which pkg-config)" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+printf "[host_machine]\n" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+printf "system = '%s'\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 2)" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+printf "cpu = '%s'\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1)" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+#write the config whether big or little endian
+if [ "$(hexdump -s 5 -n 1 -e '16/1 "%02x " "\n"' "${myBuildExtractDest}/meson/testEndiannessResult" | cut -c 1-2 )" = "01" ]; then
+#little endian
+	printf "endian = 'little'\n" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+elif [ "$(hexdump -s 5 -n 1 -e '16/1 "%02x " "\n"' "${myBuildExtractDest}/meson/testEndiannessResult" | cut -c 1-2 )" = "02" ]; then
+#big endian
+	printf "endian = 'big'\n" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+else
+printf "Uh oh! Could not determine endianness.\n"
+fi
+printf "cpu_family = '%s'\n" "$(cat "${myBuildExtractDest}/linux-deblob/theArch.config")" >> "${myBuildExtractDest}/meson/mesoncross.txt"
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

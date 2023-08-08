@@ -1,0 +1,6 @@
+Package: musl, musl-dev, musl-tools 
+Version: 1.1.21
+Maintainer: J05HYYY
+Homepage: https://www.musl-libc.org/
+Priority: optional
+Description: No description availiable.

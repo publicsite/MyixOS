@@ -1,0 +1,28 @@
+--- src/Makefile.in.old	2019-08-20 18:36:05.801814012 +0100
++++ src/Makefile.in	2019-08-20 18:37:03.276416783 +0100
+@@ -1901,6 +1901,7 @@
+ cairoinclude_HEADERS = $(enabled_cairo_headers) \
+ 	$(top_srcdir)/cairo-version.h
+ lib_LTLIBRARIES = libcairo.la
++lib_LTLIBRARIES_INST = ../libcairo.la
+ @BUILD_CXX_FALSE@cairo_cxx_lib = 
+ @BUILD_CXX_TRUE@cairo_cxx_lib = libcairo_cxx.la
+ noinst_LTLIBRARIES = $(cairo_cxx_lib)
+@@ -2059,7 +2060,7 @@
+ 
+ install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+ 	@$(NORMAL_INSTALL)
+-	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
++	@list='$(lib_LTLIBRARIES_INST)'; test -n "$(libdir)" || list=; \
+ 	list2=; for p in $$list; do \
+ 	  if test -f $$p; then \
+ 	    list2="$$list2 $$p"; \
+@@ -2104,7 +2105,7 @@
+ 	}
+ 
+ libcairo.la: $(libcairo_la_OBJECTS) $(libcairo_la_DEPENDENCIES) $(EXTRA_libcairo_la_DEPENDENCIES) 
+-	$(AM_V_CCLD)$(libcairo_la_LINK) -rpath $(libdir) $(libcairo_la_OBJECTS) $(libcairo_la_LIBADD) $(LIBS)
++	$(AM_V_CCLD)$(libcairo_la_LINK) $(libcairo_la_OBJECTS) $(libcairo_la_LIBADD) $(LIBS)
+ 
+ libcairo_cxx.la: $(libcairo_cxx_la_OBJECTS) $(libcairo_cxx_la_DEPENDENCIES) $(EXTRA_libcairo_cxx_la_DEPENDENCIES) 
+ 	$(AM_V_CXXLD)$(libcairo_cxx_la_LINK) $(am_libcairo_cxx_la_rpath) $(libcairo_cxx_la_OBJECTS) $(libcairo_cxx_la_LIBADD) $(LIBS)

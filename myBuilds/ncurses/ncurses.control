@@ -1,0 +1,6 @@
+Package: libtinfo6, libtinfo6-udeb, libncurses6, libncurses-dev, libtinfo-dev, libtinfo6-dbg, libncurses5-dev, libncurses6-dbg, libncursesw6, libncursesw5-dev, libncursesw6-dbg, lib64tinfo6, lib64ncurses6, lib64ncursesw6, lib64ncurses-dev, lib32tinfo6, lib32ncurses6, lib32ncursesw6, lib32ncurses-dev, ncurses-bin, ncurses-base, ncurses-term, ncurses-examples, ncurses-doc, libtinfo5, libncurses5, libncursesw5 
+Version: 6.1
+Maintainer: J05HYYY
+Homepage: https://invisible-island.net/ncurses/
+Priority: optional
+Description: No description availiable.

@@ -1,0 +1,3 @@
+if we try to build gcc second before gcc first we get
+	gnu/stubs.h
+error, which means gcc second requires glibc

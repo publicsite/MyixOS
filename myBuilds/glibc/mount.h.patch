@@ -1,0 +1,29 @@
+--- sysdeps/unix/sysv/linux/sys/mount.h.old	2023-02-01 03:27:45.000000000 +0000
++++ sysdeps/unix/sysv/linux/sys/mount.h	2023-04-11 21:12:52.252428404 +0100
+@@ -1,5 +1,5 @@
+ /* Header file for mounting/unmount Linux filesystems.
+-   Copyright (C) 1996-2023 Free Software Foundation, Inc.
++   Copyright (C) 1996-2022 Free Software Foundation, Inc.
+    This file is part of the GNU C Library.
+ 
+    The GNU C Library is free software; you can redistribute it and/or
+@@ -188,6 +188,9 @@
+ };
+ 
+ 
++/* fsopen flags.  */
++#define FSOPEN_CLOEXEC          0x00000001
++
+ /* fsmount flags.  */
+ #define FSMOUNT_CLOEXEC         0x00000001
+ 
+@@ -258,9 +261,6 @@
+ };
+ #endif
+ 
+-/* fsopen flags.  */
+-#define FSOPEN_CLOEXEC          0x00000001
+-
+ /* open_tree flags.  */
+ #define OPEN_TREE_CLONE    1         /* Clone the target tree and attach the clone */
+ #define OPEN_TREE_CLOEXEC  O_CLOEXEC /* Close the file on execve() */

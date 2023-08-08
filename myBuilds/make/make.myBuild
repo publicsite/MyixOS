@@ -1,5 +1,7 @@
 #!/bin/sh
-filename="make-4.2.1"
+actualname="make"
+version="4.2.1"
+filename="${actualname}-${version}"
 extension=".tar.gz"
 source="http://ftp.gnu.org/gnu/make/${filename}${extension}"
 sumUrl=""
@@ -28,7 +30,8 @@ cd "${myBuildExtractDest}/${filename}"
 patch -p1 < "${myBuildHome}/myBuilds/make/make-dfsg-glob-glibc227.patch"
 patch -p0 < "${myBuildHome}/myBuilds/make/fix-no-guile-option.patch"
 autoreconf -vfi
-with_guile=no ./configure --build=${BUILD} --host=${TARGET} --target=${TARGET} --prefix=/usr --with-guile=no
+with_guile=no CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" \
+./configure --build=${BUILD} --host=${HOST} --target=${TARGET} --prefix="${PREFIX}/${TARGET}" --with-guile=no
 make DESTDIR=${SYSROOT}
 return "$?"
 }
@@ -42,7 +45,29 @@ return "$?"
 
 do_package(){
 #here you package the files
-echo "package!"
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
 return "$?"
 }
 

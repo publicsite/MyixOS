@@ -1,0 +1,18 @@
+--- ltmain.sh.old	2019-08-20 23:32:18.453539130 +0100
++++ ltmain.sh	2019-08-20 23:32:34.742071080 +0100
+@@ -4278,15 +4278,6 @@
+ 	  # Determine the prefix the user has applied to our future dir.
+ 	  inst_prefix_dir=`$ECHO "$destdir" | $SED -e "s%$libdir\$%%"`
+ 
+-	  # Don't allow the user to place us outside of our expected
+-	  # location b/c this prevents finding dependent libraries that
+-	  # are installed to the same prefix.
+-	  # At present, this check doesn't affect windows .dll's that
+-	  # are installed into $libdir/../bin (currently, that works fine)
+-	  # but it's something to keep an eye on.
+-	  test "$inst_prefix_dir" = "$destdir" && \
+-	    func_fatal_error "error: cannot install '$file' to a directory not ending in $libdir"
+-
+ 	  if test -n "$inst_prefix_dir"; then
+ 	    # Stick the inst_prefix_dir data into the link command.
+ 	    relink_command=`$ECHO "$relink_command" | $SED "s%@inst_prefix_dir@%-inst-prefix-dir $inst_prefix_dir%"`

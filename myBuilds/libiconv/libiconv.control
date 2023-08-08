@@ -1,0 +1,7 @@
+Package: libiconv
+Provides: libiconv, libiconv-dev
+Version: 1.16
+Maintainer: J05HYYY
+Homepage: https://www.gnu.org/software/libiconv
+Priority: optional
+Description: No description availiable.

@@ -1,0 +1,7 @@
+Package: autoconf
+Provides: autoconf, autoconf-doc 
+Version: 2.69
+Maintainer: J05HYYY
+Homepage: http://www.gnu.org/software/autoconf/
+Priority: optional
+Description: No description availiable.

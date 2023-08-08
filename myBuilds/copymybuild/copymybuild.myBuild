@@ -1,0 +1,32 @@
+#!/bin/sh
+
+#functions
+
+do_install(){
+#here you put the installation commands, like make install
+mkdir "${SYSROOT}/root"
+mkdir "${SYSROOT}/root/myBuildBootstrap"
+mkdir "${SYSROOT}/root/myBuildBootstrap/logs"
+mkdir "${SYSROOT}/dev"
+mkdir "${SYSROOT}/root/myBuildBootstrap/installDir"
+mkdir "${SYSROOT}/root/myBuildBootstrap/extractdest"
+cp -a "${myBuildHome}/buildAll.sh" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/buildBase.sh" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/buildLindows.sh" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/buildToolchain.sh" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/buildSELinux.sh" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/buildWayland.sh" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/createImage.sh" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/createISO.sh" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/installToHDD.sh" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/init-overlay.sh" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/helpers" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/myBuilds" "${SYSROOT}/root/myBuildBootstrap/"
+cp -a "${myBuildHome}/sourcedest" "${SYSROOT}/root/myBuildBootstrap/sourcedest"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

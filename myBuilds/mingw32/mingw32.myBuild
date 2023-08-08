@@ -1,0 +1,62 @@
+#!/bin/sh
+filename="w32api-5.0.2-mingw32-src"
+filename1="mingwrt-5.0.2-mingw32-src"
+extension=".tar.xz"
+source="https://sourceforge.net/projects/mingw/files/MinGW/Base/w32api/w32api-5.0.2/${filename}${extension}/download"
+source1=https://sourceforge.net/projects/mingw/files/MinGW/Base/mingwrt/mingwrt-5.0.2/${filename1}${extension}/download
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	mv ${myBuildSourceDest}/download ${myBuildSourceDest}/${filename}${extension}
+
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source1}" "${myBuildSourceDest}"
+	mv ${myBuildSourceDest}/download ${myBuildSourceDest}/${filename1}${extension}
+	return "$?"
+}
+
+do_extract(){
+
+	mkdir "${myBuildExtractDest}/mingw"
+
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}/mingw"
+
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename1}${extension}" "${myBuildExtractDest}/mingw"
+	return "$?"
+}
+
+do_build(){
+
+cd "${myBuildExtractDest}/mingw"
+
+wrtdir="$(printf "%s\n" mingw*)"
+
+cd "${myBuildExtractDest}/mingw/w32api-"*
+
+DLLTOOL=${SYSROOT}/usr/bin/dlltool ac_dir="${myBuildExtractDest}/mingw/${wrtdir}" ./configure --build=$BUILD --host=$HOST --target=${TARGET}
+
+make DESTDIR=${SYSROOT}
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+
+	cd "${myBuildExtractDest}/w32api-"*
+	make DESTDIR=${SYSROOT} install
+	return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0" $@
+fi

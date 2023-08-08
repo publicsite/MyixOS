@@ -1,0 +1,31 @@
+i686-pc-cygwin
+	Test with -mno-cygwin or -nodefaultlibs and wine (like previous test on i686-w32-mingw64
+
+Trying to compile using the above resulted in Segmentation Fault
+	I symlinked crt0.o from glibc to crt1.o
+
+Trying to compile cygwin-newlib resulted in:
+Fatal error: bad .section directive: want a,l,w,x,M,S,G,T in string
+
+______________________________________________________________________________
+
+i686-w32-mingw64 with musl:
+
+trying to compile musl before compiler didn't work
+
+compiling musl after compiler resulted in:
+
+{standard input}:5: Error: unknown pseudo-op: `.hidden'
+make: *** [Makefile:148: obj/crt/Scrt1.o] Error 1
+_____________________________________________________________________________
+
+
+i686-pc-newlib
+	... if the above doesn't work, see how far we get with this
+
+i686-w32-newlib
+	... and if that still doesn't work
+
+
+Trying to compile newlib resulted in:
+Fatal error: bad .section directive: want a,l,w,x,M,S,G,T in string

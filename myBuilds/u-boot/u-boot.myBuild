@@ -1,0 +1,143 @@
+#!/bin/sh
+filename="u-boot-2022.01"
+extension=".tar.bz2"
+source="ftp://ftp.denx.de/pub/u-boot/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+checkResultFile(){
+#this function checks if the folder exists given the user input as argument 1
+
+	if [ "$(find . -type f -maxdepth 1 | cut -c 3- | while read line; do if [ "$1" = "$line" ]; then printf "yes\n"; fi; done)" = "yes" ]; then
+		return 0
+	else
+		return 101
+	fi
+}
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+#copy the x86_generic configs
+cd ${myBuildExtractDest}/${filename}
+cp -a  "${myBuildHome}/myBuilds/u-boot/x86_generic.dts" "${myBuildExtractDest}/${filename}/arch/x86/dts/"
+cp -a  "${myBuildHome}/myBuilds/u-boot/x86_generic_defconfig" "${myBuildExtractDest}/${filename}/configs/"
+
+cd ${myBuildExtractDest}/${filename}/configs
+
+cp -a efi-x86_payload32_defconfig efi-distro-x86_payload32_defconfig
+sed -i "s#CONFIG_BOOTARGS=\"root=/dev/sdb3 init=/sbin/init rootwait ro\"#CONFIG_DISTRO_DEFAULTS=y#g" efi-distro-x86_payload32_defconfig
+cp -a efi-x86_payload64_defconfig efi-distro-x86_payload64_defconfig
+sed -i "s#CONFIG_BOOTARGS=\"root=/dev/sdb3 init=/sbin/init rootwait ro\"#CONFIG_DISTRO_DEFAULTS=y#g" efi-distro-x86_payload64_defconfig
+
+while true; do
+	toprint="$(find . -maxdepth 1 -type f | sort | cut -c 3-)"
+
+	printf "\n\n==TYPE THE CONFIGURATION==\n\n%s\n" "$toprint" | less
+
+	read theUbootDefconfig
+
+	checkResultFile "$theUbootDefconfig"
+
+	if [ "$?" = "0" ]; then
+		break
+	fi
+done
+
+cd ${myBuildExtractDest}/${filename}
+
+sed -i "s#CC		= \$(CROSS_COMPILE)gcc#CC		= \$(CROSS_COMPILE)gcc --sysroot=${TEMP_SYSROOT} -L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib#g" ${myBuildExtractDest}/${filename}/Makefile
+
+#we don't want to use python
+	if [ "$(grep "CONFIG_PYLIBFDT=" configs/${theUbootDefconfig} )" = 0 ]; then
+		sed -i "s#CONFIG_PYLIBFDT=y#CONFIG_PYLIBFDT=n#g" configs/${theUbootDefconfig}
+	else
+		printf "CONFIG_PYLIBFDT=n\n" >> configs/${theUbootDefconfig}
+	fi
+	if [ "$(grep "CONFIG_OF_BOARD_SETUP=" configs/${theUbootDefconfig} )" = 0 ]; then
+		sed -i "s#CONFIG_OF_BOARD_SETUP=y#CONFIG_OF_BOARD_SETUP=n#g" configs/${theUbootDefconfig}
+	else
+		printf "CONFIG_OF_BOARD_SETUP=n\n" >> configs/${theUbootDefconfig}
+	fi
+	if [ "$(grep "CONFIG_BINMAN=" configs/${theUbootDefconfig} )" = 0 ]; then
+		sed -i "s#CONFIG_BINMAN=y#CONFIG_BINMAN=n#g" configs/${theUbootDefconfig}
+	else
+		printf "CONFIG_BINMAN=n\n" >> configs/${theUbootDefconfig}
+	fi
+	patch -p0 < "${myBuildHome}/myBuilds/u-boot/uboot_ARM_disable_OF_BOARD_SETUP.patch"
+	patch -p0 < "${myBuildHome}/myBuilds/u-boot/uboot_ARM_disable_BINMAN.patch"
+	patch -p0 < "${myBuildHome}/myBuilds/u-boot/uboot_x86_disable_BINMAN.patch"
+	sed -i "s#\$(call if_changed,binman)##g" Makefile
+
+#we want to use distro settings so we can use extlinux.conf for x86
+patch -p0 < "${myBuildHome}/myBuilds/u-boot/u-boot_x86-common_adddistro.patch"
+
+#we always want to set CROSS_COMPILE variable
+patch -p0 < "${myBuildHome}/myBuilds/u-boot/uboot_always_set_CROSS_COMPILE.patch"
+
+#if [ "$theUbootDefconfig" = "efi-x86_payload32_defconfig" ]; then
+#sed -i 's#CONFIG_BOOTARGS="root=/dev/sdb3 init=/sbin/init rootwait ro"#CONFIG_BOOTARGS="console=ttyS0,115200 root=/dev/sda2 console=tty0 rw rootwait"#g' configs/${theUbootDefconfig}
+#printf "CONFIG_USE_BOOTCOMMAND=y\n" >> configs/${theUbootDefconfig}
+#printf "CONFIG_BOOTCOMMAND=\"ide reset ; ext2load ide 0:2 0x1000000 /boot/vmlinuz-linux-deblob ; zboot 0x1000000\"\n" >> configs/${theUbootDefconfig}
+#fi
+
+make CROSS_COMPILE="${TARGET}-" "$theUbootDefconfig"
+
+make CROSS_COMPILE="${TARGET}-" all
+make CROSS_COMPILE="${TARGET}-" u-boot.img
+
+#if [ "$?" != "0" ]; then return 1; fi #check for errors
+#
+#printf "\n\n==Running configure.==\n\n"
+#
+#./configure \
+#	--build=$BUILD \
+#	--prefix=$PREFIX \
+#	--host=$HOST \
+#	--target=$TARGET \
+#	--enable-languages=c,c++ \
+#	--enable-cxx \
+#	--enable-threads \
+#	--enable-64-bit-bfd \
+#	${CONFIG_EXTRA}
+#if [ "$?" != "0" ]; then return 1; fi #check for errors
+##	    --with-sysroot=$ROOTFS \
+##	    $WITHPPL \
+
+#printf "\n\n==Running make.==\n\n"
+
+#make
+#if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+#make install
+#if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

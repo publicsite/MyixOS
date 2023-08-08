@@ -1,0 +1,45 @@
+#!/bin/sh
+filename="make"
+sumUrl=""
+
+#functions
+
+do_get(){
+	cd "${myBuildSourceDest}"
+	git clone https://git.savannah.gnu.org/git/make.git
+	return "$?"
+}
+
+do_extract(){
+	cp -a "${myBuildSourceDest}/${filename}" "${myBuildExtractDest}/${filename}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+cd "${myBuildExtractDest}/${filename}"
+autoreconf -i
+#patch -p0 < "${myBuildHome}/myBuilds/make/configure.ac_glob.patch"
+#patch -p0 < "${myBuildHome}/myBuilds/make/glob.c_glob.patch"
+CFLAGS="-g" ./configure --build=${BUILD} --host=${HOST} --target=${TARGET} --prefix=/usr --with-build-sysroot=${TEMP_SYSROOT}
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make DESTDIR=${SYSROOT} install
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

@@ -1,0 +1,38 @@
+bc	#should be fixed with busybox-w32
+	/root/myBuildBootstrap/extractdest/bc-1.07.1/bc/execute.c:296: undefined reference to `random'
+bison	#should be fixed with gettext
+	src/getargs.c:366:44: error: 'LC_MESSAGES' undeclared (first use in this function)
+
+elfutils	#should be fixed with zlib
+	configure: error: zlib not found but is required
+gawk	#should be fixed with patch
+	In file included from gawkmisc.c:36:
+	pc/gawkmisc.pc:733:5: error: conflicting types for 'execvp'
+	 int execvp(const char *file, const char *const *argv)
+	     ^~~~~~
+	In file included from /mingw/i686-w64-mingw32/include/unistd.h:11,
+	                 from awk.h:156,
+	                 from gawkmisc.c:27:
+	/mingw/i686-w64-mingw32/include/process.h:185:15: note: previous declaration of 'execvp' was here
+	   int __cdecl execvp(const char *_Filename,char *const _ArgList[]) __MINGW_ATTRIB_DEPRECATED_MSVC2005;
+	               ^~~~~~
+gettext	#should be fixed by installing libiconv
+	./libxml/encoding.h:29:10: fatal error: iconv.h: No such file or directory
+kmod
+	libkmod/libkmod.c:23:10: fatal error: fnmatch.h: No such file or directory
+	 #include <fnmatch.h>
+	          ^~~~~~~~~~~
+openssl
+	NO
+texinfo #should be fixed by setting CC=
+	sets target as i686-linux-gnu, assembler errors
+zlib #should be fixed by using the makefile as specified
+	Please use win32/Makefile.gcc instead.
+m4
+	OK
+make
+	OK
+autoconf
+	OK
+automake
+	OK

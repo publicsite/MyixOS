@@ -1,0 +1,14 @@
+--- Makefile.old	2019-12-02 18:25:19.285974000 +0000
++++ Makefile	2019-12-02 18:37:19.489806759 +0000
+@@ -239,11 +239,6 @@
+ 
+ #########################################################################
+ 
+-# set default to nothing for native builds
+-ifeq ($(HOSTARCH),$(ARCH))
+-CROSS_COMPILE ?=
+-endif
+-
+ KCONFIG_CONFIG	?= .config
+ export KCONFIG_CONFIG
+ 

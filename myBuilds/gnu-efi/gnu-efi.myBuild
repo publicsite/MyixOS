@@ -1,0 +1,128 @@
+#!/bin/sh
+actualname="gnu-efi"
+version="3.0.15"
+filename="${actualname}-${version}"
+extension=".tar.bz2"
+source="https://sourceforge.net/projects/gnu-efi/files/${filename}${extension}/download"
+sumUrl=""
+
+#functions
+
+checkResultFolder(){
+#this function checks if the folder exists given the user input as argument 1
+
+	if [ "$(find . -maxdepth 1 -type d | cut -c 3- | while read line; do if [ "$1" = "$line" ]; then printf "yes\n"; fi; done)" = "yes" ]; then
+		return 0
+	else
+		return 101
+	fi
+}
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	mv "${myBuildSourceDest}/download" "${myBuildSourceDest}/${filename}${extension}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+#autoreconf -vfi
+
+patch -p1 < "${myBuildHome}"/myBuilds/gnu-efi/gnu-efi_dont_define_memcpy_memset.patch
+
+sed -i "s#SRCDIR = \$(dir \$(MKFILE_PATH))#SRCDIR = ${PWD}#g" Makefile
+
+cd lib
+
+while true; do
+	printf "\n\n==TYPE THE ARCHITECTURE==\n\n"
+
+	find . -maxdepth 1 -type d | cut -c 3-
+
+	read theArch
+
+	checkResultFolder "$theArch"
+
+	if [ "$?" = "0" ]; then
+		break
+	fi
+done
+
+echo "$theArch" > "${myBuildExtractDest}/${filename}/theArch.config"
+
+cd "${myBuildExtractDest}/${filename}"
+
+make ARCH="${theArch}" MKFILE_PATH="${myBuildExtractDest}/${filename}/Makefile" CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" INSTALLROOT="${SYSROOT}" PREFIX="/usr"
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+
+theArch=""
+if [ ! -f "${myBuildExtractDest}/${filename}/theArch.config" ]; then
+
+	while true; do
+		printf "\n\n==TYPE THE ARCHITECTURE==\n\n"
+
+		find . -maxdepth 1 -type d | cut -c 3-
+
+		read theArch
+
+		checkResultFolder "$theArch"
+
+		if [ "$?" = "0" ]; then
+			break
+		fi
+	done
+
+	echo "$theArch" > "${myBuildExtractDest}/${filename}/theArch.config"
+else
+	theArch="$(cat "${myBuildExtractDest}/${filename}/theArch.config")"
+fi
+
+make ARCH="${theArch}" INSTALLROOT="${SYSROOT}" PREFIX="/usr" install
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

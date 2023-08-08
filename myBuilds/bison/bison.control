@@ -1,0 +1,7 @@
+Package: bison
+Provides: bison, libbison-dev 
+Version: 2:3.0.5
+Maintainer: J05HYYY
+Homepage: https://www.gnu.org/software/bison/
+Priority: optional
+Description: No description availiable.

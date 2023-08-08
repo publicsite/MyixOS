@@ -1,0 +1,7 @@
+Package: gettext
+Provides: gettext-base, gettext, gettext-el, gettext-doc, autopoint, libgettextpo0, libasprintf0v5, libgettextpo-dev, libasprintf-dev 
+Version: 0.20
+Maintainer: J05HYYY
+Homepage: https://www.gnu.org/software/gettext/
+Priority: optional
+Description: No description availiable.

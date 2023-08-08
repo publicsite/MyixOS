@@ -1,0 +1,184 @@
+#!/bin/sh
+actualname="mingw-w64"
+filename="${actualname}-v6.0.0"
+extension=".tar.bz2"
+source="https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/${filename}${extension}/download"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	mv ${myBuildSourceDest}/download ${myBuildSourceDest}/${filename}${extension}
+	return "$?"
+}
+
+do_extract(){
+	if [ -d "${myBuildExtractDest}/${filename}" ]; then
+		rm -rf "${myBuildExtractDest}/${filename}"
+	fi
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+
+cd "${myBuildExtractDest}/${filename}"
+
+#patch -p0 < "${myBuildHome}"/myBuilds/mingw64/mingw64_fix-installation-path.patch
+
+if [ "$5" = "m32" ]; then
+	prefix_flag="--prefix=/usr/${TARGET32}"
+	include_flag="-I${TEMP_SYSROOT}${PREFIX}/${TARGET32}/include"
+	library_flag="-L${TEMP_SYSROOT}${PREFIX}/${TARGET32}/lib"
+	library_b_flag="-B${TEMP_SYSROOT}${PREFIX}/${TARGET32}/lib"
+	library_pthread_flag="-L${myBuildExtractDest}/${filename}/${TARGET32}-pthreads"
+else
+	prefix_flag="--prefix=/usr/${TARGET}"
+	include_flag="-I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include"
+	library_flag="-L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib"
+	library_b_flag="-B${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib"
+	library_pthread_flag="-L${myBuildExtractDest}/${filename}/${TARGET}-pthreads"
+fi
+
+if [ "$4" = "headers" ]; then
+	#build headers
+	#here you put commands like configure and make
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-headers"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-headers"
+	CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" CFLAGS="${include_flag}" LDFLAGS="${library_flag}" ../mingw-w64-headers/configure --host=$TARGET --prefix="${PREFIX}/${TARGET}" --enable-sdk=all --enable-secure-api
+	make DESTDIR=${SYSROOT}
+elif [ "$4" = "runtime" ]; then
+
+#build runtime
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-crt"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-crt"
+	if [ "$BITS" = "64" ] && [ "$5" != "m32" ] ; then
+		CPP="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin/${TARGET}-cpp ${include_flag}" CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" CFLAGS="${include_flag}" LD="${TARGET}-ld" LDFLAGS="${library_flag}" ../mingw-w64-crt/configure --host=${TARGET} --disable-lib32 --enable-lib64 ${prefix_flag} --with-sysroot="${TEMP_SYSROOT}"
+	else
+		CPP="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin/${TARGET}-cpp ${include_flag}" CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" CFLAGS="${include_flag}" LD="${TARGET}-ld" LDFLAGS="${library_flag}" ../mingw-w64-crt/configure --host=${TARGET} --disable-lib64 --enable-lib32 ${prefix_flag} --with-sysroot="${TEMP_SYSROOT}"
+	fi
+	make DESTDIR=${SYSROOT}
+else
+#build pthread
+
+	#sed -i "s#COPY_SHARED_TRUE#COPY_SHARED_FALSE#g" "${myBuildExtractDest}/${filename}/mingw-w64-libraries/winpthreads/Makefile.in"
+	
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-pthreads"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-pthreads"
+
+	##old_makeinfo="${MAKEINFO}"
+	##unset MAKEINFO
+
+	if [ "$5" = "m32" ]; then
+		if [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i386" ] || [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i486" ] || [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i586" ] || [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i686" ]; then
+			CPP="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin/${TARGET}-cpp ${include_flag} -m32 -Wl,-mi386pe" CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT} ${library_b_flag} -m32 -Wl,-mi386pe" CFLAGS="${include_flag}" RCFLAGS="${include_flag}" LD="${TARGET}-ld -mi386pe" ../mingw-w64-libraries/winpthreads/configure --host=${TARGET32} ${prefix_flag}
+		else
+			CPP="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin/${TARGET}-cpp ${include_flag} -m32 -Wl,-m$(printf "%s" "$TARGET32" | cut -d '-' -f 1)pe" CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT} ${library_b_flag} -m32 -Wl,-m$(printf "%s" "$TARGET32" | cut -d '-' -f 1)pe" CFLAGS="${include_flag}" RCFLAGS="${include_flag}" LD="${TARGET}-ld -m$(printf "%s" "$TARGET32" | cut -d '-' -f 1)pe" ../mingw-w64-libraries/winpthreads/configure --host=${TARGET32} ${prefix_flag}
+		fi
+	else
+		CPP="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin/${TARGET}-cpp ${include_flag}" CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT} ${library_b_flag}" CFLAGS="${include_flag}" RCFLAGS="${include_flag}" LD="${TARGET}-ld" ../mingw-w64-libraries/winpthreads/configure --host=${TARGET} ${prefix_flag}
+	fi
+
+	##export MAKEINFO="${old_makeinfo}"
+
+	make DESTDIR=${SYSROOT}
+
+#build winstorecompat
+
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-winstorecompat"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-winstorecompat"
+
+	if [ "$5" = "m32" ]; then
+		if [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i386" ] || [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i486" ] || [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i586" ] || [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i686" ]; then
+			CPP="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin/${TARGET}-cpp ${include_flag} -m32 -Wl,-mi386pe" CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT} -m32 -Wl,-mi386pe" CFLAGS="${include_flag}" RCFLAGS="${include_flag}" LD="${TARGET}-ld -mi386pe" LDFLAGS="${library_b_flag} ${library_pthread_flag}" ../mingw-w64-libraries/winstorecompat/configure --host=${TARGET32} ${prefix_flag}
+		else
+			CPP="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin/${TARGET}-cpp ${include_flag} -m32 -Wl,-m$(printf "%s" "$TARGET32" | cut -d '-' -f 1)pe" CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT} -m32 -Wl,-m$(printf "%s" "$TARGET32" | cut -d '-' -f 1)pe" CFLAGS="${include_flag}" RCFLAGS="${include_flag}" LD="${TARGET}-ld -m$(printf "%s" "$TARGET32" | cut -d '-' -f 1)pe" LDFLAGS="${library_b_flag} ${library_pthread_flag}" ../mingw-w64-libraries/winstorecompat/configure --host=${TARGET32} ${prefix_flag}
+		fi
+	else
+		CPP="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin/${TARGET}-cpp $include_flag" CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" CFLAGS="${include_flag}" RCFLAGS="${include_flag}" LD="${TARGET}-ld" LDFLAGS="${library_b_flag} ${library_pthread_flag}" ../mingw-w64-libraries/winstorecompat/configure --host=${TARGET} ${prefix_flag}
+	fi
+
+	make DESTDIR=${SYSROOT}
+fi
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+
+if [ "$4" = "headers" ]; then
+	#install headers
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-headers"
+	make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+elif [ "$4" = "runtime" ]; then
+	#install runtime
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-crt"
+	make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+else
+#install pthread
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-pthreads"
+	##create shared library
+	##${TARGET}-gcc -shared -Wl,--enable-auto-import,--out-implib=libpthread.a -Wl,--export-all-symbols -o libpthread.dll
+	##cp -a libpthread.dll "${SYSROOT}${PREFIX}/${TARGET}/lib"
+	make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+
+	if [ "$5" != "m32" ]; then
+		#install winstorecompat
+		cd "${myBuildExtractDest}/${filename}/${TARGET}-winstorecompat"
+		make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+	fi
+
+if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" = "mingw32" ]; then
+	#we ln the dlls because libtool installs dlls by default in bindir instead of libdir
+	cd ${SYSROOT}${PREFIX}/${TARGET}/lib
+	$MYIXOS_LINK "../bin/lib"*".dll"
+fi
+
+fi
+}
+
+do_package(){
+#here you package the files
+if [ "$4" = "runtime" ]; then
+cp -a "${myBuildHome}"/myBuilds/gcc/${actualname}.control "${CONTDIR}/control"
+elif [ "$4" = "headers" ]; then
+cp -a "${myBuildHome}"/myBuilds/gcc/${actualname}-dev.control "${CONTDIR}/control"
+else
+cp -a "${myBuildHome}"/myBuilds/gcc/${actualname}-libraries.control "${CONTDIR}/control"
+fi
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+if [ "$4" = "runtime" ]; then
+	ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+elif [ "$4" = "headers" ]; then
+	ar r "${PKGDIR}/${actualname}-dev_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+else
+	ar r "${PKGDIR}/${actualname}-libraries_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+fi
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0" $@
+fi

@@ -1,0 +1,43 @@
+--- gcc/configure.ac.old	2018-04-18 10:46:58.000000000 +0100
++++ gcc/configure.ac	2019-06-12 00:48:37.253256289 +0100
+@@ -1301,11 +1301,11 @@
+ 	madvise stpcpy strnlen strsignal strverscmp \
+ 	strtol strtoul strtoll strtoull setenv unsetenv \
+ 	errno snprintf vsnprintf vasprintf malloc realloc calloc \
+-	free getopt clock getpagesize ffs gcc_UNLOCKED_FUNCS, , ,[
++	free getopt clock getpagesize ffs gcc_UNLOCKED_FUNCS, 1, 0,[
+ #include "ansidecl.h"
+ #include "system.h"])
+ 
+-gcc_AC_CHECK_DECLS(getrlimit setrlimit getrusage, , ,[
++gcc_AC_CHECK_DECLS(getrlimit setrlimit getrusage, 1, 0,[
+ #include "ansidecl.h"
+ #include "system.h"
+ #ifdef HAVE_SYS_RESOURCE_H
+@@ -1326,7 +1326,7 @@
+ # FREAD and FWRITE macros.  Fortunately, for GCC's single usage of ldgetname
+ # in collect2.c, <fcntl.h> isn't visible, but the configure test below needs
+ # to undef these macros to get the correct value for HAVE_DECL_LDGETNAME.
+-gcc_AC_CHECK_DECLS(ldgetname, , ,[
++gcc_AC_CHECK_DECLS(ldgetname, 1, 0,[
+ #include "ansidecl.h"
+ #include "system.h"
+ #ifdef HAVE_LDFCN_H
+@@ -1336,7 +1336,7 @@
+ #endif
+ ])
+ 
+-gcc_AC_CHECK_DECLS(times, , ,[
++gcc_AC_CHECK_DECLS(times, 1, 0,[
+ #include "ansidecl.h"
+ #include "system.h"
+ #ifdef HAVE_SYS_TIMES_H
+@@ -1344,7 +1344,7 @@
+ #endif
+ ])
+ 
+-gcc_AC_CHECK_DECLS(sigaltstack, , ,[
++gcc_AC_CHECK_DECLS(sigaltstack, 1, 0,[
+ #include "ansidecl.h"
+ #include "system.h"
+ #include <signal.h>

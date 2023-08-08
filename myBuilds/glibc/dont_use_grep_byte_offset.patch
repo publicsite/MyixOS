@@ -1,0 +1,11 @@
+--- sysdeps/unix/make-syscalls.sh.old	2023-02-01 03:27:45.000000000 +0000
++++ sysdeps/unix/make-syscalls.sh	2023-05-13 03:31:21.959043627 +0100
+@@ -189,7 +189,7 @@
+   ulong_arg_1=0
+   ulong_arg_2=0
+   ulong_count=0
+-  for U in $(echo $args | sed -e "s/.*:/:/" | grep -ob U)
++  for U in $(echo $args | sed -e "s/.*:/:/" | perl -CSDLA -ne 'BEGIN { $pattern = shift }; printf "%d:U\n", $-[0] while $_ =~ m/$pattern/g;' U)
+   do
+     ulong_count=$(expr $ulong_count + 1)
+     ulong_arg=$(echo $U | sed -e "s/:U//")

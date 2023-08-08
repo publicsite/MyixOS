@@ -1,0 +1,7 @@
+Package: binutils
+Provides: binutils-for-host, binutils-for-build, binutils, libbinutils, libbinutils-dbg, binutils-dev, binutils-multiarch, binutils-multiarch-dbg, binutils-multiarch-dev, binutils-hppa64-linux-gnu, binutils-hppa64-linux-gnu-dbg, binutils-doc, binutils-source, binutils-common, binutils-x86-64-linux-gnu, binutils-x86-64-linux-gnu-dbg, binutils-i686-linux-gnu, binutils-i686-linux-gnu-dbg, binutils-aarch64-linux-gnu, binutils-aarch64-linux-gnu-dbg, binutils-arm-linux-gnueabihf, binutils-arm-linux-gnueabihf-dbg, binutils-arm-linux-gnueabi, binutils-arm-linux-gnueabi-dbg, binutils-mips-linux-gnu, binutils-mips-linux-gnu-dbg, binutils-mipsel-linux-gnu, binutils-mipsel-linux-gnu-dbg, binutils-mips64el-linux-gnuabi64, binutils-mips64el-linux-gnuabi64-dbg, binutils-powerpc64le-linux-gnu, binutils-powerpc64le-linux-gnu-dbg, binutils-s390x-linux-gnu, binutils-s390x-linux-gnu-dbg, binutils-alpha-linux-gnu, binutils-alpha-linux-gnu-dbg, binutils-hppa-linux-gnu, binutils-hppa-linux-gnu-dbg
+Version: 2.33.1
+Maintainer: J05HYYY
+Homepage: https://www.gnu.org/software/binutils/
+Priority: optional
+Description: No description availiable.

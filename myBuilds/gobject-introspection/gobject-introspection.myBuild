@@ -1,0 +1,47 @@
+#!/bin/sh
+filename="gobject-introspection-1.61.2"
+extension=".tar.xz"
+source="http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.61/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+meson build/ --prefix="${PREFIX}/${TARGET}" --libdir="lib" --cross-file ${myBuildExtractDest}/meson/mesoncross.txt
+
+make
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+DESTDIR="${SYSROOT}" ninja -C build/ install
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

@@ -1,0 +1,31 @@
+--- libopkg/Makefile.am.old	2020-02-24 02:47:30.000000000 +0000
++++ libopkg/Makefile.am	2020-02-24 06:26:51.382569703 +0000
+@@ -13,7 +13,8 @@
+ 		   opkg_download.c opkg_download.h \
+ 		   opkg_install.c opkg_install.h \
+ 		   opkg_upgrade.c opkg_upgrade.h \
+-		   opkg_remove.c opkg_remove.h
++		   opkg_remove.c opkg_remove.h \
++		   pkg_alternatives.c pkg_alternatives.h
+ opkg_db_sources = opkg_conf.c opkg_conf.h \
+ 		  opkg_utils.c opkg_utils.h pkg.c pkg.h hash_table.h \
+ 		  pkg_depends.c pkg_depends.h pkg_extract.c pkg_extract.h \
+@@ -28,16 +29,11 @@
+ opkg_util_sources = file_util.c file_util.h opkg_message.h opkg_message.c \
+ 		    parse_util.c parse_util.h \
+ 		    sprintf_alloc.c sprintf_alloc.h \
+-		    xregex.c xregex.h xsystem.c xsystem.h
++		    xregex.c xregex.h xsystem.c xsystem.h \
++		    sha256.c sha256.h
+ if HAVE_PATHFINDER
+ opkg_util_sources += opkg_pathfinder.c opkg_pathfinder.h
+ endif
+-if HAVE_MD5
+-opkg_util_sources += md5.c md5.h
+-endif
+-if HAVE_SHA256
+-opkg_util_sources += sha256.c sha256.h
+-endif
+ 
+ noinst_LIBRARIES = libopkg.a
+ libopkg_a_SOURCES = \

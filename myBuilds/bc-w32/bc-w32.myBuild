@@ -1,0 +1,95 @@
+#!/bin/sh
+actualname="bc"
+version="1.07.1"
+filename="${actualname}-${version}"
+extension=".tar.gz"
+source="https://ftp.gnu.org/gnu/bc/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+autoreconf -vfi
+
+#this makes bc use the host bc for creating libmath, rather than a target binary which won't run on the build system
+sed -i "s#./fbc#bc#g" bc/Makefile.am
+
+#this changes from an ed file which is incompatible with busybox, to a sed file, which is
+cat > bc/fix-libmath_h << "EOF"
+#! /bin/sh
+sed -e '1   s/^/{"/' \
+    -e     's/$/",/' \
+    -e '2,$ s/^/"/'  \
+    -e   '$ d'       \
+    -i libmath.h
+
+sed -e '$ s/$/0}/' \
+    -i libmath.h
+EOF
+
+CFLAGS="-Drandom=rand" \
+CPPFLAGS="--sysroot=${TEMP_SYSROOT} -I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include -D_WIN32" \
+LDFLAGS="-B${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib -L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib" \
+    ./configure \
+    --prefix="${PREFIX}/${TARGET}" \
+    --build=${BUILD} \
+    --host=${HOST} \
+    --target=${TARGET}
+
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}-w32/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

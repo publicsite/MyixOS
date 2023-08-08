@@ -1,0 +1,56 @@
+#!/bin/sh
+#we will replace with upstream once intltool has been replaced with gettext
+filename="shared-mime-info-valentindavid-gettext"
+extension=".tar.gz"
+source="https://gitlab.freedesktop.org/valentindavid/shared-mime-info/-/archive/valentindavid/gettext/${filename}${extension}"
+#filename="shared-mime-info-1.12"
+#extension=".tar.xz"
+#source="https://gitlab.freedesktop.org/xdg/shared-mime-info/uploads/80c7f1afbcad2769f38aeb9ba6317a51/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+autoreconf -vif
+
+./configure \
+    --prefix="${PREFIX}/${TARGET}" \
+    --build=${BUILD} \
+    --host=${HOST} \
+    --target=${TARGET}
+
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make DESTDIR=${SYSROOT} install
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

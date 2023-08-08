@@ -1,0 +1,105 @@
+#!/bin/sh
+filename="mingw-w64-v6.0.0"
+extension=".tar.bz2"
+source="https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/${filename}${extension}/download"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	mv ${myBuildSourceDest}/download ${myBuildSourceDest}/${filename}${extension}
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+
+cd "${myBuildExtractDest}/${filename}"
+
+#patch -p0 < "${myBuildHome}"/myBuilds/mingw64/mingw64_fix-installation-path.patch
+
+if [ "$4" = "headers" ]; then
+	#build headers
+	#here you put commands like configure and make
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-headers"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-headers"
+	CPP="/usr/bin/cpp" CC="${TARGET}-gcc -B${SYSROOT}${PREFIX}/${TARGET}/usr/lib" ../mingw-w64-headers/configure --build=$BUILD --host=$TARGET --prefix="${PREFIX}/${TARGET}/usr" --enable-sdk=all --enable-secure-api
+	make DESTDIR=${SYSROOT}
+elif [ "$4" = "runtime" ]; then
+
+#build runtime
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-crt"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-crt"
+	if [ "$BITS" = "64" ]; then
+#CFLAGS="-D__x86_64" 
+	CPP="/usr/bin/cpp" CC="${TARGET}-gcc -B${SYSROOT}${PREFIX}/${TARGET}/usr/lib" CFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/usr/include" ../mingw-w64-crt/configure --build=$BUILD --host=$TARGET --disable-lib32 --enable-lib64 --prefix="${PREFIX}/${TARGET}"
+	else
+#CFLAGS="-D_X86_" 
+	CPP="/usr/bin/cpp" CC="${TARGET}-gcc -B${SYSROOT}${PREFIX}/${TARGET}/usr/lib" CFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/usr/include" ../mingw-w64-crt/configure --build=$BUILD --host=$TARGET --disable-lib64 --enable-lib32 --prefix="${PREFIX}/${TARGET}"
+	fi
+	make DESTDIR=${SYSROOT}
+else
+#build pthread
+
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-pthreads"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-pthreads"
+	CPP="/usr/bin/cpp" CC="${TARGET}-gcc -B${SYSROOT}${PREFIX}/${TARGET}/usr/lib" CFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/usr/include" RCFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/usr/include" LDFLAGS="-L${SYSROOT}${PREFIX}/${TARGET}/lib" ../mingw-w64-libraries/winpthreads/configure --build=$BUILD --host=$TARGET --prefix="${PREFIX}/${TARGET}"
+
+	make DESTDIR=${SYSROOT}
+
+#build winstorecompat
+
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-winstorecompat"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-winstorecompat"
+	CPP="/usr/bin/cpp" CC="${TARGET}-gcc -B${SYSROOT}${PREFIX}/${TARGET}/usr/lib" CFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/usr/include" RCFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/usr/include" LDFLAGS="-L${SYSROOT}${PREFIX}/${TARGET}/lib" ../mingw-w64-libraries/winstorecompat/configure --build=$BUILD --host=$TARGET --prefix="${PREFIX}/${TARGET}"
+
+	make DESTDIR=${SYSROOT}
+fi
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+
+if [ "$4" = "headers" ]; then
+	#install headers
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-headers"
+	make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+elif [ "$4" = "runtime" ]; then
+	#install runtime
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-crt"
+	make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+else
+#install pthread
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-pthreads"
+	make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+
+#install winstorecompat
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-winstorecompat"
+	make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+
+if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" = "mingw32" ]; then
+	#we ln the dlls because libtool installs dlls by default in bindir instead of libdir
+	cd ${SYSROOT}${PREFIX}/${TARGET}/usr/lib
+	ln -s "../bin/lib"*".dll" .
+fi
+
+fi
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0" $@
+fi

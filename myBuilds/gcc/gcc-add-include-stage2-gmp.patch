@@ -1,0 +1,11 @@
+--- Makefile.in.old	2017-11-28 10:35:37.000000000 +0000
++++ Makefile.in	2019-09-30 20:41:41.670331902 +0100
+@@ -12514,7 +12514,7 @@
+ 	$(HOST_EXPORTS) \
+ 	$(POSTSTAGE1_HOST_EXPORTS) \
+ 	CFLAGS="$(STAGE2_CFLAGS)"; export CFLAGS; \
+-	CXXFLAGS="$(STAGE2_CXXFLAGS)"; export CXXFLAGS; \
++	CXXFLAGS="$(STAGE2_CXXFLAGS) -I$(build_tooldir)/usr/${TARGET}/usr/include"; export CXXFLAGS; \
+ 	LIBCFLAGS="$(STAGE2_CFLAGS)"; export LIBCFLAGS;  \
+ 	echo Configuring stage 2 in $(HOST_SUBDIR)/gmp; \
+ 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/gmp; \

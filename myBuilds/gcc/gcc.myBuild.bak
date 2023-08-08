@@ -1,0 +1,667 @@
+#!/bin/sh
+#gcc 7.3.0 doesn't compile ncurses.so.5
+#gcc 7.3.0 doesn't compile with ncurses 6.1 with or without a ncurses.so.5 symlink
+actualname="gcc"
+version="11.3.0"
+filename="${actualname}-${version}" #was 8.3.0
+#filename="gcc-9.1.0"
+extension=".tar.gz"
+source="ftp://ftp.gnu.org/gnu/gcc/${filename}/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+		"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+		return "$?"
+}
+
+do_extract(){
+		rm -rf "${myBuildExtractDest}/${filename}"
+		mkdir "${myBuildExtractDest}/${filename}"
+		"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}/${filename}"
+		return "$?"
+}
+
+do_build(){
+
+	if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" = "mingw32" ]; then
+		mkdir -p "${SYSROOT}${PREFIX}/include"
+	fi
+
+		#here you put commands like configure and make
+
+		#"$myBuildHome/extras/playGeorge.sh" "$myBuildHome" &
+
+	if [ "$4" = "first" ]; then
+
+		while true; do
+		printf "Do you want to fetch packages from the internet? [y/n]"
+			read internet
+			if [ "${internet}" = "y" ]; then
+				break
+			elif [ "${internet}" = "n" ]; then
+				break
+			fi
+		done
+	fi
+
+	if [ "${internet}" = "y" ]; then
+		cd "${myBuildExtractDest}/${filename}/${filename}"
+
+		rm -rf "${myBuildSourceDest}"/gcc-prerequisites/*.tar*
+
+		contrib/download_prerequisites
+	else
+
+		cd "${myBuildSourceDest}"/gcc-prerequisites
+
+		mpc=mpc-*.tar*
+		mpfr=mpfr-*.tar*
+		gmp=gmp-*.tar*
+		isl=isl-*.tar*
+
+		"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}"/gcc-prerequisites/${mpc} "${myBuildExtractDest}/${filename}"
+		"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}"/gcc-prerequisites/${mpfr} "${myBuildExtractDest}/${filename}"
+		"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}"/gcc-prerequisites/${gmp} "${myBuildExtractDest}/${filename}"
+		"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}"/gcc-prerequisites/${isl} "${myBuildExtractDest}/${filename}"
+
+		mpcExpanded=$(ls ${mpc})
+		mpfrExpanded=$(ls ${mpfr})
+		gmpExpanded=$(ls ${gmp})
+		islExpanded=$(ls ${isl})
+
+		##printf "${myBuildExtractDest}/${filename}/mpc\n"
+		##printf "${myBuildExtractDest}/${filename}/${mpcExpanded%.tar*}"
+
+		if [ "$(printf "%s\n" "${BUILD}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+			ln -s "${myBuildExtractDest}/${filename}/${mpcExpanded%.tar*}" "${myBuildExtractDest}/${filename}/${filename}/mpc"
+			ln -s "${myBuildExtractDest}/${filename}/${mpfrExpanded%.tar*}" "${myBuildExtractDest}/${filename}/${filename}/mpfr"
+			ln -s "${myBuildExtractDest}/${filename}/${gmpExpanded%.tar*}" "${myBuildExtractDest}/${filename}/${filename}/gmp"
+			ln -s "${myBuildExtractDest}/${filename}/${islExpanded%.tar*}" "${myBuildExtractDest}/${filename}/${filename}/isl"
+		else
+			mv "${myBuildExtractDest}/${filename}/${mpcExpanded%.tar*}" "${myBuildExtractDest}/${filename}/${filename}/mpc"
+			mv "${myBuildExtractDest}/${filename}/${mpfrExpanded%.tar*}" "${myBuildExtractDest}/${filename}/${filename}/mpfr"
+			mv "${myBuildExtractDest}/${filename}/${gmpExpanded%.tar*}" "${myBuildExtractDest}/${filename}/${filename}/gmp"
+			mv "${myBuildExtractDest}/${filename}/${islExpanded%.tar*}" "${myBuildExtractDest}/${filename}/${filename}/isl"
+		fi
+	fi
+
+	#we make this dir so that gcc doesn't error when looking for crti.o
+	#https://stackoverflow.com/questions/91576/crti-o-file-missing
+	mkdir "${SYSROOT}/usr/lib"
+
+	mkdir "${SYSROOT}/dev"
+
+	#this fixes
+	#/dev/null:1:5: error: expected '=', ',', ';', 'asm' or '__attribute__' before ':' token
+	#make[3]: *** [Makefile:1976: s-selftest-c] Error 1
+	cd "${myBuildExtractDest}/${filename}/${filename}/gcc"
+	patch -p0 < "${myBuildHome}"/myBuilds/gcc/gcc-fself-test-fix-nfanku.patch
+
+	cd "${myBuildExtractDest}/${filename}/${filename}"
+
+	#this lets xg++ find features.h in gmp and libcpp stage 2
+	#it should really be getting this value from with-native-system-header-dir
+	#... but the world's not perfect.
+	#patch -p0 < "${myBuildHome}"/myBuilds/gcc/gcc-add-include-stage2-gmp.patch
+	#patch -p0 < "${myBuildHome}"/myBuilds/gcc/gcc-add-include-stage2-libcpp.patch
+
+	#https://github.com/spack/spack/issues/15351
+	patch -p1 < "${myBuildHome}"/myBuilds/gcc/glibc-2.31-libsanitizer-1.patch
+	patch -p1 < "${myBuildHome}"/myBuilds/gcc/glibc-2.31-libsanitizer-2.patch
+
+	patch -p1 < "${myBuildHome}"/myBuilds/gcc/Link-libgcc-using-LDFLAGS-not-just-SHLIB_LDFLAGS.patch
+
+	if [ "${internet}" = "y" ]; then
+		mkdir "${myBuildSourceDest}/gcc-prerequisites"
+		mv mpc-*.tar.gz "${myBuildSourceDest}/gcc-prerequisites"
+		mv mpfr-*.tar.bz2 "${myBuildSourceDest}/gcc-prerequisites"
+		mv gmp-*.tar.bz2 "${myBuildSourceDest}/gcc-prerequisites"
+		mv isl-*.tar.bz2 "${myBuildSourceDest}/gcc-prerequisites"
+	fi
+
+
+	mkdir "${myBuildExtractDest}/${filename}/gcc-build"
+
+	cd "${myBuildExtractDest}/${filename}/gcc-build"
+
+
+	#if [ "$TARGET32" != "$TARGET" ]; then
+	#	#mingw does not like multilib
+	#	if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+	#		multilib_flags="--enable-multilib --enable-multiarch --with-multilib-list=m64,m32"
+	#	else
+	#		multilib_flags="--disable-multilib"
+	#	fi
+	#else
+		multilib_flags="--disable-multilib"
+	#fi
+
+	if [ "$4" = "first" ]; then
+
+		#mkdir "${SYSROOT}/include"
+
+		#allow us to add flags to gcc
+		#WOOif [ "$TARGET" != "$TARGET32" ]; then
+		#	sed -i "s#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET' -B\$(build_tooldir)/bin/ -B\$(build_tooldir)/lib/ -isystem \$(build_tooldir)/include -isystem \$(build_tooldir)/sys-include'#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET\' -B\$(build_tooldir)${PREFIX}/${TARGET}/bin/ -B\$(build_tooldir)${PREFIX}/${TARGET}/lib64/ -L\$(build_tooldir)${PREFIX}/${TARGET}/lib64/ -B\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -L\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -isystem \$(build_tooldir)${PREFIX}/${TARGET}/include -isystem \$(build_tooldir)${PREFIX}/${TARGET}/sys-include\'#g" "${myBuildExtractDest}/${filename}/${filename}/configure"
+		#else
+			sed -i "s#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET' -B\$(build_tooldir)/bin/ -B\$(build_tooldir)/lib/ -isystem \$(build_tooldir)/include -isystem \$(build_tooldir)/sys-include'#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET\' -B\$(build_tooldir)${PREFIX}/${TARGET}/bin/ -B\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -L\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -isystem \$(build_tooldir)${PREFIX}/${TARGET}/include -isystem \$(build_tooldir)${PREFIX}/${TARGET}/sys-include\'#g" "${myBuildExtractDest}/${filename}/${filename}/configure"
+		#fi
+
+		if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+			if [ "${BITS}" = "64" ]; then
+#first, vanilla, 64 bit
+				build_tooldir="${TEMP_SYSROOT}" \
+				"${myBuildExtractDest}"/${filename}/${filename}/configure \
+					--prefix="${PREFIX}/${TARGET}" \
+					--exec_prefix="$PREFIX" \
+					--build=$BUILD \
+					--host=$HOST \
+					--target=$TARGET \
+					--enable-languages=c \
+					--with-gxx-include-dir="${PREFIX}/${TARGET}/include/c++/${version}" \
+					--with-build-sysroot="${TEMP_SYSROOT}" \
+					--disable-shared \
+					--disable-threads \
+					--disable-libcc1 \
+					--disable-libquadmath \
+					--disable-libssp \
+					--disable-libatomic \
+					--disable-zlib \
+					--disable-biarch \
+					--disable-libgomp \
+					--disable-libstdc++-v3 \
+					--disable-libmpx \
+					--disable-libvtv \
+					--without-headers \
+					$multilib_flags \
+					--with-libdir="${PREFIX}/${TARGET}/lib" \
+					--sbindir="${PREFIX}/${TARGET}/sbin" \
+					--bindir="${PREFIX}/${TARGET}/bin" \
+					--libexecdir="${PREFIX}/${TARGET}/lib" \
+					--libdir="${PREFIX}/${TARGET}/lib"
+			else
+#first, vanilla, !64 bit
+				build_tooldir="${TEMP_SYSROOT}" \
+				"${myBuildExtractDest}"/${filename}/${filename}/configure \
+					--prefix="${PREFIX}/${TARGET}" \
+					--exec_prefix="$PREFIX" \
+					--build=$BUILD \
+					--host=$HOST \
+					--target=$TARGET \
+					--enable-languages=c \
+					--with-gxx-include-dir="${PREFIX}/${TARGET}/include/c++/${version}" \
+					--with-build-sysroot="${TEMP_SYSROOT}" \
+					--disable-shared \
+					--disable-threads \
+					--disable-libcc1 \
+					--disable-libquadmath \
+					--disable-libssp \
+					--disable-libatomic \
+					--disable-zlib \
+					--disable-biarch \
+					--disable-libgomp \
+					--disable-libstdc++-v3 \
+					--disable-libmpx \
+					--disable-libvtv \
+					--without-headers \
+					$multilib_flags \
+					--with-libdir="${PREFIX}/${TARGET}/lib" \
+					--sbindir="${PREFIX}/${TARGET}/sbin" \
+					--bindir="${PREFIX}/${TARGET}/bin" \
+					--libexecdir="${PREFIX}/${TARGET}/lib" \
+					--libdir="${PREFIX}/${TARGET}/lib"
+			fi
+		else
+
+			mkdir -p "${SYSROOT}/mingw/include"
+
+			if [ "${BITS}" = "64" ]; then
+#first, mingw32, 64 bit
+
+
+
+				build_tooldir="${TEMP_SYSROOT}" \
+				"${myBuildExtractDest}"/${filename}/${filename}/configure \
+					--prefix="${PREFIX}" \
+					--build=$BUILD \
+					--host=$HOST \
+					--target=$TARGET \
+					--enable-languages=c,c++ \
+					--with-gxx-include-dir="${PREFIX}/${TARGET}/include/c++/${version}" \
+					--disable-libcc1 \
+					--disable-libquadmath \
+					--disable-libssp \
+					--disable-libatomic \
+					--disable-zlib \
+					--disable-biarch \
+					--disable-libgomp \
+					--disable-libstdcxx \
+					--disable-libvtv \
+					$multilib_flags \
+					--with-build-sysroot="${TEMP_SYSROOT}" \
+					--with-libdir=${PREFIX}/${TARGET}/lib \
+					--disable-shared \
+					--disable-threads \
+					--bindir="${PREFIX}/${TARGET}/bin" \
+					--sbindir="${PREFIX}/${TARGET}/sbin" \
+					--libexecdir="${PREFIX}/${TARGET}/lib" \
+					--libdir="${PREFIX}/${TARGET}/lib" \
+					--datarootdir="${PREFIX}/${TARGET}/share" \
+					--sysconfdir="${PREFIX}/${TARGET}/etc" \
+					--sharedstatedir="${PREFIX}/${TARGET}/com" \
+					--localstatedir="${PREFIX}/${TARGET}/var" \
+					--includedir="${PREFIX}/${TARGET}/include" \
+					--oldincludedir="${PREFIX}/${TARGET}/include" \
+					--mandir="${PREFIX}/${TARGET}/share/man"
+			else
+
+#first, mingw32, !64 bit
+
+				build_tooldir="${TEMP_SYSROOT}" \
+				"${myBuildExtractDest}"/${filename}/${filename}/configure \
+					--prefix="${PREFIX}" \
+					--build=$BUILD \
+					--host=$HOST \
+					--target=$TARGET \
+					--enable-languages=c,c++ \
+					--with-gxx-include-dir="${PREFIX}/${TARGET}/include/c++/${version}" \
+					--disable-libcc1 \
+					--disable-libquadmath \
+					--disable-libssp \
+					--disable-libatomic \
+					--disable-zlib \
+					--disable-biarch \
+					--disable-libgomp \
+					--disable-libstdcxx \
+					--disable-libvtv \
+					$multilib_flags \
+					--with-build-sysroot="${TEMP_SYSROOT}" \
+					--with-libdir=${PREFIX}/${TARGET}/lib \
+					--disable-shared \
+					--disable-threads \
+					--bindir="${PREFIX}/${TARGET}/bin" \
+					--sbindir="${PREFIX}/${TARGET}/sbin" \
+					--libexecdir="${PREFIX}/${TARGET}/lib" \
+					--libdir="${PREFIX}/${TARGET}/lib" \
+					--datarootdir="${PREFIX}/${TARGET}/share" \
+					--sysconfdir="${PREFIX}/${TARGET}/etc" \
+					--sharedstatedir="${PREFIX}/${TARGET}/com" \
+					--localstatedir="${PREFIX}/${TARGET}/var" \
+					--includedir="${PREFIX}/${TARGET}/include" \
+					--oldincludedir="${PREFIX}/${TARGET}/include" \
+					--mandir="${PREFIX}/${TARGET}/share/man"
+
+			fi
+			make all-gcc all-target-libgcc \
+				build_tooldir="${TEMP_SYSROOT}"
+		fi
+
+		make all-gcc all-target-libgcc \
+			build_tooldir="${TEMP_SYSROOT}"
+
+		if [ -d "${SYSROOT}/mingw/include" ]; then
+			rmdir "${SYSROOT}/mingw/include"
+		fi
+	else
+		#(usually) if $4 = second
+
+		#patch gcc to avoid errors like 'ambiguating new declaration of ...'
+		#cd "${myBuildExtractDest}/${filename}/${filename}"
+		#patch -p0 < "${myBuildHome}"/myBuilds/gcc/fix-gcc_AC_CHECK_DECLS-calls.patch
+
+		#patch -p0 < "${myBuildHome}"/myBuilds/gcc/gcc-fix-redefines-1of3.patch
+		#patch -p0 < "${myBuildHome}"/myBuilds/gcc/gcc-fix-redefines-2of3.patch
+		#patch -p0 < "${myBuildHome}"/myBuilds/gcc/gcc-fix-redefines-3of3.patch
+
+		cd "${myBuildExtractDest}/${filename}/gcc-build"
+
+		#fixes for https://stackoverflow.com/questions/35392310/error-building-gcc-4-8-3-from-source-libstdc-so-6-version-cxxabi-1-3-8-not
+		sed -i "s#MSGFMT = msgfmt#MSGFMT = LD_LIBRARY_PATH= msgfmt#g" "${myBuildExtractDest}/${filename}/${filename}/libstdc++-v3/po/Makefile.in"
+		sed -i "s#MSGFMT = msgfmt#MSGFMT = LD_LIBRARY_PATH= msgfmt#g" "${myBuildExtractDest}/${filename}/${filename}/libstdc++-v3/po/Makefile.am"
+
+		if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+			#also search these directories in FLAGS_FOR_TARGET
+			#allow us to add flags to gcc
+
+			#if [ "$TARGET" != "$TARGET32" ]; then
+			#	sed -i "s#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET' -B\$(build_tooldir)/bin/ -B\$(build_tooldir)/lib/ -isystem \$(build_tooldir)/include -isystem \$(build_tooldir)/sys-include'#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET\' -B\$(build_tooldir)${PREFIX}/${TARGET}/bin/ -B\$(build_tooldir)${PREFIX}/${TARGET}/lib64/ -L\$(build_tooldir)${PREFIX}/${TARGET}/lib64/ -B\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -L\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -isystem \$(build_tooldir)${PREFIX}/${TARGET}/include -isystem \$(build_tooldir)${PREFIX}/${TARGET}/sys-include\'#g" "${myBuildExtractDest}/${filename}/${filename}/configure"
+			#else
+				sed -i "s#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET' -B\$(build_tooldir)/bin/ -B\$(build_tooldir)/lib/ -isystem \$(build_tooldir)/include -isystem \$(build_tooldir)/sys-include'#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET\' -B\$(build_tooldir)${PREFIX}/${TARGET}/bin/ -B\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -L\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -isystem \$(build_tooldir)${PREFIX}/${TARGET}/include -isystem \$(build_tooldir)${PREFIX}/${TARGET}/sys-include\'#g" "${myBuildExtractDest}/${filename}/${filename}/configure"
+			#fi
+
+			if [ "$TEMP_SYSROOT" != "$SYSROOT" ]; then
+				#cassertinc="$(find ${TEMP_SYSROOT}${PREFIX}/${TARGET}/include/c++/ -maxdepth 1 -mindepth 1 | head -n 1)"
+				#bitsinc="${cassertinc}/${TARGET}"
+				thecc="${TARGET}-gcc --sysroot="${TEMP_SYSROOT}" -isystem="${TEMP_SYSROOT}${PREFIX}/${TARGET}/include" # -I${cassertinc} -I${bitsinc}
+				thecxx="${TARGET}-g++ --sysroot="${TEMP_SYSROOT}" -isystem="${TEMP_SYSROOT}${PREFIX}/${TARGET}/include"
+			else
+				thecc="${TARGET}-gcc"
+				thecxx="${TARGET}-g++"
+			fi
+
+			if [ "${BITS}" = "64" ]; then
+
+				#unfortunately we have to omit --with-native-system-header-dir when build=target=host
+				#because it breaks gcc, gmp stage2 whilst looking for features.h
+				if [ "$HOST" = "$BUILD" ] && [ "$BUILD" = "$TARGET" ]; then
+					CC="$thecc" CXX="$thecxx" \
+					build_tooldir="${TEMP_SYSROOT}" \
+					"${myBuildExtractDest}"/${filename}/${filename}/configure \
+						--prefix="${PREFIX}" \
+						--build=$BUILD \
+						--host=$HOST \
+						--target=$TARGET \
+						--enable-languages=c,c++ \
+						--enable-cxx \
+						--with-gxx-include-dir="${PREFIX}/${TARGET}/include/c++/${version}" \
+						--enable-threads \
+						--enable-linker-build-id \
+						--disable-libmpx \
+						$multilib_flags \
+						--bindir="${PREFIX}/${TARGET}/bin" \
+						--sbindir="${PREFIX}/${TARGET}/sbin" \
+						--libexecdir="${PREFIX}/${TARGET}/lib" \
+						--libdir="${PREFIX}/${TARGET}/lib" \
+						--datarootdir="${PREFIX}/${TARGET}/share" \
+						--sysconfdir="${PREFIX}/${TARGET}/etc" \
+						--sharedstatedir="${PREFIX}/${TARGET}/com" \
+						--localstatedir="${PREFIX}/${TARGET}/var" \
+						--includedir="${PREFIX}/${TARGET}/include" \
+						--oldincludedir="${PREFIX}/${TARGET}/include" \
+						--mandir="${PREFIX}/${TARGET}/share/man" \
+						--with-build-sysroot="${TEMP_SYSROOT}"
+
+				else
+					CC="$thecc" CXX="$thecxx" \
+					LDFLAGS_FOR_TARGET="-L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib" \
+					build_tooldir="${TEMP_SYSROOT}" \
+					"${myBuildExtractDest}"/${filename}/${filename}/configure \
+						--prefix="${PREFIX}" \
+						--build=$BUILD \
+						--host=$HOST \
+						--target=$TARGET \
+						--enable-languages=c,c++ \
+						--enable-cxx \
+						--with-gxx-include-dir="${PREFIX}/${TARGET}/include/c++/${version}" \
+						--enable-threads \
+						--enable-linker-build-id \
+						--disable-libmpx \
+						$multilib_flags \
+						--with-native-system-header-dir="${PREFIX}/${TARGET}/include" \
+						--bindir="${PREFIX}/${TARGET}/bin" \
+						--sbindir="${PREFIX}/${TARGET}/sbin" \
+						--libexecdir="${PREFIX}/${TARGET}/lib" \
+						--libdir="${PREFIX}/${TARGET}/lib" \
+						--datarootdir="${PREFIX}/${TARGET}/share" \
+						--sysconfdir="${PREFIX}/${TARGET}/etc" \
+						--sharedstatedir="${PREFIX}/${TARGET}/com" \
+						--localstatedir="${PREFIX}/${TARGET}/var" \
+						--includedir="${PREFIX}/${TARGET}/include" \
+						--oldincludedir="${PREFIX}/${TARGET}/include" \
+						--mandir="${PREFIX}/${TARGET}/share/man" \
+						--with-build-sysroot="${TEMP_SYSROOT}"
+				fi
+
+			else
+
+				#unfortunately we have to omit --with-native-system-header-dir when build=target=host
+				#because it breaks gcc, gmp stage2 whilst looking for features.h
+				if [ "$HOST" = "$BUILD" ] && [ "$BUILD" = "$TARGET" ]; then
+					CC="$thecc" CXX="$thecxx" \
+					build_tooldir="${TEMP_SYSROOT}" \
+					"${myBuildExtractDest}"/${filename}/${filename}/configure \
+						--prefix="${PREFIX}" \
+						--build=$BUILD \
+						--host=$HOST \
+						--target=$TARGET \
+						--enable-languages=c,c++ \
+						--enable-cxx \
+						--with-gxx-include-dir="${PREFIX}/${TARGET}/include/c++/${version}" \
+						--enable-threads \
+						--enable-linker-build-id \
+						--disable-libmpx \
+						$multilib_flags \
+						--bindir="${PREFIX}/${TARGET}/bin" \
+						--sbindir="${PREFIX}/${TARGET}/sbin" \
+						--libexecdir="${PREFIX}/${TARGET}/lib" \
+						--libdir="${PREFIX}/${TARGET}/lib" \
+						--datarootdir="${PREFIX}/${TARGET}/share" \
+						--sysconfdir="${PREFIX}/${TARGET}/etc" \
+						--sharedstatedir="${PREFIX}/${TARGET}/com" \
+						--localstatedir="${PREFIX}/${TARGET}/var" \
+						--includedir="${PREFIX}/${TARGET}/include" \
+						--oldincludedir="${PREFIX}/${TARGET}/include" \
+						--mandir="${PREFIX}/${TARGET}/share/man" \
+						--with-build-sysroot="${TEMP_SYSROOT}"
+
+				else
+					CC="$thecc" CXX="$thecxx" \
+					LDFLAGS_FOR_TARGET="-L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib" \
+					build_tooldir="${TEMP_SYSROOT}" \
+					"${myBuildExtractDest}"/${filename}/${filename}/configure \
+						--prefix="${PREFIX}" \
+						--build=$BUILD \
+						--host=$HOST \
+						--target=$TARGET \
+						--enable-languages=c,c++ \
+						--enable-cxx \
+						--with-gxx-include-dir="${PREFIX}/${TARGET}/include/c++/${version}" \
+						--enable-threads \
+						--enable-linker-build-id \
+						--disable-libmpx \
+						$multilib_flags \
+						--with-native-system-header-dir="${PREFIX}/${TARGET}/include" \
+						--bindir="${PREFIX}/${TARGET}/bin" \
+						--sbindir="${PREFIX}/${TARGET}/sbin" \
+						--libexecdir="${PREFIX}/${TARGET}/lib" \
+						--libdir="${PREFIX}/${TARGET}/lib" \
+						--datarootdir="${PREFIX}/${TARGET}/share" \
+						--sysconfdir="${PREFIX}/${TARGET}/etc" \
+						--sharedstatedir="${PREFIX}/${TARGET}/com" \
+						--localstatedir="${PREFIX}/${TARGET}/var" \
+						--includedir="${PREFIX}/${TARGET}/include" \
+						--oldincludedir="${PREFIX}/${TARGET}/include" \
+						--mandir="${PREFIX}/${TARGET}/share/man" \
+						--with-build-sysroot="${TEMP_SYSROOT}"
+
+				fi
+			fi
+
+			#make $J all build_tooldir="${TEMP_SYSROOT}" AS_FOR_TARGET="${TARGET}-as" LD_FOR_TARGET="${TARGET}-ld" BOOT_CFLAGS="-Wl,-rpath,/usr/${TARGET}/usr/lib -L/usr/${TARGET}/usr/lib -B/usr/${TARGET}/usr/lib"
+			#make all $J build_tooldir="${TEMP_SYSROOT}" AS_FOR_TARGET="${TARGET}-as" LD_FOR_TARGET="${TARGET}-ld"
+
+	#if [ "$SYSROOT" = "$TEMP_SYSROOT" ]; then
+
+		make all $J build_tooldir="${TEMP_SYSROOT}" LDFLAGS_FOR_TARGET="-L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib" AS_FOR_TARGET="${TARGET}-as" LD_FOR_TARGET="${TARGET}-ld" \
+		BOOT_CFLAGS="--sysroot=${TEMP_SYSROOT}"
+
+	#else
+	#	make all $J build_tooldir="${TEMP_SYSROOT}" LDFLAGS_FOR_TARGET="-L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib" AS_FOR_TARGET="${TARGET}-as" LD_FOR_TARGET="${TARGET}-ld" \
+	#	BOOT_CFLAGS="--sysroot=${TEMP_SYSROOT}"
+	#fi
+####BOOT_CFLAGS="-I${TEMP_SYSROOT}${PREFIX}/include -Wl,-rpath,${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib -L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib -B${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib"
+
+#SHLIB_LDFLAGS="-Wl,--sysroot=${TEMP_SYSROOT}"
+#LDFLAGS_FOR_BUILD="-Wl,--sysroot=${TEMP_SYSROOT}" LDFLAGS_FOR_TARGET="-Wl,--sysroot=${TEMP_SYSROOT}" 
+		else
+			mkdir -p "${SYSROOT}/mingw/include"
+
+			#if [ "$TARGET" != "$TARGET32" ]; then
+			#	sed -i "s#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET' -B\$(build_tooldir)/bin/ -B\$(build_tooldir)/lib/ -isystem \$(build_tooldir)/include -isystem \$(build_tooldir)/sys-include'#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET\' -B\$(build_tooldir)${PREFIX}/${TARGET}/bin/ -B\$(build_tooldir)${PREFIX}/${TARGET}/lib64/ -L\$(build_tooldir)${PREFIX}/${TARGET}/lib64/ -B\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -L\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -isystem \$(build_tooldir)${PREFIX}/${TARGET}/include -isystem \$(build_tooldir)${PREFIX}/${TARGET}/sys-include\'#g" "${myBuildExtractDest}/${filename}/${filename}/configure"
+			#else
+				sed -i "s#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET' -B\$(build_tooldir)/bin/ -B\$(build_tooldir)/lib/ -isystem \$(build_tooldir)/include -isystem \$(build_tooldir)/sys-include'#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET\' -B\$(build_tooldir)${PREFIX}/${TARGET}/bin/ -B\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -L\$(build_tooldir)${PREFIX}/${TARGET}/lib/ -isystem \$(build_tooldir)${PREFIX}/${TARGET}/include -isystem \$(build_tooldir)${PREFIX}/${TARGET}/sys-include\'#g" "${myBuildExtractDest}/${filename}/${filename}/configure"
+			#fi
+				sed -i "s#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET' -L\${prefix}/\${target}/lib -L\${prefix}/mingw/lib -isystem \${prefix}/\${target}/include -isystem \${prefix}/mingw/include'#FLAGS_FOR_TARGET=\$FLAGS_FOR_TARGET\' -L${PREFIX}/${TARGET}/lib -isystem ${PREFIX}/${TARGET}/include\'#g" "${myBuildExtractDest}/${filename}/${filename}/configure"
+
+			if [ "${BITS}" = "64" ]; then
+
+				#sed to fix flags to target to point to sysroot in the right locations.
+				#allow us to add flags to gcc
+
+				build_tooldir="${TEMP_SYSROOT}" \
+				"${myBuildExtractDest}"/${filename}/${filename}/configure \
+					--prefix="${PREFIX}" \
+					--build=$BUILD \
+					--host=$HOST \
+					--target=$TARGET \
+					--enable-languages=c,c++ \
+					--enable-cxx \
+					--with-gxx-include-dir="${PREFIX}/${TARGET}/include/c++/${version}" \
+					--enable-threads=posix \
+					--enable-linker-build-id \
+					--disable-zlib \
+					--disable-libgomp \
+					--disable-libstdcxx-pch \
+					--disable-libssp \
+					$multilib_flags \
+					--with-native-system-header-dir="${PREFIX}/${TARGET}/include" \
+					--bindir="${PREFIX}/${TARGET}/bin" \
+					--sbindir="${PREFIX}/${TARGET}/sbin" \
+					--libexecdir="${PREFIX}/${TARGET}/lib" \
+					--libdir="${PREFIX}/${TARGET}/lib" \
+					--datarootdir="${PREFIX}/${TARGET}/share" \
+					--sysconfdir="${PREFIX}/${TARGET}/etc" \
+					--sharedstatedir="${PREFIX}/${TARGET}/com" \
+					--localstatedir="${PREFIX}/${TARGET}/var" \
+					--includedir="${PREFIX}/${TARGET}/include" \
+					--oldincludedir="${PREFIX}/${TARGET}/include" \
+					--mandir="${PREFIX}/${TARGET}/share/man" \
+					--with-build-sysroot="${TEMP_SYSROOT}"
+
+			else
+#second, mingw32, !64 bit, build!=host!=target
+
+				##old_cpp="$CPP"
+				##unset CPP
+
+				build_tooldir="${TEMP_SYSROOT}" \
+				"${myBuildExtractDest}"/${filename}/${filename}/configure \
+					--prefix="${PREFIX}" \
+					--build=$BUILD \
+					--host=$HOST \
+					--target=$TARGET \
+					--enable-languages=c,c++ \
+					--enable-cxx \
+					--with-gxx-include-dir="${PREFIX}/${TARGET}/include/c++/${version}" \
+					--enable-threads=posix \
+					--enable-linker-build-id \
+					--disable-zlib \
+					--disable-libgomp \
+					--disable-libstdcxx-pch \
+					--disable-libssp \
+					$multilib_flags \
+					--with-native-system-header-dir="${PREFIX}/${TARGET}/include" \
+					--bindir="${PREFIX}/${TARGET}/bin" \
+					--sbindir="${PREFIX}/${TARGET}/sbin" \
+					--libexecdir="${PREFIX}/${TARGET}/lib" \
+					--libdir="${PREFIX}/${TARGET}/lib" \
+					--datarootdir="${PREFIX}/${TARGET}/share" \
+					--sysconfdir="${PREFIX}/${TARGET}/etc" \
+					--sharedstatedir="${PREFIX}/${TARGET}/com" \
+					--localstatedir="${PREFIX}/${TARGET}/var" \
+					--includedir="${PREFIX}/${TARGET}/include" \
+					--oldincludedir="${PREFIX}/${TARGET}/include" \
+					--mandir="${PREFIX}/${TARGET}/share/man" \
+					--with-build-sysroot="${TEMP_SYSROOT}"
+
+#					--with-boot-libs="-lpthread" \
+#					--with-boot-ldflags="-L${TEMP_SYSROOT}${PREFIX}${TARGET}/lib"
+
+#					--enable-version-specific-runtime-libs \
+				#else
+#second, mingw32, !64 bit, build=host=target
+				#fi
+			fi
+
+
+			make all $J \
+				build_tooldir="${TEMP_SYSROOT}" \
+				AS_FOR_TARGET="${TARGET}-as" \
+				LD_FOR_TARGET="${TARGET}-ld"
+
+			#build_tooldir="${TEMP_SYSROOT}" AS_FOR_TARGET="${TARGET}-as" LD_FOR_TARGET="${TARGET}-ld"
+#BOOT_CFLAGS="-nostdinc -nostdinc++ -I${TEMP_SYSROOT}${PREFIX}/include -Wl,-rpath,${TEMP_SYSROOT}${PREFIX}/lib -L${TEMP_SYSROOT}${PREFIX}/lib -B${TEMP_SYSROOT}${PREFIX}/lib" #-Wl,-rpath,${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib -L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib -B${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib
+
+			##export CPP="$old_cpp"
+
+			rmdir "${SYSROOT}/mingw/include"	
+		fi
+
+	fi
+
+	return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/gcc/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+do_install(){
+cd "${myBuildExtractDest}/${filename}/gcc-build"
+if [ "$4" = "first" ]; then
+	make install-gcc install-target-libgcc DESTDIR=${SYSROOT} $J
+
+	#only symlink libgcc_eh for a cross compiler running on same host
+	if [ -f "$(${TEMP_SYSROOT}/bin/${TARGET}-gcc -print-libgcc-file-name)" ]; then
+		cd "${TEMP_SYSROOT}/usr/${TARGET}/lib"
+		if [ ! -f "libgcc.a" ]; then
+			$MYIXOS_LINK "$(${TEMP_SYSROOT}/bin/${TARGET}-gcc -print-libgcc-file-name)" libgcc.a
+		fi
+		cd "${myBuildExtractDest}/${filename}/gcc-build"
+	fi
+
+	if [ -f "$(${TEMP_SYSROOT}/bin/${TARGET}-gcc -print-libgcc-file-name)" ]; then
+		cd "${TEMP_SYSROOT}/usr/${TARGET}/lib"
+		if [ ! -f "libgcc_eh.a" ]; then
+			$MYIXOS_LINK "$(${TEMP_SYSROOT}/bin/${TARGET}-gcc -print-libgcc-file-name)" libgcc_eh.a
+		fi
+		cd "${myBuildExtractDest}/${filename}/gcc-build"
+	fi
+
+else
+	make install DESTDIR=${SYSROOT} $J
+fi
+
+if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" = "mingw32" ]; then
+	#we ln the dlls because libtool installs dlls by default in bindir instead of libdir
+	cd ${SYSROOT}/mingw/${TARGET}/usr/lib
+	$MYIXOS_LINK "../bin/lib"*".dll" .
+fi
+
+#cd "$SYSROOT/usr/bin"
+
+#$MYIXOS_LINK ${TARGET}-gcc cc
+
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0" "$@"
+fi

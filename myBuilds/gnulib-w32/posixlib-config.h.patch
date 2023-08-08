@@ -1,0 +1,12 @@
+--- config.h.old	2019-01-29 18:09:45.428763000 +0000
++++ config.h	2019-01-29 18:32:33.949515757 +0000
+@@ -3130,9 +3130,6 @@
+ /* Define to 1 if open() fails to recognize a trailing slash. */
+ /* #undef OPEN_TRAILING_SLASH_BUG */
+ 
+-/* Name of package */
+-#define PACKAGE "dummy"
+-
+ /* Define to the address where bug reports for this package should be sent. */
+ #define PACKAGE_BUGREPORT ""
+ 

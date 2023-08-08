@@ -1,0 +1,54 @@
+#!/bin/sh
+version="1.2.1"
+filename="re2c-${version}"
+extension=".tar.gz"
+source="https://github.com/skvadrik/re2c/archive/${version}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	mv "${myBuildSourceDest}/${version}${extension}" "${myBuildSourceDest}/${filename}${extension}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+./autogen.sh
+
+./configure \
+    --prefix=${PREFIX} \
+    --build=${BUILD} \
+    --host=${BUILD} \
+    --target=${TARGET}
+
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make DESTDIR=${SYSROOT} install
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

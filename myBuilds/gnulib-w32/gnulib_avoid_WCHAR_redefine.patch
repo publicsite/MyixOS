@@ -1,0 +1,12 @@
+--- lib/dfa.c.old	2020-01-03 19:47:37.694250704 +0000
++++ lib/dfa.c	2020-01-03 19:48:07.503160019 +0000
+@@ -264,9 +264,6 @@
+ 
+   RPAREN,                       /* RPAREN never appears in the parse tree.  */
+ 
+-  WCHAR,                        /* Only returned by lex.  wctok contains
+-                                   the wide character representation.  */
+-
+   ANYCHAR,                      /* ANYCHAR is a terminal symbol that matches
+                                    a valid multibyte (or single byte) character.
+                                    It is used only if MB_CUR_MAX > 1.  */

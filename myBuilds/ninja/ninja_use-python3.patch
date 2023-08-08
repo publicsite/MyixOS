@@ -1,0 +1,20 @@
+--- build.ninja.old	2019-08-17 02:57:25.743416000 +0100
++++ build.ninja	2019-08-21 14:08:36.422368236 +0100
+@@ -12,7 +12,7 @@
+ ar = ar
+ cflags = -g -Wall -Wextra -Wno-deprecated -Wno-missing-field-initializers $
+     -Wno-unused-parameter -fno-rtti -fno-exceptions -fvisibility=hidden $
+-    -pipe '-DNINJA_PYTHON="python"' -O2 -DNDEBUG -fdiagnostics-color $
++    -pipe '-DNINJA_PYTHON="python3"' -O2 -DNDEBUG -fdiagnostics-color $
+     -DUSE_PPOLL -DNINJA_HAVE_BROWSE -I.
+ ldflags = -L$builddir
+ 
+@@ -173,7 +173,7 @@
+ 
+ # Regenerate build files if build script changes.
+ rule configure
+-  command = ${configure_env}python $root/configure.py $configure_args
++  command = ${configure_env}python3 $root/configure.py $configure_args
+   generator = 1
+ build build.ninja: configure | $root/configure.py $root/misc/ninja_syntax.py
+ 

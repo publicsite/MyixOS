@@ -1,0 +1,96 @@
+The following tests show wine fakedlls cannot be used as a drop in replacement for mingw when creating a toolchain.
+I should try something similar with a cygwin toolchain.
+We could also try with -nostdinc and -nodefaultlibs, and add an include; -I/usr/include/wine/wine/windows
+This probably won't work for mingw toolchain, as the errors were crt based, but may work for a cygwin toolchain
+
+$ i686-w64-mingw32-gcc -nodefaultlibs helloworld.c -lmingw32 -lmingwex -lgcc -lmsvcrt -lkernel32
+
+(compiles ok)
+
+$ i686-w64-mingw32-gcc -nodefaultlibs helloworld.c -lmingw32 -lmingwex -lgcc -lmsvcrt -L/usr/lib/i386-linux-gnu/wine/fakedlls -lkernel32
+
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/crt2.o: in function `pre_c_init':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:142: undefined reference to `__set_app_type'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:146: undefined reference to `__p__fmode'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:144: undefined reference to `__set_app_type'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/crt2.o: in function `pre_cpp_init':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:173: undefined reference to `__getmainargs'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/crt2.o: in function `_tmainCRTStartup':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:259: undefined reference to `_imp__Sleep@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:286: undefined reference to `_imp__SetUnhandledExceptionFilter@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:290: undefined reference to `_set_invalid_parameter_handler'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:299: undefined reference to `__p__acmdln'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/crt2.o: in function `duplicate_ppstrings':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:423: undefined reference to `malloc'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:428: undefined reference to `strlen'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:429: undefined reference to `malloc'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:430: undefined reference to `memcpy'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/crt2.o: in function `_tmainCRTStartup':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:337: undefined reference to `_imp____initenv'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:345: undefined reference to `_cexit'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:263: undefined reference to `_amsg_exit'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:275: undefined reference to `_initterm'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:246: undefined reference to `_imp__GetStartupInfoA@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:268: undefined reference to `_initterm'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:342: undefined reference to `exit'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/crt2.o: in function `atexit':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crtexe.c:439: undefined reference to `_onexit'
+/usr/bin/i686-w64-mingw32-ld: /tmp/ccYVtMTa.o:helloworld.c:(.text+0x16): undefined reference to `puts'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-charmax.o): in function `my_lconv_init':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/charmax.c:19: undefined reference to `_imp____lconv_init'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-gs_support.o): in function `_security_init_cookie':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/gs_support.c:62: undefined reference to `_imp__GetSystemTimeAsFileTime@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/gs_support.c:70: undefined reference to `_imp__GetCurrentProcessId@0'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/gs_support.c:71: undefined reference to `_imp__GetCurrentThreadId@0'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/gs_support.c:72: undefined reference to `_imp__GetTickCount@0'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/gs_support.c:74: undefined reference to `_imp__QueryPerformanceCounter@4'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-gs_support.o): in function `_report_gsfailure':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/gs_support.c:149: undefined reference to `_imp__SetUnhandledExceptionFilter@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/gs_support.c:150: undefined reference to `_imp__UnhandledExceptionFilter@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/gs_support.c:151: undefined reference to `_imp__GetCurrentProcess@0'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/gs_support.c:151: undefined reference to `_imp__TerminateProcess@8'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/gs_support.c:152: undefined reference to `abort'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-merr.o): in function `matherr':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/merr.c:72: undefined reference to `__acrt_iob_func'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/merr.c:72: undefined reference to `fprintf'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-merr.o): in function `_mingw_setusermatherr':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/merr.c:33: undefined reference to `__setusermatherr'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-pseudo-reloc.o): in function `mark_section_writable':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/pseudo-reloc.c:204: undefined reference to `_imp__VirtualQuery@12'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/pseudo-reloc.c:216: undefined reference to `_imp__VirtualProtect@16'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/pseudo-reloc.c:220: undefined reference to `_imp__GetLastError@0'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-pseudo-reloc.o): in function `restore_modified_sections':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/pseudo-reloc.c:236: undefined reference to `_imp__VirtualProtect@16'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-pseudo-reloc.o): in function `_report_error':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/pseudo-reloc.c:149: undefined reference to `__acrt_iob_func'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/pseudo-reloc.c:149: undefined reference to `fwrite'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/pseudo-reloc.c:150: undefined reference to `__acrt_iob_func'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/pseudo-reloc.c:150: undefined reference to `vfprintf'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/pseudo-reloc.c:156: undefined reference to `abort'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-crt_handler.o): in function `gnu_exception_handler@4':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crt_handler.c:212: undefined reference to `signal'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crt_handler.c:258: undefined reference to `signal'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crt_handler.c:258: undefined reference to `signal'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crt_handler.c:261: undefined reference to `signal'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crt_handler.c:231: undefined reference to `signal'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-crt_handler.o):./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/crt_handler.c:261: more undefined references to `signal' follow
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-tlsthrd.o): in function `_mingwthr_run_key_dtors':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:105: undefined reference to `_imp__EnterCriticalSection@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:107: undefined reference to `_imp__TlsGetValue@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:107: undefined reference to `_imp__GetLastError@0'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:118: undefined reference to `_imp__LeaveCriticalSection@4'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-tlsthrd.o): in function `__w64_mingwthr_add_key_dtor':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:48: undefined reference to `calloc'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:55: undefined reference to `_imp__EnterCriticalSection@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:60: undefined reference to `_imp__LeaveCriticalSection@4'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-tlsthrd.o): in function `__w64_mingwthr_remove_key_dtor':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:73: undefined reference to `_imp__EnterCriticalSection@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:94: undefined reference to `_imp__LeaveCriticalSection@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:87: undefined reference to `free'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-tlsthrd.o): in function `_mingw_TLScallback':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:141: undefined reference to `free'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:146: undefined reference to `_imp__DeleteCriticalSection@4'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/tlsthrd.c:130: undefined reference to `_imp__InitializeCriticalSection@4'
+/usr/bin/i686-w64-mingw32-ld: /usr/lib/gcc/i686-w64-mingw32/8.3-win32/../../../../i686-w64-mingw32/lib/../lib/libmingw32.a(lib32_libmingw32_a-pesect.o): in function `FindPESectionByName':
+./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/pesect.c:75: undefined reference to `strlen'
+/usr/bin/i686-w64-mingw32-ld: ./build/i686-w64-mingw32-i686-w64-mingw32-crt/./mingw-w64-crt/crt/pesect.c:88: undefined reference to `strncmp'

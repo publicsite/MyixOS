@@ -1,0 +1,99 @@
+#!/bin/sh
+actualname="console-setup"
+actualname2="unifont"
+version="a580d47bb1f1034045b7527574ae8c3be495a9e6"
+version2="15.0.01"
+filename="${actualname}-${version}"
+filename2="${actualname2}-${version2}"
+extension=".tar.gz"
+extension2=".bdf.gz"
+source="https://salsa.debian.org/installer-team/console-setup/-/archive/a580d47bb1f1034045b7527574ae8c3be495a9e6/${filename}${extension}"
+source2="https://ftp.gnu.org/gnu/${actualname2}/${filename2}/${filename2}${extension2}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source2}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename2}${extension2}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+cd "${myBuildExtractDest}/${filename}"
+
+cp -a "${myBuildSourceDest}/unifont-"*".bdf" Fonts/bdf/unifont.bdf
+
+sed -i "s#[a-zA-Z0-9]-VGA28x16 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-VGA32x16 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-VGA8 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-VGA14 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-VGA16 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-Fixed13 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-Fixed14 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-Fixed15 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-Fixed16 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-Fixed18 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-Goha12 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-Goha14 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-Goha16 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-Goha18 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-GohaClassic12 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-GohaClassic14 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-GohaClassic16 ##g" Fonts/soft.Makefile
+sed -i "s#[a-zA-Z0-9]-GohaClassic18 ##g" Fonts/soft.Makefile
+CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" LD="${TARGET}-ld" AS="${TARGET}-as" AR="${TARGET}-ar" RANLIB="${TARGET}-ranlib" CPP="${TARGET}-cpp" make prefix=${SYSROOT}${PREFIX} build-linux
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" LD="${TARGET}-ld" AS="${TARGET}-as" AR="${TARGET}-ar" RANLIB="${TARGET}-ranlib" CPP="${TARGET}-cpp" xkbdir="" make prefix=${SYSROOT}${PREFIX} install-linux
+
+mkdir "${SYSROOT}/etc/init.d"
+cp -a "${myBuildHome}/myBuilds/console-setup/keyboard-setup.sh" "${SYSROOT}/etc/init.d/"
+chmod +x "${SYSROOT}/etc/init.d/keyboard-setup.sh"
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

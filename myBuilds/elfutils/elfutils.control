@@ -1,0 +1,7 @@
+Package: elfutils
+Provides: elfutils, libelf1, libelf-dev, libdw-dev, libdw1, libasm1, libasm-dev 
+Version: 0.177
+Maintainer: J05HYYY
+Homepage: https://sourceware.org/elfutils/
+Priority: optional
+Description: No description availiable.

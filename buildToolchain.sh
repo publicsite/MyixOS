@@ -1,205 +1,304 @@
 #!/bin/sh
-#myBuild options
 
-#environment variables
-export myBuildHome="$1"
-export myBuildHelpersDir="${myBuildHome}/helpers"
-export myBuildSourceDest="${myBuildHome}/sourcedest"
-export myBuildExtractDest="${myBuildHome}/extractdest"
+checkResultPrebuilt(){
+#this function checks if the folder exists given the user input as argument 1
 
-mkdir "$myBuildSourceDest"
-mkdir "$myBuildExtractDest"
+	if [ "$(find . -maxdepth 1 -type d -name "arch*" | cut -c 8- | while read line; do if [ "$1" = "$line" ]; then printf "yes\n"; fi; done)" = "yes" ]; then
+		return 0
+	else
+		return 101
+	fi
+}
 
-export J="-j12"
+if [ "$2" = "buildCross" ]; then
+	if [ "$(printf "%s\n" "${BUILD}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+		export PATH="${TEMP_SYSROOT}/build_tools/bin:${TEMP_SYSROOT}/build_tools/usr/bin:${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin:${TEMP_SYSROOT}${PREFIX}/${TARGET}/usr/bin:${TEMP_SYSROOT}${PREFIX}/${HOST}/bin:${TEMP_SYSROOT}${PREFIX}/${HOST}/usr/bin"
+	else
+		export PATH="${TEMP_SYSROOT}/build_tools/bin;${TEMP_SYSROOT}/build_tools/usr/bin;${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin;${TEMP_SYSROOT}${PREFIX}/${TARGET}/usr/bin;${TEMP_SYSROOT}${PREFIX}/${HOST}/bin;${TEMP_SYSROOT}${PREFIX}/${HOST}/usr/bin;${OLD_PATH}"
+	fi
+fi
 
-#this would be for binutils search paths, but i am playing my luck to see if i can go without it
-#ld --verbose | grep SEARCH_DIR | tr -s ' ;' \\012
-export BITS='32'
+cd "${myBuildHome}"
 
-#architecture='x86' #the architecture of the target (used for building a kernel)
-#export architecture
+if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 2 | cut -c 1-5)" = "linux" ]; then
 
-export TARGET="i686-linux-gnu" #the toolchain we're creating
-export ARCH='x86' #the architecture of the toolchain we're compiling from
-export BUILD="i686-linux-gnu" #the toolchain we're compiling from, can be found by reading the "Target: *" field from "gcc -v", or "gcc -v 2>&1 | grep Target: | sed 's/.*: //" for systems with grep and sed
+	if [ "$(printf "%s\n" "${BUILD}" | cut -d "-" -f 3 | cut -c 1-7)" = "mingw32" ]; then
 
-export SYSROOT="${myBuildHome}/installDir" #the root dir
+		cd "${myBuildHome}/headers-prebuilt/include"
 
-mkdir "$SYSROOT"
+		while true; do
+			printf "\n\n==TYPE THE ARCHITECTURE==\n\n"
 
-export PREFIX='/usr' #the location to install to
+			find . -maxdepth 1 -type d -name "arch*" | cut -c 8-
 
-###	get, extract, build and install the programs	###
+			printf "generic\n"
 
-#FOR glibc
-"${myBuildHome}"/myBuilds/linux-deblob/linux-deblob.myBuild get #2>&1 | tee logs/linux-deblob.get.log
-"${myBuildHome}"/myBuilds/linux-deblob/linux-deblob.myBuild extract 2>&1 | tee logs/linux-deblob.extract.log
-"${myBuildHome}"/myBuilds/linux-deblob/linux-deblob.myBuild build 2>&1 | tee logs/linux-deblob.build.log
-"${myBuildHome}"/myBuilds/linux-deblob/linux-deblob.myBuild install 2>&1 | tee logs/linux-deblob.install.log
+			read theArch
 
-#NOT needed
-#"${myBuildHome}"/myBuilds/ncurses.myBuild get #2>&1 | tee logs/ncurses.get.log
-#"${myBuildHome}"/myBuilds/ncurses.myBuild extract #2>&1 | tee logs/ncurses.extract.log
-#"${myBuildHome}"/myBuilds/ncurses.myBuild build #2>&1 | tee logs/ncurses.build.log
-#"${myBuildHome}"/myBuilds/ncurses.myBuild install #2>&1 | tee logs/ncurses.install.log
+			checkResultPrebuilt "$theArch"
 
-##needed IF NOT using busybox (untested)
-##"${myBuildHome}"/myBuilds/bash.myBuild get #2>&1 | tee logs/bash.get.log
-##"${myBuildHome}"/myBuilds/bash.myBuild extract #2>&1 | tee logs/bash.extract.log
-##"${myBuildHome}"/myBuilds/bash.myBuild build #2>&1 | tee logs/bash.build.log
-##"${myBuildHome}"/myBuilds/bash.myBuild install #2>&1 | tee logs/bash.install.log
+			if [ "$?" = "0" ]; then
+				break
+			fi
+		done
 
-#FOR gcc
-"${myBuildHome}"/myBuilds/glibc.myBuild get #2>&1 | tee logs/glibc.get.log
-"${myBuildHome}"/myBuilds/glibc.myBuild extract 2>&1 | tee logs/glibc.extract.log
-"${myBuildHome}"/myBuilds/glibc.myBuild build 2>&1 | tee logs/glibc.build.log
-"${myBuildHome}"/myBuilds/glibc.myBuild install 2>&1 | tee logs/glibc.install.log
+		find . -maxdepth 1 -type d | while read line; do
 
-#FOR gcc
-"${myBuildHome}"/myBuilds/binutils/binutils.myBuild get #2>&1 | tee logs/binutils.get.log
-"${myBuildHome}"/myBuilds/binutils/binutils.myBuild extract 2>&1 | tee logs/binutils.extract.log
-"${myBuildHome}"/myBuilds/binutils/binutils.myBuild build 2>&1 | tee logs/binutils.build.log
-"${myBuildHome}"/myBuilds/binutils/binutils.myBuild install 2>&1 | tee logs/binutils.install.log
+			if [ "$line" != "." ]; then
+				if [ "$(printf "%s" "$line" | cut -c 1-7)" = "./arch-" ]; then
+					if [ "$(printf "%s" "$line" | cut -c 8-)" = "$theArch" ]; then
+						cp -a "${line}/"* "${SYSROOT}${PREFIX}/${TARGET}/include"
+					fi
+				else
+					cp -a "$line" "${SYSROOT}${PREFIX}/${TARGET}/include"
+				fi
+			fi
+		done
 
+		cd "${myBuildHome}"
+	else
+
+		#we want the linux headers for the host if we are building a cross compiler
+		if [ "$2" = "buildCross" ]; then
+			export TARGET="${HOST}"
+		fi
+
+		#install linux headers for HOST
+		"${myBuildHome}"/myBuilds/linux/linux.myBuild extract headers 2>&1 | tee "${myBuildHome}"/logs/linux."$2".extract.log
+
+		if [ "$2" = "buildCross" ]; then
+printf \
+"\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n \
+NOTE: It is important to type the BUILD architecture for the kernel here !!!\n \
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"
+		else
+printf \
+"\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n \
+NOTE: It is important to type the TARGET architecture for the kernel here !!!\n \
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"
+		fi
+
+
+		"${myBuildHome}"/myBuilds/linux/linux.myBuild build headers 2>&1 | tee "${myBuildHome}"/logs/linux.headers."$2".build.log
+		"${myBuildHome}"/myBuilds/linux/linux.myBuild install headers 2>&1 | tee "${myBuildHome}"/logs/linux.headers."$2".install.log
+
+		#because it's cross, we set target back to OLD_HOST
+		if [ "$2" = "buildCross" ]; then
+			export TARGET="${OLD_HOST}"
+		#else
+		#	"${myBuildHome}"/myBuilds/linux/linux.myBuild package headers 2>&1 | tee "${myBuildHome}"/logs/linux.headers."$2".package.log
+		fi
+	fi
+fi
+
+
+#build binutils
+"${myBuildHome}"/myBuilds/binutils/binutils.myBuild extract "$2" 2>&1 | tee "${myBuildHome}"/logs/binutils."${TARGET}"."$2".extract.log
+"${myBuildHome}"/myBuilds/binutils/binutils.myBuild build "$2" 2>&1 | tee "${myBuildHome}"/logs/binutils."${TARGET}"."$2".build.log
+"${myBuildHome}"/myBuilds/binutils/binutils.myBuild install "$2" 2>&1 | tee "${myBuildHome}"/logs/binutils."${TARGET}"."$2".install.log
+
+#if [ "$2" != "buildCross" ]; then
+#"${myBuildHome}"/myBuilds/binutils/binutils.myBuild package "$2" 2>&1 | tee "${myBuildHome}"/logs/binutils."${TARGET}"."$2".package.log
+#fi
+
+#install the libc headers
+
+if [ "$2" != "buildCross" ] && [ "${with_selinux}" = "true" ]; then
+
+	#we build selinux, needed for GUI
+	"${myBuildHome}/buildSELinux.sh" "$PWD" 2>&1
+
+
+	if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+		#build glibc with selinux
+		"${myBuildHome}"/myBuilds/glibc/glibc.myBuild extract 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET}".headers."$2".extract.log
+
+		"${myBuildHome}"/myBuilds/glibc/glibc.myBuild build headers 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET}".headers."$2".build.log
+		"${myBuildHome}"/myBuilds/glibc/glibc.myBuild install headers 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET}".headers."$2".install.log
+
+		"${myBuildHome}"/myBuilds/glibc/glibc.myBuild build library 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET}".library."$2".build.log
+		"${myBuildHome}"/myBuilds/glibc/glibc.myBuild install library 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET}".library."$2".install.log
+		#"${myBuildHome}"/myBuilds/glibc/glibc.myBuild package library 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET}".library."$2".package.log
+	fi
+fi
+
+if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" = "mingw32" ]; then
+	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild extract headers 2>&1 | tee logs/mingw64."${TARGET}".headers."$2".extract.log
+	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild build headers 2>&1 | tee logs/mingw64."${TARGET}".headers."$2".build.log
+	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild install headers 2>&1 | tee logs/mingw64."${TARGET}".headers."$2".install.log
+	#if [ "$2" != "buildCross" ]; then
+	#	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild package headers 2>&1 | tee logs/mingw64."${TARGET}".headers."$2".install.log
+	#fi
+elif [ "$2" = "buildCross" ]; then
+	old_with_selinux="${with_selinux}"
+	export with_selinux="false"
+
+	"${myBuildHome}"/myBuilds/glibc/glibc.myBuild extract 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET}".headers."$2".extract.log
+
+	"${myBuildHome}"/myBuilds/glibc/glibc.myBuild build headers 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET}".headers."$2".build.log
+	"${myBuildHome}"/myBuilds/glibc/glibc.myBuild install headers 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET}".headers."$2".install.log
+
+	export with_selinux="${old_with_selinux}"
+
+fi
+
+if [ "$2" = "buildCross" ]; then
+	#we build initial compiler, used for bootstrapping
+	#FOR linux
+	"${myBuildHome}"/myBuilds/gcc/gcc.myBuild extract first "$2" 2>&1 | tee "${myBuildHome}"/logs/gcc-first."${TARGET}"."$2".extract.log
+	"${myBuildHome}"/myBuilds/gcc/gcc.myBuild build first "$2" 2>&1 | tee "${myBuildHome}"/logs/gcc-first."${TARGET}"."$2".build.log
+	"${myBuildHome}"/myBuilds/gcc/gcc.myBuild install first "$2" 2>&1 | tee "${myBuildHome}"/logs/gcc-first."${TARGET}"."$2".install.log
+
+	if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+
+		#remove old configuration for HOST
+		if [ -f "${myBuildExtractDest}/linux/theArch.config" ]; then
+			rm "${myBuildExtractDest}/linux/theArch.config"
+		fi
+		if [ -f "${myBuildExtractDest}/linux/thedefconfig.config" ]; then
+			rm "${myBuildExtractDest}/linux/thedefconfig.config"
+		fi
+
+		if [ "$(printf "%s\n" "${BUILD}" | cut -d "-" -f 3 | cut -c 1-7)" = "mingw32" ]; then
+			"${myBuildHome}"/myBuilds/linux/linux.myBuild extract headers 2>&1 | tee "${myBuildHome}"/logs/linux.kernel.build.log
+		fi
+
+printf \
+"\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n \
+NOTE: It is important to type the name of TARGET for the kernel here !!!\n \
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"
+
+
+		#install linux headers for TARGET
+		"${myBuildHome}"/myBuilds/linux/linux.myBuild build headers 2>&1 | tee "${myBuildHome}"/logs/linux.headers."$2".build.log
+		"${myBuildHome}"/myBuilds/linux/linux.myBuild install headers 2>&1 | tee "${myBuildHome}"/logs/linux.headers."$2".install.log
+
+	fi
+
+		#we set this for building libc.
+		if [ "$(printf "%s\n" "${BUILD}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+			export PATH="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin:${TEMP_SYSROOT}${PREFIX}/${TARGET}/usr/bin:${TEMP_SYSROOT}${PREFIX}/${HOST}/bin:${TEMP_SYSROOT}${PREFIX}/${HOST}/usr/bin:${TEMP_SYSROOT}/build_tools/bin:${TEMP_SYSROOT}/build_tools/usr/bin"
+		else
+			export PATH="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin;${TEMP_SYSROOT}${PREFIX}/${TARGET}/usr/bin;${TEMP_SYSROOT}${PREFIX}/${HOST}/bin;${TEMP_SYSROOT}${PREFIX}/${HOST}/usr/bin;${TEMP_SYSROOT}/build_tools/bin;${TEMP_SYSROOT}/build_tools/usr/bin;${OLD_PATH}"
+		fi
+fi
+
+#if building for the mingw target, we build the runtime and libraries, otherwise we build glibc
+if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" = "mingw32" ]; then
+	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild extract runtime 2>&1 | tee logs/mingw64."${TARGET}".runtime."$2".extract.log
+	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild build runtime 2>&1 | tee logs/mingw64."${TARGET}".runtime."$2".build.log
+	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild install runtime 2>&1 | tee logs/mingw64."${TARGET}".runtime."$2".install.log
+	#if [ "$2" != "buildCross" ]; then
+	#	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild package runtime 2>&1 | tee logs/mingw64."${TARGET}".headers."$2".install.log
+	#fi
+
+	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild build libraries 2>&1 | tee logs/mingw64."${TARGET}".libraries."$2".build.log
+	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild install libraries 2>&1 | tee logs/mingw64."${TARGET}".libraries."$2".install.log
+	#if [ "$2" != "buildCross" ]; then
+	#	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild package libraries 2>&1 | tee logs/mingw64."${TARGET}".headers."$2".install.log
+	#fi
+
+	##build 32 bit mingw library for multilib support
+	#if [ "$TARGET32" != "$TARGET" ]; then
+	#	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild extract headers m32 2>&1 | tee logs/mingw64."${TARGET32}".headers."$2".extract.log
+	#	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild build headers m32 2>&1 | tee logs/mingw64."${TARGET32}".headers."$2".build.log
+	#		"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild install headers m32 2>&1 | tee logs/mingw64."${TARGET}".headers."$2".install.log
+	#	if [ "$2" != "buildCross" ]; then
+	#		"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild package headers m32 2>&1 | tee logs/mingw64."${TARGET}".headers."$2".install.log
+	#	fi
+
+	#	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild extract runtime m32 2>&1 | tee logs/mingw64."${TARGET32}".runtime."$2".extract.log
+	#	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild build runtime m32 2>&1 | tee logs/mingw64."${TARGET32}".runtime."$2".build.log
+	#	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild install runtime m32 2>&1 | tee logs/mingw64."${TARGET32}".runtime."$2".install.log
+	#	if [ "$2" != "buildCross" ]; then
+	#		"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild package runtime m32 2>&1 | tee logs/mingw64."${TARGET32}".headers."$2".install.log
+	#	fi
+
+	#	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild build libraries m32 2>&1 | tee logs/mingw64."${TARGET32}".libraries."$2".build.log
+	#	"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild install libraries m32 2>&1 | tee logs/mingw64."${TARGET32}".libraries."$2".install.log
+	#	if [ "$2" != "buildCross" ]; then
+	#		"${myBuildHome}"/myBuilds/mingw64/mingw64.myBuild package libraries m32 2>&1 | tee logs/mingw64."${TARGET32}".headers."$2".install.log
+	#	fi
+	#fi
+
+elif [ "$2" = "buildCross" ] || [ "${with_selinux}" != "true" ]; then
+	#we build glibc without selinux first
+
+	old_with_selinux="${with_selinux}"
+	export with_selinux="false"
+
+	#FOR gcc when building for linux target #we need two c libraries, one for the HOST and one for the TARGET
+	"${myBuildHome}"/myBuilds/glibc/glibc.myBuild build library 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET}".library."$2".build.log
+	"${myBuildHome}"/myBuilds/glibc/glibc.myBuild install library 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET}".library."$2".install.log
+
+	##build 32 bit glibc library for multilib support
+	#if [ "$TARGET32" != "$TARGET" ]; then
+	
+	#	"${myBuildHome}"/myBuilds/glibc/glibc.myBuild extract 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET32}".headers."$2".extract.log
+
+	#	#FOR gcc when building for linux target #we need two c libraries, one for the HOST and one for the TARGET
+	#	"${myBuildHome}"/myBuilds/glibc/glibc.myBuild build headers m32 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET32}".headers."$2".build.log
+	#	"${myBuildHome}"/myBuilds/glibc/glibc.myBuild install headers m32 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET32}".headers."$2".install.log
+
+	#	"${myBuildHome}"/myBuilds/glibc/glibc.myBuild build library m32 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET32}".library."$2".build.log
+	#	"${myBuildHome}"/myBuilds/glibc/glibc.myBuild install library m32 2>&1 | tee "${myBuildHome}"/logs/glibc."${TARGET32}".library."$2".install.log
+
+	#fi
+
+	export with_selinux="${old_with_selinux}"
+
+fi
+
+if [ "$2" = "buildCross" ]; then
+	#we set this back for building the cross compiler final.
+	if [ "$(printf "%s\n" "${BUILD}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+		export PATH="${TEMP_SYSROOT}/build_tools/bin:${TEMP_SYSROOT}/build_tools/usr/bin:${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin:${TEMP_SYSROOT}${PREFIX}/${TARGET}/usr/bin:${TEMP_SYSROOT}${PREFIX}/${HOST}/bin:${TEMP_SYSROOT}${PREFIX}/${HOST}/usr/bin"
+	else
+		export PATH="${TEMP_SYSROOT}/build_tools/bin;${TEMP_SYSROOT}/build_tools/usr/bin;${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin;${TEMP_SYSROOT}${PREFIX}/${TARGET}/usr/bin;${TEMP_SYSROOT}${PREFIX}/${HOST}/bin;${TEMP_SYSROOT}${PREFIX}/${HOST}/usr/bin"
+	fi
+fi
+
+#then we build the proper cross compiler
 #FOR linux
-"${myBuildHome}"/myBuilds/gcc/gcc.myBuild get #2>&1 | tee logs/gcc.get.log
-"${myBuildHome}"/myBuilds/gcc/gcc.myBuild extract 2>&1 | tee logs/gcc.extract.log
-"${myBuildHome}"/myBuilds/gcc/gcc.myBuild build 2>&1 | tee logs/gcc.build.log
-"${myBuildHome}"/myBuilds/gcc/gcc.myBuild install 2>&1 | tee logs/gcc.install.log
+"${myBuildHome}"/myBuilds/gcc/gcc.myBuild extract second "$2" 2>&1 | tee "${myBuildHome}"/logs/gcc-second."${TARGET}"."$2".extract.log
+"${myBuildHome}"/myBuilds/gcc/gcc.myBuild build second "$2" 2>&1 | tee "${myBuildHome}"/logs/gcc-second."${TARGET}"."$2".build.log
+"${myBuildHome}"/myBuilds/gcc/gcc.myBuild install second "$2" 2>&1 | tee "${myBuildHome}"/logs/gcc-second."${TARGET}"."$2".install.log
 
-##probably needed IF NOT using busybox (untested)
-##"${myBuildHome}"/myBuilds/coreutils.myBuild get #2>&1 | tee logs/coreutils.get.log
-##"${myBuildHome}"/myBuilds/coreutils.myBuild extract #2>&1 | tee logs/coreutils.extract.log
-##"${myBuildHome}"/myBuilds/coreutils.myBuild build #2>&1 | tee logs/coreutils.build.log
-##"${myBuildHome}"/myBuilds/coreutils.myBuild install #2>&1 | tee logs/coreutils.install.log
+#if [ "$2" != "buildCross" ]; then
+#"${myBuildHome}"/myBuilds/gcc/gcc.myBuild package second "$2" 2>&1 | tee "${myBuildHome}"/logs/gcc-second."${TARGET}"."$2".package.log
+#fi
 
-###backup was here, though didn't include binutils
+#we set this for building tools for HOST
+if [ "$(printf "%s\n" "${BUILD}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+	export PATH="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin:${TEMP_SYSROOT}${PREFIX}/${TARGET}/usr/bin:${TEMP_SYSROOT}${PREFIX}/${HOST}/bin:${TEMP_SYSROOT}${PREFIX}/${HOST}/usr/bin:${TEMP_SYSROOT}/build_tools/bin:${TEMP_SYSROOT}/build_tools/usr/bin"
+else
+	export PATH="${TEMP_SYSROOT}${PREFIX}/${TARGET}/bin;${TEMP_SYSROOT}${PREFIX}/${TARGET}/usr/bin;${TEMP_SYSROOT}${PREFIX}/${HOST}/bin;${TEMP_SYSROOT}${PREFIX}/${HOST}/usr/bin;${TEMP_SYSROOT}/build_tools/bin;${TEMP_SYSROOT}/build_tools/usr/bin;${OLD_PATH}"
+fi
 
-#FOR linux
-"${myBuildHome}"/myBuilds/busybox/busybox.myBuild get #2>&1 | tee logs/busybox.get.log
-"${myBuildHome}"/myBuilds/busybox/busybox.myBuild extract 2>&1 | tee logs/busybox.extract.log
-"${myBuildHome}"/myBuilds/busybox/busybox.myBuild build 2>&1 | tee logs/busybox.build.log
-"${myBuildHome}"/myBuilds/busybox/busybox.myBuild install 2>&1 | tee logs/busybox.install.log
-
-##we should now have a working compiler, libc and kernel
-
-#FOR make, due to make throwing error "undefined reference to `__alloca'" when compiling glibc
-#note, is also used to build software from [source] .ac files, which relevant to much of the software for myBuilds (inc. make)
-"${myBuildHome}"/myBuilds/autoconf.myBuild get #2>&1 | tee logs/autoconf.get.log
-"${myBuildHome}"/myBuilds/autoconf.myBuild extract 2>&1 | tee logs/autoconf.extract.log
-"${myBuildHome}"/myBuilds/autoconf.myBuild build 2>&1 | tee logs/autoconf.build.log
-"${myBuildHome}"/myBuilds/autoconf.myBuild install 2>&1 | tee logs/autoconf.install.log
-
-#FOR automake
-"${myBuildHome}"/myBuilds/perl.myBuild get #2>&1 | tee logs/perl.get.log
-"${myBuildHome}"/myBuilds/perl.myBuild extract 2>&1 | tee logs/perl.extract.log
-"${myBuildHome}"/myBuilds/perl.myBuild build 2>&1 | tee logs/perl.build.log
-"${myBuildHome}"/myBuilds/perl.myBuild install 2>&1 | tee logs/perl.install.log
-
-#FOR make
-"${myBuildHome}"/myBuilds/automake.myBuild get #2>&1 | tee logs/automake.get.log
-"${myBuildHome}"/myBuilds/automake.myBuild extract 2>&1 | tee logs/automake.extract.log
-"${myBuildHome}"/myBuilds/automake.myBuild build 2>&1 | tee logs/automake.build.log
-"${myBuildHome}"/myBuilds/automake.myBuild install 2>&1 | tee logs/automake.install.log
-
-##NOT needed, but for possibly (and optionally) building glib
-##"${myBuildHome}"/myBuilds/libffi.myBuild get #2>&1 | tee logs/libffi.get.log
-##"${myBuildHome}"/myBuilds/libffi.myBuild extract #2>&1 | tee logs/libffi.extract.log
-##"${myBuildHome}"/myBuilds/libffi.myBuild build #2>&1 | tee logs/libffi.build.log
-##"${myBuildHome}"/myBuilds/libffi.myBuild install #2>&1 | tee logs/libffi.install.log
-
-#FOR make whilst using autoreconf (note: also for building glib)
-"${myBuildHome}"/myBuilds/gettext.myBuild get #2>&1 | tee logs/gettext.get.log
-"${myBuildHome}"/myBuilds/gettext.myBuild extract 2>&1 | tee logs/gettext.extract.log
-"${myBuildHome}"/myBuilds/gettext.myBuild build 2>&1 | tee logs/gettext.build.log
-"${myBuildHome}"/myBuilds/gettext.myBuild install 2>&1 | tee logs/gettext.install.log
-
-##NOT needed, but possibly can be used to build glib instead of glib's internal pcre
-##"${myBuildHome}"/myBuilds/pcre.myBuild get #2>&1 | tee logs/pcre.get.log
-##"${myBuildHome}"/myBuilds/pcre.myBuild extract #2>&1 | tee logs/pcre.extract.log
-##"${myBuildHome}"/myBuilds/pcre.myBuild build #2>&1 | tee logs/pcre.build.log
-##"${myBuildHome}"/myBuilds/pcre.myBuild install #2>&1 | tee logs/pcre.install.log
-
-##NOT needed, but possibly can be used for building pkgconfig
-##"${myBuildHome}"/myBuilds/glib.myBuild get #2>&1 | tee logs/glib.get.log
-##"${myBuildHome}"/myBuilds/glib.myBuild extract #2>&1 | tee logs/glib.extract.log
-##"${myBuildHome}"/myBuilds/glib.myBuild build #2>&1 | tee logs/glib.build.log
-##"${myBuildHome}"/myBuilds/glib.myBuild install #2>&1 | tee logs/glib.install.log
-
-##NOT needed
-##"${myBuildHome}"/myBuilds/pkg-config.myBuild get #2>&1 | tee logs/pkg-config.get.log
-##"${myBuildHome}"/myBuilds/pkg-config.myBuild extract #2>&1 | tee logs/pkg-config.extract.log
-##"${myBuildHome}"/myBuilds/pkg-config.myBuild build #2>&1 | tee logs/pkg-config.build.log
-##"${myBuildHome}"/myBuilds/pkg-config.myBuild install #2>&1 | tee logs/pkg-config.install.log
-
-#FOR linux
-"${myBuildHome}"/myBuilds/make/make.myBuild get #2>&1 | tee logs/make.get.log
-"${myBuildHome}"/myBuilds/make/make.myBuild extract 2>&1 | tee logs/make.extract.log
-"${myBuildHome}"/myBuilds/make/make.myBuild build 2>&1 | tee logs/make.build.log
-"${myBuildHome}"/myBuilds/make/make.myBuild install 2>&1 | tee logs/make.install.log
-
-#FOR elfutils
-"${myBuildHome}"/myBuilds/zlib.myBuild get #2>&1 | tee logs/zlib.get.log
-"${myBuildHome}"/myBuilds/zlib.myBuild extract 2>&1 | tee logs/zlib.extract.log
-"${myBuildHome}"/myBuilds/zlib.myBuild build 2>&1 | tee logs/zlib.build.log
-"${myBuildHome}"/myBuilds/zlib.myBuild install 2>&1 | tee logs/zlib.install.log
-
-##this library doesn't work for compiling linux when i tested, because gelf.h was installed in /usr/include/libelf/ rather than just /usr/include but I may be wrong.
-##"${myBuildHome}"/myBuilds/libelf.myBuild get #2>&1 | tee logs/libelf.get.log
-##"${myBuildHome}"/myBuilds/libelf.myBuild extract #2>&1 | tee logs/libelf.extract.log
-##"${myBuildHome}"/myBuilds/libelf.myBuild build #2>&1 | tee logs/libelf.build.log
-##"${myBuildHome}"/myBuilds/libelf.myBuild install #2>&1 | tee logs/libelf.install.log
-
-#FOR bc 
-"${myBuildHome}"/myBuilds/elfutils.myBuild get #2>&1 | tee logs/elfutils.get.log
-"${myBuildHome}"/myBuilds/elfutils.myBuild extract 2>&1 | tee logs/elfutils.extract.log
-"${myBuildHome}"/myBuilds/elfutils.myBuild build 2>&1 | tee logs/elfutils.build.log
-"${myBuildHome}"/myBuilds/elfutils.myBuild install 2>&1 | tee logs/elfutils.install.log
-
-##FOR bc
-"${myBuildHome}"/myBuilds/texinfo.myBuild get #2>&1 | tee logs/texinfo.get.log
-"${myBuildHome}"/myBuilds/texinfo.myBuild extract 2>&1 | tee logs/texinfo.extract.log
-"${myBuildHome}"/myBuilds/texinfo.myBuild build 2>&1 | tee logs/texinfo.build.log
-"${myBuildHome}"/myBuilds/texinfo.myBuild install 2>&1 | tee logs/texinfo.install.log
-
-##FOR linux
-"${myBuildHome}"/myBuilds/bc.myBuild get #2>&1 | tee logs/bc.get.log
-"${myBuildHome}"/myBuilds/bc.myBuild extract 2>&1 | tee logs/bc.extract.log
-"${myBuildHome}"/myBuilds/bc.myBuild build 2>&1 | tee logs/bc.build.log
-"${myBuildHome}"/myBuilds/bc.myBuild install 2>&1 | tee logs/bc.install.log
-
-##FOR linux
-"${myBuildHome}"/myBuilds/openssl.myBuild get #2>&1 | tee logs/openssl.get.log
-"${myBuildHome}"/myBuilds/openssl.myBuild extract 2>&1 | tee logs/openssl.extract.log
-"${myBuildHome}"/myBuilds/openssl.myBuild build 2>&1 | tee logs/openssl.build.log
-"${myBuildHome}"/myBuilds/openssl.myBuild install 2>&1 | tee logs/openssl.install.log
-
-##FOR linux, we use this because busybox does not provide a "-b" option for the "depmod" command
-"${myBuildHome}"/myBuilds/kmod.myBuild get #2>&1 | tee logs/kmod.get.log
-"${myBuildHome}"/myBuilds/kmod.myBuild extract 2>&1 | tee logs/kmod.extract.log
-"${myBuildHome}"/myBuilds/kmod.myBuild build 2>&1 | tee logs/kmod.build.log
-"${myBuildHome}"/myBuilds/kmod.myBuild install 2>&1 | tee logs/kmod.install.log
-
-##FOR gcc
-"${myBuildHome}"/myBuilds/gawk.myBuild get #2>&1 | tee logs/gawk.get.log
-"${myBuildHome}"/myBuilds/gawk.myBuild extract 2>&1 | tee logs/gawk.extract.log
-"${myBuildHome}"/myBuilds/gawk.myBuild build 2>&1 | tee logs/gawk.build.log
-"${myBuildHome}"/myBuilds/gawk.myBuild install 2>&1 | tee logs/gawk.install.log
-
-##FOR gcc
-"${myBuildHome}"/myBuilds/bison.myBuild get #2>&1 | tee logs/bison.get.log
-"${myBuildHome}"/myBuilds/bison.myBuild extract 2>&1 | tee logs/bison.extract.log
-"${myBuildHome}"/myBuilds/bison.myBuild build 2>&1 | tee logs/bison.build.log
-"${myBuildHome}"/myBuilds/bison.myBuild install 2>&1 | tee logs/bison.install.log
-
-##FOR gcc
-"${myBuildHome}"/myBuilds/m4/m4.myBuild get #2>&1 | tee logs/m4.get.log
-"${myBuildHome}"/myBuilds/m4/m4.myBuild extract 2>&1 | tee logs/m4.extract.log
-"${myBuildHome}"/myBuilds/m4/m4.myBuild build 2>&1 | tee logs/m4.build.log
-"${myBuildHome}"/myBuilds/m4/m4.myBuild install 2>&1 | tee logs/m4.install.log
-
-###	copy sources to build directory in /root/myBuildBootstrap	###
-"${myBuildHome}"/myBuilds/copyMyBuild.myBuild install #2>&1 | tee logs/copyMyBuild.install.log
-
-###	finally run ldconfig last so that the libraries get linked correctly	###
-/sbin/ldconfig -v -r "${SYSROOT}"
+#we build zlib for the target, this is required, on the host, for building a native elfutils and gcc for the target
+if [ "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 3 | cut -c 1-7)" != "mingw32" ]; then
+	#FOR elfutils
+	"${myBuildHome}"/myBuilds/zlib/zlib.myBuild extract 2>&1 | tee "${myBuildHome}"/logs/zlib-"${TARGET}"."$2".extract.log
+	"${myBuildHome}"/myBuilds/zlib/zlib.myBuild build 2>&1 | tee "${myBuildHome}"/logs/zlib-"${TARGET}"."$2".build.log
+	if [ "$2" = "buildCross" ]; then
+		"${myBuildHome}"/myBuilds/zlib/zlib.myBuild install 2>&1 | tee "${myBuildHome}"/logs/zlib-"${TARGET}"."$2".install.log
+	else
+		export SYSROOT="${OLD_SYSROOT}"
+		"${myBuildHome}"/myBuilds/zlib/zlib.myBuild install 2>&1 | tee "${myBuildHome}"/logs/zlib-"${TARGET}"."$2".install.log
+		#"${myBuildHome}"/myBuilds/zlib/zlib.myBuild package 2>&1 | tee "${myBuildHome}"/logs/zlib-"${TARGET}"."$2".package.log
+		export SYSROOT="${TEMP_SYSROOT}"
+	fi
+else
+	#FOR elfutils
+	"${myBuildHome}"/myBuilds/zlib-w32/zlib-w32.myBuild extract 2>&1 | tee "${myBuildHome}"/logs/zlib-w32-"${TARGET}"."$2".extract.log
+	"${myBuildHome}"/myBuilds/zlib-w32/zlib-w32.myBuild build 2>&1 | tee "${myBuildHome}"/logs/zlib-w32-"${TARGET}"."$2".build.log
+	"${myBuildHome}"/myBuilds/zlib-w32/zlib-w32.myBuild install 2>&1 | tee "${myBuildHome}"/logs/zlib-w32-"${TARGET}"."$2".install.log
+	if [ "$2" = "buildCross" ]; then
+		"${myBuildHome}"/myBuilds/zlib-w32/zlib-w32.myBuild install 2>&1 | tee "${myBuildHome}"/logs/zlib-w32-"${TARGET}"."$2".install.log
+	else
+		export SYSROOT="${OLD_SYSROOT}"
+		"${myBuildHome}"/myBuilds/zlib-w32/zlib-w32.myBuild install 2>&1 | tee "${myBuildHome}"/logs/zlib-w32-"${TARGET}"."$2".install.log
+		#"${myBuildHome}"/myBuilds/zlib-w32/zlib-w32.myBuild package 2>&1 | tee "${myBuildHome}"/logs/zlib-w32-"${TARGET}"."$2".package.log
+		export SYSROOT="${TEMP_SYSROOT}"
+	fi
+fi

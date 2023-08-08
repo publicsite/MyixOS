@@ -1,0 +1,1 @@
+sudo mount -o bind /proc installDir/proc #needed for building openssl for arm (crypto/aes/asm/aes-armv4.pl writes to stdout), also needed for building mingw

@@ -1,0 +1,57 @@
+#!/bin/sh
+filename="libxkbfile-1.0.9"
+extension=".tar.gz"
+source="ftp://ftp.x.org/pub/individual/lib/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+./gnulib-tool --lgpl --create-testdir --source-base=lib --dir="${theDir}/posixlib" `"${theDir}/gnulib/posix-modules" --for-mingw`
+cd ../posixlib
+./configure --build=${BUILD} --host=${HOST} --enable-threads=posix libgsasl_la_LDFLAGS="-no-undefined" --enable-shared
+make
+#patch config.h
+patch -p0 < ../posixlib-config.h.patch
+
+#cd gllib
+#we want a shared library
+#${TARGET}-gcc -shared -o libgnu.dll *.o libgnu.a $CFLAGS $LDFLAGS -lws2_32
+#mv libgnu.a ../
+
+
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make install DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

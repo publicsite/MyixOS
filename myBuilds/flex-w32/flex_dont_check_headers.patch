@@ -1,0 +1,63 @@
+--- configure.old	2020-01-04 16:45:16.796023630 +0000
++++ configure	2020-01-04 16:45:52.971824675 +0000
+@@ -19852,38 +19852,6 @@
+ 
+ fi
+ 
+-# checks for headers
+-
+-for ac_header in regex.h strings.h sys/stat.h sys/wait.h unistd.h
+-do :
+-  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
+-ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
+-if eval test \"x\$"$as_ac_Header"\" = x"yes"; then :
+-  cat >>confdefs.h <<_ACEOF
+-#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
+-_ACEOF
+-
+-else
+-  as_fn_error $? "required header not found on your system" "$LINENO" 5
+-fi
+-
+-done
+-
+-
+-for ac_header in inttypes.h libintl.h limits.h locale.h malloc.h netinet/in.h
+-do :
+-  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
+-ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
+-if eval test \"x\$"$as_ac_Header"\" = x"yes"; then :
+-  cat >>confdefs.h <<_ACEOF
+-#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
+-_ACEOF
+-
+-fi
+-
+-done
+-
+-
+ # checks for libraries
+ 
+ # The test test-pthread uses libpthread, so we check for it here, but
+@@ -20739,21 +20707,6 @@
+ $as_echo "$as_me: WARNING: result $ac_cv_func_realloc_0_nonnull guessed because of cross compilation" >&2;}
+ fi
+ 
+-for ac_func in dup2 memset regcomp strcasecmp strchr strdup strtol
+-do :
+-  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+-ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+-if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+-  cat >>confdefs.h <<_ACEOF
+-#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+-_ACEOF
+-
+-else
+-  as_fn_error $? "required library function not found on your system" "$LINENO" 5
+-fi
+-done
+-
+-
+ # Optional library functions
+ for ac_func in pow setlocale reallocarray
+ do :

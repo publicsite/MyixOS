@@ -1,0 +1,107 @@
+Fix glibc so it builds in
+extractdest/${filename}/<>
+rather than
+extractdest/glibc/<>
+
+###############################################################
+
+make toolchain work for linux 32 bit using glibc
+
+_______________________________________________________________
+
+cross compile the lot again from a cross-made toolchain
+
+_______________________________________________________________
+
+make sure the crossed compiled lot can cross compile a cross made toolchains
+
+###############################################################
+
+build basic newlib mingw toolchain
+
+_______________________________________________________________
+
+build a cross environment
+
+... determine if wine is needed
+
+_______________________________________________________________
+
+make a package for wine if so
+
+_______________________________________________________________
+
+install wine to the cross toolchain
+
+_______________________________________________________________
+
+use WINE to compile perl if needed
+
+_______________________________________________________________
+
+edit so that if wine doesn't exist, use cmd.exe, or no WINE
+
+_______________________________________________________________
+
+cross compile a native windows environment using cross-made windows toolchain
+
+_______________________________________________________________
+
+try building the lot in WINE
+
+###############################################################
+
+build gnulib
+
+	can instruct to use -include path/to/config.h
+	this will include config.h equivialent to a first line #include in a c file
+
+###############################################################
+
+build libfork w32
+
+	again,
+	can instruct to use -include path/to/config.h
+	this will include config.h equivialent to a first line #include in a c file
+
+###############################################################
+
+build darwin toolchain using some kind of darwin libc
+
+_______________________________________________________________
+
+cross compile the lot again from a cross-made toolchain
+
+_______________________________________________________________
+
+make sure the crossed compiled lot can cross compile a cross made toolchains
+
+###############################################################
+
+build android toolchain using bionic or libhybris
+
+_______________________________________________________________
+
+cross compile the lot again from a cross-made toolchain
+
+_______________________________________________________________
+
+make sure the crossed compiled lot can cross compile a cross made toolchains
+
+###############################################################
+
+build bsd toolchain using ?glibc? or bsdlibc
+
+_______________________________________________________________
+
+cross compile the lot again from a cross-made toolchain
+
+_______________________________________________________________
+
+make sure the crossed compiled lot can cross compile a cross made toolchains
+
+###############################################################
+
+tidy up code
+
+###############################################################

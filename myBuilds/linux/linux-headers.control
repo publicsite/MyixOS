@@ -1,0 +1,7 @@
+Package: linux-headers
+Provides: linux-headers, linux-headers-4kc-malta, linux-headers-5kc-malta, linux-headers-686, linux-headers-686-pae, linux-headers-amd64, linux-headers-arm64, linux-headers-armmp, linux-headers-armmp-lpae, linux-headers-cloud-amd64, linux-headers-loongson-3, linux-headers-marvell, linux-headers-octeon, linux-headers-powerpc64le, linux-headers-rpi, linux-headers-rt-686-pae, linux-headers-rt-amd64, linux-headers-rt-arm64, linux-headers-rt-armmp, linux-headers-s390x,linux-headers-5.2.14, linux-headers-5.2.14-4kc-malta, linux-headers-5.2.14-5kc-malta, linux-headers-5.2.14-686, linux-headers-5.2.14-686-pae, linux-headers-5.2.14-amd64, linux-headers-5.2.14-arm64, linux-headers-5.2.14-armmp, linux-headers-5.2.14-armmp-lpae, linux-headers-5.2.14-cloud-amd64, linux-headers-5.2.14-loongson-3, linux-headers-5.2.14-marvell, linux-headers-5.2.14-octeon, linux-headers-5.2.14-powerpc64le, linux-headers-5.2.14-rpi, linux-headers-5.2.14-rt-686-pae, linux-headers-5.2.14-rt-amd64, linux-headers-5.2.14-rt-arm64, linux-headers-5.2.14-rt-armmp, linux-headers-5.2.14-s390x
+Version: 5.2.14
+Maintainer: J05HYYY
+Homepage: https://www.kernel.org/
+Priority: optional
+Description: No description availiable.

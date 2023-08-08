@@ -1,0 +1,7 @@
+Package: libarchive13
+Provides: libarchive-dev, libarchive13, libarchive-tools
+Version: 3.4.1
+Maintainer: J05HYYY
+Homepage: https://www.libarchive.org/
+Priority: optional
+Description: No description availiable.

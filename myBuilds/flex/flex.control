@@ -1,0 +1,7 @@
+Package: flex
+Provides: flex, flex-doc, libfl2, libfl-dev 
+Version: 2.6.4
+Maintainer: J05HYYY
+Homepage: https://github.com/westes/flex
+Priority: optional
+Description: No description availiable.

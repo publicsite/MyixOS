@@ -1,0 +1,24 @@
+--- gcc/timevar.c.old	2018-02-28 13:45:59.000000000 +0000
++++ gcc/timevar.c	2019-06-08 16:54:22.338618791 +0100
+@@ -24,10 +24,13 @@
+ #include "timevar.h"
+ #include "options.h"
+ 
++/*
+ #ifndef HAVE_CLOCK_T
+ typedef int clock_t;
+ #endif
++*/
+ 
++/*
+ #ifndef HAVE_STRUCT_TMS
+ struct tms
+ {
+@@ -37,6 +40,7 @@
+   clock_t tms_cstime;
+ };
+ #endif
++*/
+ 
+ #ifndef RUSAGE_SELF
+ # define RUSAGE_SELF 0

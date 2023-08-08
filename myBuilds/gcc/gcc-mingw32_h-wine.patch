@@ -1,0 +1,35 @@
+--- gcc/config/i386/mingw32.h.old	2018-01-03 10:03:58.000000000 +0000
++++ gcc/config/i386/mingw32.h	2019-04-24 01:28:39.384963177 +0100
+@@ -140,17 +140,17 @@
+ #endif
+ #undef REAL_LIBGCC_SPEC
+ #define REAL_LIBGCC_SPEC \
+-  "%{mthreads:-lmingwthrd} -lmingw32 \
++  " \
+    " SHARED_LIBGCC_SPEC " \
+-   -lmoldname -lmingwex -lmsvcrt"
++   -lwine"
+ 
+ #undef STARTFILE_SPEC
+-#define STARTFILE_SPEC "%{shared|mdll:dllcrt2%O%s} \
+-  %{!shared:%{!mdll:crt2%O%s}} %{pg:gcrt2%O%s} \
++#define STARTFILE_SPEC " \
+   crtbegin.o%s \
+   %{fvtable-verify=none:%s; \
+     fvtable-verify=preinit:vtv_start.o%s; \
+-    fvtable-verify=std:vtv_start.o%s}"
++    fvtable-verify=std:vtv_start.o%s} \
++  -lwine"
+ 
+ #undef ENDFILE_SPEC
+ #define ENDFILE_SPEC \
+@@ -159,7 +159,8 @@
+    %{fvtable-verify=none:%s; \
+     fvtable-verify=preinit:vtv_end.o%s; \
+     fvtable-verify=std:vtv_end.o%s} \
+-  crtend.o%s"
++  crtend.o%s \
++  -lwine"
+ 
+ /* Override startfile prefix defaults.  */
+ #ifndef STANDARD_STARTFILE_PREFIX_1

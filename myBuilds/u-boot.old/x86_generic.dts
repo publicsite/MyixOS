@@ -1,0 +1,30 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (C) 2015, Bin Meng <bmeng.cn@gmail.com>
+ */
+
+/dts-v1/;
+
+/include/ "skeleton.dtsi"
+/include/ "serial.dtsi"
+/include/ "reset.dtsi"
+/include/ "rtc.dtsi"
+/include/ "tsc_timer.dtsi"
+
+/ {
+	model = "x86 Generic";
+	compatible = "intel";
+
+	config {
+		silent_console = <0>;
+	};
+
+	chosen {
+		stdout-path = "/serial";
+	};
+
+	pci {
+		compatible = "pci-x86";
+		u-boot,dm-pre-reloc;
+	};
+};

@@ -1,0 +1,6 @@
+Package: util-linux
+Provides: util-linux, util-linux-locales, mount, bsdutils, fdisk, fdisk-udeb, libblkid1, libblkid1-udeb, libblkid-dev, libfdisk1, libfdisk1-udeb, libfdisk-dev, libmount1, libmount1-udeb, libmount-dev, libsmartcols1, libsmartcols1-udeb, libsmartcols-dev, libuuid1, uuid-runtime, libuuid1-udeb, uuid-dev, util-linux-udeb, rfkill 
+Version: 2.34
+Maintainer: J05HYYY
+Priority: optional
+Description: No description availiable.

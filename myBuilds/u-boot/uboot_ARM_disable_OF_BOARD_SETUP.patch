@@ -1,0 +1,18 @@
+--- arch/arm/Kconfig.old	2019-10-28 15:14:05.241234405 +0000
++++ arch/arm/Kconfig	2019-10-28 15:14:22.641776469 +0000
+@@ -941,7 +941,6 @@
+ 	select DM_SCSI if SCSI
+ 	select DM_SERIAL
+ 	select DM_USB if DISTRO_DEFAULTS
+-	select OF_BOARD_SETUP
+ 	select OF_CONTROL
+ 	select OF_SEPARATE
+ 	select SPECIFY_CONSOLE_INDEX
+@@ -1497,7 +1496,6 @@
+ 	select DM_RESET
+ 	select DM_SERIAL
+ 	select DM_USB
+-	select OF_BOARD_SETUP
+ 	select OF_CONTROL
+ 	select OF_LIBFDT
+ 	select PINCTRL

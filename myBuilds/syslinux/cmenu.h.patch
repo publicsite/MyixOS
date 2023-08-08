@@ -1,0 +1,17 @@
+--- com32/cmenu/libmenu/cmenu.h.old	2023-04-10 14:20:49.754611012 +0100
++++ com32/cmenu/libmenu/cmenu.h	2023-04-10 14:19:30.377887519 +0100
+@@ -131,7 +131,13 @@
+     unsigned int reserved:6;	// For future expansion
+ } t_handler_return;
+ 
+-t_handler_return ACTION_VALID, ACTION_INVALID;	// Specific values
++#ifndef ACTION_VALID
++t_handler_return ACTION_VALID;	// Specific values
++#endif
++
++#ifndef ACTION_INVALID
++t_handler_return ACTION_INVALID;	// Specific values
++#endif
+ 
+ typedef t_handler_return(*t_item_handler) (struct s_menusystem *,
+ 					   struct s_menuitem *);

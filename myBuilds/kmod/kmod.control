@@ -1,0 +1,6 @@
+Package: kmod
+Provides: kmod, libkmod2, libkmod-dev, libkmod2-udeb 
+Version: 25
+Maintainer: J05HYYY
+Priority: optional
+Description: No description availiable.

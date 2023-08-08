@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<title>Raspberry Pi Kernel Compilation - eLinux.org</title>
+<script>document.documentElement.className = document.documentElement.className.replace( /(^|\s)client-nojs(\s|$)/, "$1client-js$2" );</script>
+<script>(window.RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Raspberry_Pi_Kernel_Compilation","wgTitle":"Raspberry Pi Kernel Compilation","wgCurRevisionId":451831,"wgRevisionId":451831,"wgArticleId":15998,"wgIsArticle":true,"wgIsRedirect":false,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["RaspberryPi","Linux-kernel"],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"Raspberry_Pi_Kernel_Compilation","wgRelevantArticleId":15998,"wgRequestId":"a0ee224617fe65928bc4f7da","wgIsProbablyEditable":false,"wgRelevantPageIsProbablyEditable":false,"wgRestrictionEdit":[],"wgRestrictionMove":[],"wgWikiEditorEnabledModules":[]});mw.loader.state({"site.styles":"ready","noscript":"ready","user.styles":"ready","user":"ready","site":"ready","user.options":"ready","user.tokens":"loading","mediawiki.legacy.shared":"ready","mediawiki.legacy.commonPrint":"ready","mediawiki.sectionAnchor":"ready","mediawiki.skinning.interface":"ready","skins.vector.styles":"ready"});mw.loader.implement("user.tokens@0qsj60i",function($,jQuery,require,module){/*@nomin*/mw.user.tokens.set({"editToken":"+\\","patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"});
+});mw.loader.load(["mediawiki.page.startup","mediawiki.user","mediawiki.hidpi","mediawiki.page.ready","mediawiki.toc","mediawiki.searchSuggest","skins.vector.js"]);});</script>
+<link rel="stylesheet" href="/load.php?debug=false&amp;lang=en&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cmediawiki.sectionAnchor%7Cmediawiki.skinning.interface%7Cskins.vector.styles&amp;only=styles&amp;skin=vector"/>
+<script async="" src="/load.php?debug=false&amp;lang=en&amp;modules=startup&amp;only=scripts&amp;skin=vector"></script>
+<meta name="ResourceLoaderDynamicStyles" content=""/>
+<link rel="stylesheet" href="/load.php?debug=false&amp;lang=en&amp;modules=site.styles&amp;only=styles&amp;skin=vector"/>
+<meta name="generator" content="MediaWiki 1.31.0"/>
+<link rel="shortcut icon" href="/favicon.ico"/>
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="eLinux.org (en)"/>
+<link rel="EditURI" type="application/rsd+xml" href="https://elinux.org/api.php?action=rsd"/>
+<link rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/"/>
+<link rel="alternate" type="application/atom+xml" title="eLinux.org Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom"/>
+<!--[if lt IE 9]><script src="/load.php?debug=false&amp;lang=en&amp;modules=html5shiv&amp;only=scripts&amp;skin=vector&amp;sync=1"></script><![endif]-->
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Raspberry_Pi_Kernel_Compilation rootpage-Raspberry_Pi_Kernel_Compilation skin-vector action-view">		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+			<div id="siteNotice" class="mw-body-content"><script>document.write("\u003Cdiv id=\"localNotice\" lang=\"en\" dir=\"ltr\"\u003E\u003Cdiv class=\"mw-parser-output\"\u003E\u003Cdiv style=\"margin:0; margin-top:10px; margin-right:10px; border:1px solid #dfdfdf; padding:0 1em 1em 1em; background-color:#ffffcc; align:right;\"\u003E\n\u003Cb\u003EATTENTION ELC Presenters:  Please upload your slide deck for your presentation to the following page: \u003Ca href=\"/ELC_2019_Presentations\" title=\"ELC 2019 Presentations\"\u003EELC_2019_Presentations\u003C/a\u003E\u003C/b\u003E\u003C/div\u003E\n\u003Cp\u003E\u003Cbr /\u003E\n\u003C/p\u003E\u003C/div\u003E\u003C/div\u003E");</script></div><div class="mw-indicators mw-body-content">
+</div>
+<h1 id="firstHeading" class="firstHeading" lang="en">Raspberry Pi Kernel Compilation</h1>			<div id="bodyContent" class="mw-body-content">
+				<div id="siteSub" class="noprint">From eLinux.org</div>				<div id="contentSub"></div>
+								<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-head">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr"><div class="mw-parser-output"><table cellspacing="0" cellpadding="0" style="clear: right; margin-bottom: .5em; float: right; padding: .5em 0 .8em 1.4em; background: none; width: auto;">
+<tbody><tr>
+<td><div id="toc" class="toc"><div class="toctitle" lang="en" dir="ltr"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Important_note"><span class="tocnumber">1</span> <span class="toctext">Important note</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Overview"><span class="tocnumber">2</span> <span class="toctext">Overview</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Example_Checklist.2FRoadmap"><span class="tocnumber">2.1</span> <span class="toctext">Example Checklist/Roadmap</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#Get_the_kernel_source"><span class="tocnumber">3</span> <span class="toctext">Get the kernel source</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Get_a_compiler"><span class="tocnumber">4</span> <span class="toctext">Get a compiler</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#1._On_the_Raspberry_Pi"><span class="tocnumber">4.1</span> <span class="toctext">1. On the Raspberry Pi</span></a>
+<ul>
+<li class="toclevel-3 tocsection-7"><a href="#Arch_Linux"><span class="tocnumber">4.1.1</span> <span class="toctext">Arch Linux</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#Funtoo_or_Gentoo_Linux"><span class="tocnumber">4.1.2</span> <span class="toctext">Funtoo or Gentoo Linux</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#openSUSE_Linux"><span class="tocnumber">4.1.3</span> <span class="toctext">openSUSE Linux</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#Raspbian_and_PiBang"><span class="tocnumber">4.1.4</span> <span class="toctext">Raspbian and PiBang</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-11"><a href="#2._Cross_compiling_from_Linux"><span class="tocnumber">4.2</span> <span class="toctext">2. Cross compiling from Linux</span></a>
+<ul>
+<li class="toclevel-3 tocsection-12"><a href="#Use_the_provided_compiler"><span class="tocnumber">4.2.1</span> <span class="toctext">Use the provided compiler</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#Custom-built_Linaro_GCC"><span class="tocnumber">4.2.2</span> <span class="toctext">Custom-built Linaro GCC</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#Ubuntu"><span class="tocnumber">4.2.3</span> <span class="toctext">Ubuntu</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#Funtoo_or_Gentoo_Linux_2"><span class="tocnumber">4.2.4</span> <span class="toctext">Funtoo or Gentoo Linux</span></a></li>
+<li class="toclevel-3 tocsection-16"><a href="#Arch_Linux_2"><span class="tocnumber">4.2.5</span> <span class="toctext">Arch Linux</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-17"><a href="#Cross_compiling_from_OS_X"><span class="tocnumber">4.3</span> <span class="toctext">Cross compiling from OS X</span></a>
+<ul>
+<li class="toclevel-3 tocsection-18"><a href="#Macports"><span class="tocnumber">4.3.1</span> <span class="toctext">Macports</span></a></li>
+<li class="toclevel-3 tocsection-19"><a href="#Yagarto"><span class="tocnumber">4.3.2</span> <span class="toctext">Yagarto</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-20"><a href="#Perform_the_compilation"><span class="tocnumber">5</span> <span class="toctext">Perform the compilation</span></a></li>
+<li class="toclevel-1 tocsection-21"><a href="#Transfer_the_build"><span class="tocnumber">6</span> <span class="toctext">Transfer the build</span></a></li>
+<li class="toclevel-1 tocsection-22"><a href="#Get_the_firmware"><span class="tocnumber">7</span> <span class="toctext">Get the firmware</span></a></li>
+<li class="toclevel-1 tocsection-23"><a href="#Transfer_the_firmware"><span class="tocnumber">8</span> <span class="toctext">Transfer the firmware</span></a></li>
+<li class="toclevel-1 tocsection-24"><a href="#Test_your_build"><span class="tocnumber">9</span> <span class="toctext">Test your build</span></a></li>
+<li class="toclevel-1 tocsection-25"><a href="#Build_modules_for_the_running_kernel"><span class="tocnumber">10</span> <span class="toctext">Build modules for the running kernel</span></a>
+<ul>
+<li class="toclevel-2 tocsection-26"><a href="#1._Using_rpi-source"><span class="tocnumber">10.1</span> <span class="toctext">1. Using rpi-source</span></a></li>
+<li class="toclevel-2 tocsection-27"><a href="#2._Manually"><span class="tocnumber">10.2</span> <span class="toctext">2. Manually</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+</td></tr></tbody></table>
+<p>Back to the <a href="/R-Pi_Hub" class="mw-redirect" title="R-Pi Hub">Hub</a>.
+</p><p><br />
+<b>Software &amp; Distributions:</b>
+</p><p><i><a href="/RPi_Software" title="RPi Software">Software</a> - an overview.</i>
+</p><p><i><a href="/RPi_Distributions" title="RPi Distributions">Distributions</a> - operating systems and development environments for the Raspberry Pi. </i>
+</p><p><i><a href="/RPi_Kernel_Compilation" class="mw-redirect" title="RPi Kernel Compilation">Kernel Compilation</a> - advice on compiling a kernel.</i>
+</p><p><i><a href="/RPi_Performance" title="RPi Performance">Performance</a> - measures of the Raspberry Pi's performance.</i>
+</p><p><i><a href="/RPi_Programming" class="mw-redirect" title="RPi Programming">Programming</a> - programming languages that might be used on the Raspberry Pi.</i>
+</p>
+<div style="clear:both;"></div>
+<h1><span class="mw-headline" id="Important_note">Important note</span></h1>
+<p>The instructions provided below appears to be outdated, are inconsistent and fail for the current version of the reffered repositories.
+Consider <a rel="nofollow" class="external free" href="http://www.raspberrypi.org/documentation/linux/kernel/building.md">http://www.raspberrypi.org/documentation/linux/kernel/building.md</a>, for which the cross-compilation instructions is confirmed to work.  
+(19 March 2015, tools: 783eb21c, linux: c4ba28133).
+</p><p>The "<a rel="nofollow" class="external text" href="https://github.com/Re4son/re4son-kernel-builder">Re4son kernel-builder</a>" provides a working environment to build the latest kernel packages and can be used as a reference for studying how I cross compile the Re4son-Kernel.
+</p>
+<h1><span class="mw-headline" id="Overview">Overview</span></h1>
+<p>This page explains how to rebuild the kernel image for the Raspberry Pi. There are two possible routes available: 
+</p>
+<ol><li>Compile on the Raspberry Pi itself</li>
+<li>Cross compile on another Linux system</li></ol>
+<p>Both of these routes are covered below, however, you are strongly recommended to follow the cross-compilation route. The low processing power of the Raspberry Pi means that a local compile will take many hours. A compilation of the latest kernel and modules took about 752 minutes (12h30m)!
+</p><p>If you want to compile an upstream kernel, rather than the Raspberry Pi Foundation's downstream kernel, please see <a href="/RPi_Upstream_Kernel_Compilation" title="RPi Upstream Kernel Compilation">RPi_Upstream_Kernel_Compilation</a> for a few tips.
+</p>
+<h2><span id="Example_Checklist/Roadmap"></span><span class="mw-headline" id="Example_Checklist.2FRoadmap">Example Checklist/Roadmap</span></h2>
+<p>This section serves to hold a new user's hand just a bit more than some of the other more generic information below in the document. To get more information on the steps in the roadmap, search this page for additional details. It assumes you can navigate filesystems, move files across systems, and have a general understanding of compiling linux kernels, filesystems, partitions, and block devices.
+</p><p>This series of steps yielded a successful custom/updated hardfp kernel to a stock Raspbian installation, cross compiled from an AMD 64-bit Debian system without regression on any kernel configuration options or requiring modified boot parameters. Be aware that in the worst case, you may need to overlay a stock set of kernel/modules/firmware on the Raspberry Pi if something fails. If you do not know how to do this, then a reimage of the SD card may be necessary. Assuming this is not an issue for your configuration, continue onward:
+</p>
+<ol><li>Get the latest Raspberry Pi kernel source (<a rel="nofollow" class="external free" href="https://github.com/raspberrypi/linux">https://github.com/raspberrypi/linux</a>)</li>
+<li>Set an environment variable KERNEL_SRC to point to the location of the source (for example, KERNEL_SRC=/home/me/linux/ )</li>
+<li>Get the latest Raspberry Pi compiler (git clone <a rel="nofollow" class="external free" href="https://github.com/raspberrypi/tools">https://github.com/raspberrypi/tools</a>)</li>
+<li>Set an environment variable CCPREFIX to point to the location of tools (for example, CCPREFIX=/home/me/tools/arm-bcm2708/arm-bcm2708-linux-gnueabi/bin/arm-bcm2708-linux-gnueabi- )</li>
+<li>From the kernel clone location, clean the kernel source with "make mrproper"</li>
+<li>Pull the /proc/config.gz from the running Raspbian installation</li>
+<li>Prime the kernel with the old configuration by running "ARCH=arm CROSS_COMPILE=${CCPREFIX} make oldconfig"</li>
+<li>Modify the kernel configuration by either modifying the .config file or using "ARCH=arm CROSS_COMPILE=${CCPREFIX} make menuconfig"</li>
+<li>Build the new kernel by using "ARCH=arm CROSS_COMPILE=${CCPREFIX} make"</li>
+<li>Set an environment variable, MODULES_TEMP, to point to the location of the source (for example, MODULES_TEMP=/home/me/modules/ )</li>
+<li>Set aside the new kernel modules by using "ARCH=arm CROSS_COMPILE=${CCPREFIX} INSTALL_MOD_PATH=${MODULES_TEMP} make modules_install"</li>
+<li>From the tools clone location, in the mkimage directory, run "./imagetool-uncompressed.py ${KERNEL_SRC}/arch/arm/boot/zImage"</li>
+<li>Move the resulting kernel.img to the Raspberry Pi's /boot/ directory</li>
+<li>Package up the modules into an archive such that at the top level, the structure looks like this:
+<ul><li>./firmware</li>
+<li>./firmware/brcm</li>
+<li>./firmware/edgeport</li>
+<li>./firmware/emi26</li>
+<li>...</li>
+<li>./modules</li>
+<li>./modules/3.6.11+</li>
+<li>./modules/3.6.11+/kernel</li>
+<li>./modules/3.6.11+/kernel/lib</li>
+<li>./modules/3.6.11+/kernel/fs</li>
+<li>...</li></ul></li>
+<li>Move the modules archive to the Raspberry Pi and extract them such that the aforementioned firmware and modules directories overwrite /lib/firmware and /lib/modules</li>
+<li>Get the latest Raspberry Pi firmware (<a rel="nofollow" class="external free" href="git://github.com/raspberrypi/firmware.git">git://github.com/raspberrypi/firmware.git</a>)</li>
+<li>Transfer the following files from the firmware/boot directory to the Raspberry Pi /boot directory:
+<ul><li>bootcode.bin</li>
+<li>fixup.dat</li>
+<li>start.elf</li></ul></li>
+<li>Transfer the firmware/hardfp/opt directory to the Raspberry Pi /opt directory</li>
+<li>Reboot the Raspberry Pi</li></ol>
+<p>The Raspberry Pi should now boot with the newly configured/recompiled kernel.
+</p>
+<h1><span class="mw-headline" id="Get_the_kernel_source">Get the kernel source</span></h1>
+<p>The kernel source should be downloaded from the <a rel="nofollow" class="external text" href="https://github.com/raspberrypi/linux">Raspberry Pi Linux section on GitHub</a>. Although you could just compile the vanilla kernel from <a rel="nofollow" class="external text" href="http://www.kernel.org/">Kernel.org</a>, it will not have the necessary drivers and modules for the Broadcom SoC on the Raspberry Pi. You can however apply patches from the vanilla kernel to the Raspberry Pi one - be prepared for potential compiler grumbles though!
+</p><p>On Jan 2014, the current is rpi-3.10.y. You can check this and other available versions by browsing <a rel="nofollow" class="external text" href="https://github.com/raspberrypi/linux">Raspberry Pi Linux section on GitHub</a>
+</p><p>You can download the source directly using Git. For the 3.10 branch:
+</p>
+<pre>git init
+git clone --depth 1 git://github.com/raspberrypi/linux.git
+</pre>
+<p>And for the other stable code branch, change the numbers in the following to suit:
+</p>
+<pre>git init
+git fetch git://github.com/raspberrypi/linux.git rpi-3.6.y:refs/remotes/origin/rpi-3.6.y
+git checkout rpi-3.6.y
+</pre>
+<p>Or you can download a tarball from the same website:
+</p>
+<h1><span class="mw-headline" id="Get_a_compiler">Get a compiler</span></h1>
+<p>Next, you will need to get a version of GCC in order to build the kernel.
+</p>
+<h2><span class="mw-headline" id="1._On_the_Raspberry_Pi">1. On the Raspberry Pi</span></h2>
+<h3><span class="mw-headline" id="Arch_Linux">Arch Linux</span></h3>
+<pre>pacman -Syu
+pacman -S gcc make
+</pre>
+<h3><span class="mw-headline" id="Funtoo_or_Gentoo_Linux">Funtoo or Gentoo Linux</span></h3>
+<pre>emerge make bc screen
+</pre>
+<h3><span class="mw-headline" id="openSUSE_Linux">openSUSE Linux</span></h3>
+<p>Detailed openSUSE Raspberry Pi 12.3 Image 20130407 + 3.8.8 kernel hack tutorial witten (2013-04-22 updated) 
+see: <a rel="nofollow" class="external free" href="http://www.raspberrypi.org/phpBB3/viewtopic.php?f=87&amp;t=40664&amp;p=331953#p331953">http://www.raspberrypi.org/phpBB3/viewtopic.php?f=87&amp;t=40664&amp;p=331953#p331953</a>
+The kernel compile takes about 22 hours on Raspberry Pi Model B due massive module compiles. Include all IP_VS, ARPD, Fuse-zfs, Zram and more&#160;:-)
+</p><p>This works as well for Debian, Fedora Remix and others (just the package install command differs):
+</p>
+<pre>zypper install u-boot-tools sudo gcc automake autoconf bison gettext flex libncurses5 ncurses-devel
+</pre>
+<h3><span class="mw-headline" id="Raspbian_and_PiBang">Raspbian and PiBang</span></h3>
+<pre>apt-get update
+apt-get -y dist-upgrade
+apt-get -y install gcc make bc screen ncurses-dev git
+</pre>
+<pre>cd /usr/src
+mkdir GIT; cd GIT; git init; D=`date +"%m-%d-%Y"`
+git fetch --depth=1 git://github.com/raspberrypi/linux.git rpi-3.8.y:refs/remotes/origin/rpi-3.8.y
+git checkout rpi-3.8.y
+tar cpf rpi-3.8.y.$D.tar   rpi-3.8.y
+
+cd /usr/src
+tar xpf  GIT/rpi-3.8.y.$D.tar
+rm linux
+ln -s linux-rpi-3.8.y linux
+
+cd /usr/src/linux
+kversion=$(make -s kernelrelease)
+cp linux/.config .config_$kversion
+
+cd /usr/src/
+# Get config-3.8.7.ipvs+krb5+arpd.tar.bz2 from the tutorial:
+wget http://www.raspberrypi.org/phpBB3/download/file.php?id=3174
+# Copy the .config file to /usr/src/linux: 
+tar xpfj config-3.8.7.ipvs+krb5+arpd.tar.bz2
+
+
+#Make the kernel and go sleep&#160;:-)
+cd linux
+make oldconfig
+nohup make zImage dep modules &amp;
+
+#The next day: Install it.
+cd /usr/src/linux
+kversion=$(make -s kernelrelease)
+echo $kversion
+mkdir -p  /boot/$kversion
+make ARCH=arm INSTALL_PATH=/boot/ install
+cp System.map /boot/System.map-$kversion
+cp System.map-$kversion /boot/System.map
+make ARCH=arm modules_install INSTALL_MOD_PATH=/
+make ARCH=arm INSTALL_PATH=/boot/ zinstall
+cp .config /boot/config-$kversion
+cp ./Module.symvers  /boot/symvers-$kversion
+cp arch/arm/boot/Image /boot/kernel.img
+</pre>
+<h2><span class="mw-headline" id="2._Cross_compiling_from_Linux">2. Cross compiling from Linux</span></h2>
+<p>Please note that when cross-compiling, your compiler may not target the correct ARM processor by default. This will at best reduce performance, or worse, compile for a much newer processor resulting in illegal instructions in your code. The pre-built compiler or a custom-built compiler are recommended because of this. (For example, the latest GCC Linaro binary targets armv7-a by default, whereas the Raspberry Pi requires armv6kz). It is possible to add extra compiler options to the <tt>HOSTCFLAGS</tt> line in <tt>Makefile</tt>. The correct flags are shown on the <a href="/RPi_Software#Compiler" title="RPi Software">software page</a> - note that you may also need to add <tt>-marm</tt> if your compiler produces Thumb code by default.
+</p>
+<h3><span class="mw-headline" id="Use_the_provided_compiler">Use the provided compiler</span></h3>
+<p>Download the pre-built bmc2708 compiler from the <a rel="nofollow" class="external text" href="https://github.com/raspberrypi/tools/tree/master/arm-bcm2708/arm-bcm2708hardfp-linux-gnueabi">Raspberry Pi tools section on GitHub</a>.
+</p>
+<pre>git clone git://github.com/raspberrypi/tools.git --depth 1
+</pre>
+<p>Or you can download a tarball from the website using <a rel="nofollow" class="external text" href="https://github.com/raspberrypi/tools/archive/master.tar.gz">this link</a>.
+</p>
+<h3><span class="mw-headline" id="Custom-built_Linaro_GCC">Custom-built Linaro GCC</span></h3>
+<p>See <a href="/RPi_Linaro_GCC_Compilation" title="RPi Linaro GCC Compilation">Linaro GCC Compilation</a>.
+</p>
+<h3><span class="mw-headline" id="Ubuntu">Ubuntu</span></h3>
+<pre>apt-get install gcc-arm-linux-gnueabi make ncurses-dev
+</pre>
+<h3><span class="mw-headline" id="Funtoo_or_Gentoo_Linux_2">Funtoo or Gentoo Linux</span></h3>
+<pre>crossdev -S -v -t arm-unknown-linux-gnueabi
+</pre>
+<p>Crossdev should create a cross-toolchain using the latest stable versions of the required packages. If it fails, you can specify exact versions by removing the "-S" flag and adding the "--b", "--g", "--k" and "--l" flags. On 2012-05-06, <tt>cross -S -v -A gnueabi arm</tt> works just fine.
+</p>
+<h3><span class="mw-headline" id="Arch_Linux_2">Arch Linux</span></h3>
+<pre>yaourt -S arm-linux-gnueabi-gcc
+</pre>
+<h2><span class="mw-headline" id="Cross_compiling_from_OS_X">Cross compiling from OS X</span></h2>
+<h3><span class="mw-headline" id="Macports">Macports</span></h3>
+<p>The kernel source requires a case-sensitive filesystem. If you do not have a HFS+ case-sensitive partition that can be used, create a disk image with the appropriate format.
+Ensure the latest versin of Xcode and command line tools are installed from <a rel="nofollow" class="external text" href="http://developer.apple.com/downloads">Apple Developer Connection</a>
+Install <a rel="nofollow" class="external text" href="http://guide.macports.org/#installing">macports</a>
+</p>
+<pre>port install arm-none-eabi-gcc
+port install arm-none-eabi-binutils
+</pre>
+<p><b>If you get an error message that elf.h is missing</b>
+</p>
+<pre>sudo port install libelf &amp;&amp; sudo ln -s /opt/local/include/libelf /usr/include/libelf
+</pre>
+<p>From opensource.apple.com, download and copy <a rel="nofollow" class="external text" href="https://opensource.apple.com/source/dtrace/dtrace-48/sys/elf.h?txt">elf.h</a> and <a rel="nofollow" class="external text" href="https://opensource.apple.com/source/dtrace/dtrace-48/sys/elftypes.h?txt">elftypes.h</a> to /usr/include
+</p><p>Edit elf.h and add
+</p>
+<pre>#define EM_S390           22    
+#define R_386_NONE        0
+#define R_386_32          1
+#define R_386_PC32        2
+#define R_ARM_NONE        0
+#define R_ARM_PC24        1
+#define R_ARM_ABS32       2
+#define R_MIPS_NONE       0
+#define R_MIPS_16         1
+#define R_MIPS_32         2
+#define R_MIPS_REL32      3
+#define R_MIPS_26         4
+#define R_MIPS_HI16       5
+#define R_MIPS_LO16       6
+#define EM_S390           22
+#define R_MIPS_64         18
+#define R_390_64          22
+#define R_X86_64_64       1
+#define R_SPARC_64        32
+#define R_SH_DIR32        1
+#define R_PPC_ADDR32      1
+#define R_PPC64_ADDR64    38
+#define R_IA64_IMM64      0x23
+</pre>
+<p><b>If you get a "SEGMENT_SIZE is undeclared" error</b>
+open the Makefile and change the line:
+</p>
+<pre>NOSTDINC_FLAGS += -nostdinc -isystem $(shell $(CC) -print-file-name=include)
+</pre>
+<p>to
+</p>
+<pre>NOSTDINC_FLAGS += -nostdinc -isystem $(shell $(CC) -print-file-name=include) -Dlinux
+</pre>
+<p><b>Complete script</b> requires raspberrypi.config to be in the same folder that you execute from.
+</p>
+<pre>sudo port install arm-none-eabi-gcc
+sudo port install arm-none-eabi-binutils
+sudo port install libelf &amp;&amp; sudo ln -s /opt/local/include/libelf /usr/include/libelf
+sudo curl -L http://opensource.apple.com/source/dtrace/dtrace-48/sys/elftypes.h?txt -o  /usr/include/elftypes.h
+sudo curl -L http://opensource.apple.com/source/dtrace/dtrace-48/sys/elf.h?txt -o /usr/include/elf.h
+#code to append to elf.h
+echo "
+#define EM_S390 22    
+#define R_386_NONE 0
+#define R_386_32 1
+#define R_386_PC32 2
+#define R_ARM_NONE 0
+#define R_ARM_PC24 1
+#define R_ARM_ABS32 2
+#define R_MIPS_NONE 0
+#define R_MIPS_16 1
+#define R_MIPS_32 2
+#define R_MIPS_REL32 3
+#define R_MIPS_26 4
+#define R_MIPS_HI16 5
+#define R_MIPS_LO16 6
+#define EM_S390 22
+#define R_MIPS_64 18
+#define R_390_64 22
+#define R_X86_64_64 1
+#define R_SPARC_64 32
+#define R_SH_DIR32 1
+#define R_PPC_ADDR32 1
+#define R_PPC64_ADDR64 38
+#define R_IA64_IMM64 0x23" &gt; elf-append.h
+sudo -s 'cat elf-append.h &gt;&gt; /usr/include/elf.h'
+
+#Make a case sensitive 3&#160;GB disk image, raspberrypi-kernel, and attach it:
+hdiutil create -size 10g -type SPARSEBUNDLE -nospotlight -volname raspberrypi-kernel -fs "Case-sensitive Journaled HFS+" -attach ./raspberrypi-kernel.dmg
+cp raspberrypi.config /Volumes/raspberrypi-kernel/
+mkdir /Volumes/raspberrypi-kernel/src
+cd /Volumes/raspberrypi-kernel/src
+
+#Get source, either 1. from a ZIP file (faster), or 2. from Git
+#1. From a ZIP file
+curl -L https://codeload.github.com/raspberrypi/linux/zip/rpi-3.6.y -o ./rpi-3.6.y.zip
+unzip rpi-3.6.y.zip
+#2. From Git (disabled)
+#git init
+#git fetch git://github.com/raspberrypi/linux.git rpi-3.6.y:refs/remotes/origin/rpi-3.6.y
+#git checkout rpi-3.6.y
+
+cpu=$(sysctl hw.ncpu | awk '{print $2}')
+cpup1=$((cpu+1))
+
+cd /Volumes/raspberrypi-kernel/src/linux-rpi-3.6.y/
+export CCPREFIX=/opt/local/bin/arm-none-eabi-
+make mrproper
+cp /Volumes/raspberrypi-kernel/raspberrypi.config .config
+#Answer yes to all config options
+#yes "" | make ARCH=arm CROSS_COMPILE=${CCPREFIX} oldconfig
+make ARCH=arm CROSS_COMPILE=${CCPREFIX} -j$cpup1
+#make ARCH=arm CROSS_COMPILE=${CCPREFIX} modules -j$cpup1
+</pre>
+<h3><span class="mw-headline" id="Yagarto">Yagarto</span></h3>
+<p>Download and install from <a rel="nofollow" class="external text" href="http://www.yagarto.de/#downloadmac">here</a>.
+</p>
+<h1><span class="mw-headline" id="Perform_the_compilation">Perform the compilation</span></h1>
+<p>Firstly, ensure your build directory is clean:
+</p>
+<pre>make mrproper
+</pre>
+<p>Next, in all cases, you will want to get a working kernel configuration to start from. You can get the one running on the Raspberry Pi by typing the following (on the Raspberry Pi):
+</p>
+<pre>zcat /proc/config.gz &gt; .config
+</pre>
+<p>Then copy <tt>.config</tt> into your build directory.
+</p><p>Alternatively, the default configuration is available in the downloaded kernel source in <tt>arch/arm/configs/bcmrpi_defconfig</tt>. Just copy this to <tt>.config</tt> in the build directory.
+</p><p>From this point on, if you are cross-compiling, set an environment variable <tt>CCPREFIX</tt> that points to the prefix of your compiler binary as each compiler will be named slightly differently.
+</p>
+<pre>export CCPREFIX=/path/to/your/compiler/binary/prefix-of-binary-
+</pre>
+<p>If you are building on the Raspberry Pi, remove <tt>ARCH=arm CROSS_COMPILE=${CCPREFIX}</tt> from each command.
+</p><p>Ensure that your configuration file is up-to-date:
+</p>
+<pre>make ARCH=arm CROSS_COMPILE=${CCPREFIX} oldconfig
+</pre>
+<p>If any configuration options have been added, you will be asked what set each option to. If you don't know the answer, just press enter to accept the default.
+</p><p>Optionally, if you want to make changes to the configuration, run this next:
+</p>
+<pre>make ARCH=arm CROSS_COMPILE=${CCPREFIX} menuconfig
+</pre>
+<p>Now you are ready to build:<br />
+(On the Raspberry Pi, type 'screen' to open a virtual screen. If you use it you can disconnect from the Raspberry Pi and compile overnight...)
+</p>
+<pre>make ARCH=arm CROSS_COMPILE=${CCPREFIX}
+</pre>
+<p>If you are on a multi-core system, you can make the build faster by appending <tt>-j&lt;N&gt;</tt> where <tt>&lt;N&gt;</tt> is the number of cores on your system plus one (that is, -j3 for two cores).
+</p><p>Find something else to get on with while the compilation takes place. On an average PC with the default configuration, this should take about 15 minutes.
+</p><p>The modules will be build with the following command.
+</p>
+<pre>make ARCH=arm CROSS_COMPILE=${CCPREFIX} modules
+</pre>
+<h1><span class="mw-headline" id="Transfer_the_build">Transfer the build</span></h1>
+<p>The fully built kernel will be <tt>arch/arm/boot/Image</tt>. Copy your new kernel file into the Raspberry Pi boot partition, though preferably as a new file (such as <tt>kernel_new.img</tt>) just in case it doesn't work. If you're building on the Raspberry Pi, just copy the file to <tt>/boot</tt>. If you use a different filename, edit <tt>config.txt</tt> change the kernel line:
+</p>
+<pre>kernel=kernel_new.img
+#kernel=kernel.img
+</pre>
+<p>Now you need to transfer the modules. Set an environment variable that points to a temporary module path.
+</p>
+<pre>export MODULES_TEMP=~/modules
+</pre>
+<p>In the build directory, run the following command:
+</p>
+<pre>make ARCH=arm CROSS_COMPILE=${CCPREFIX} INSTALL_MOD_PATH=${MODULES_TEMP} modules_install
+</pre><p>
+The contents of this directory, a single </p><pre>lib</pre><p> directory, should then be copied into the Raspberry Pi root directory, merging or overwriting </p><pre>/lib</pre>
+<p>NOTE: If you have rebuilt the new kernel with exactly the same version as the one that's running, you'll need to remove the old modules first. Ideally this should be done offline by mounting the SD card on another system.
+</p><p>NOTE: The lib directory will have symlinks back to the kernel sources (lib/modules/&lt;kernel-version&gt;/source and lib/modules/&lt;kernel-version&gt;/build). If you have limited space on the SD card and don't intend to compile modules on the Raspberry Pi itself, you will probably want to remove those links before you transfer the lib directory. The size difference can be many hundreds of MB.
+</p><p>Your Raspberry Pi should now be ready to boot the new kernel. However, at this point it's recommended that you update your GPU firmware and libraries. <b>This is required if you've just moved from 3.2 to 3.6 as the firmware interface has changed</b>.
+</p>
+<h1><span class="mw-headline" id="Get_the_firmware">Get the firmware</span></h1>
+<p>The firmware and boot files should be updated at the same time to ensure that your new kernel works properly. Again, two branches are available:
+</p>
+<ul><li><b>master</b> - This is the version of firmware currently used in Raspbian (that is, it works with the 3.2 kernel).</li>
+<li><b>next</b> - This is a development branch which provides a newer GPU firmware to work with the updated drivers in the 3.6 kernel.</li></ul>
+<p>You can either download the source directly using Git:
+You can download the firmware directly using Git. For the master branch:
+</p>
+<pre>git clone git://github.com/raspberrypi/firmware.git
+</pre>
+<p>And for the next branch:
+</p>
+<pre>git fetch git://github.com/raspberrypi/firmware.git next:refs/remotes/origin/next
+</pre>
+<p>Or you can download a tarball from the website using these links: <a rel="nofollow" class="external text" href="https://github.com/raspberrypi/firmware/archive/master.tar.gz">master</a> <a rel="nofollow" class="external text" href="https://github.com/raspberrypi/firmware/archive/next.tar.gz">next</a>
+</p>
+<h1><span class="mw-headline" id="Transfer_the_firmware">Transfer the firmware</span></h1>
+<p>Firstly, update the required boot files in the Raspberry Pi <tt>boot</tt> directory with those you've downloaded. These are:
+</p>
+<ul><li>bootcode.bin</li>
+<li>fixup.dat</li>
+<li>start.elf</li></ul>
+<p>Next, you need to copy the VC libraries over. There are two copies of this: one for hard float and one for soft float. To find the correct one, run the following command:
+</p>
+<pre>${CCPREFIX}gcc -v 2&gt;&amp;1 | grep hard
+</pre>
+<p>If something prints out, and you can see <tt>--with-float=hard</tt>, you need the hard float ones. NOTE: The current version of Raspbian uses hard float.
+</p><p>Remove the <tt>/opt/vc</tt> directory from the Raspberry Pi root, then:
+</p>
+<ul><li>For hard float, copy <tt>vc</tt> from the <tt>hardfp/opt</tt> directory into <tt>/opt</tt> in the Raspberry Pi root directory</li>
+<li>Otherwise copy <tt>vc</tt> from the top-level <tt>opt</tt> directory into <tt>/opt</tt> in the Raspberry Pi root directory.</li></ul>
+<p>Note: The hard float vs soft float here refers only to the kernel itself, not the functionality it provides. Your applications will still be able to use hard floats. The kernel doesn't use floats anyway, so it is not something to worry about as long as you select the correct <tt>vc</tt> directory to copy.
+</p>
+<h1><span class="mw-headline" id="Test_your_build">Test your build</span></h1>
+<p>Power cycle your Raspberry Pi and check the following:
+</p>
+<ul><li>If you have the serial port on the GPIO expander wired up, you should see the kernel booting.</li>
+<li>The screen works - the kernel boots and you get a login prompt.</li>
+<li>The VC interface is working - if the 'OK' LED flashes regularly eight or so times every few seconds once the OS has booted, it's not. You can also test this by running <tt>vcgencmd measure_temp</tt>. If it prints "VCHI initialization failed", you have the a mismatch between the firmware, the VC libraries, and the kernel driver.</li>
+<li>Run <tt>uname -a</tt> and check that your new kernel is the one that's running.</li>
+<li>Make sure you don't have any odd error messages during boot that may indicate a module isn't working properly. If you see <tt>missed completion of cmd 18</tt> regarding DMA transfers to the SD card, you can safely ignore it.</li></ul>
+<h1><span class="mw-headline" id="Build_modules_for_the_running_kernel">Build modules for the running kernel</span></h1>
+<p>You need the kernel sources for the currently running kernel to successfully build kernel modules for the Raspberry Pi. More specifically, only parts of the complete source, the so called kernel headers are needed. 
+There are two ways to arrive at a state from which you can build kernel modules on the Raspberry Pi. <br />
+<a href="/Raspberry_Pi_Kernel_Compilation#1._Using_rpi-source" title="Raspberry Pi Kernel Compilation">1.</a> is most suitable if you have been using Kernel sources from raspberrypi.org <br />
+<a href="/Raspberry_Pi_Kernel_Compilation#2._Manually" title="Raspberry Pi Kernel Compilation">2.</a> is using only mainline kernel stuff
+</p>
+<h2><span class="mw-headline" id="1._Using_rpi-source">1. Using rpi-source</span></h2>
+<p><a rel="nofollow" class="external text" href="https://github.com/notro/rpi-source/wiki">rpi-source</a> downloads a matching source for the running kernel.
+It supports rpi-update kernels and Raspian kernels. 
+</p><p>Examples: <a rel="nofollow" class="external free" href="https://github.com/notro/rpi-source/wiki/Examples-on-how-to-build-various-modules">https://github.com/notro/rpi-source/wiki/Examples-on-how-to-build-various-modules</a>
+</p>
+<h2><span class="mw-headline" id="2._Manually">2. Manually</span></h2>
+<p>If you have used or want to stick with a vanilla (mainline) kernel, there is a different way
+</p><p>You have been following the <a href="/RPi_Upstream_Kernel_Compilation" title="RPi Upstream Kernel Compilation">RPi_Upstream_Kernel_Compilation</a> guide, correct? Great, let's move on: That guide is not using modules, so enable modules in make menuconfig first. Then execute 
+</p>
+<pre>$ ARCH=arm CROSS_COMPILE=${CCPREFIX} chrt -i 0 make -j 8
+$ ARCH=arm CROSS_COMPILE=${CCPREFIX} INSTALL_MOD_PATH=${MODULES_TEMP} make modules_install
+</pre>
+<p>The second line will create the .ko files and it will create the necessary folder structure (/usr/src/linux/lib/modules/`uname -r`/[build|kernel|source]. build and source are symlinks to the kernel sources. kernel contains the module files (under some subdirectories). 
+</p><p>Now you can continue with <a href="/RPi_Upstream_Kernel_Compilation" title="RPi Upstream Kernel Compilation">RPi_Upstream_Kernel_Compilation</a> compiling the bootloader and so on. Finally also copy the used kernel sources onto the SD card, e.g. under /home/pi/linux
+</p>
+<pre>$ cp -av /usr/src/linux/ &lt;sdcard-ext4-root&gt;/home/pi/
+</pre>
+<p>Boot the Raspberry Pi, then execute
+</p>
+<pre>$ cd /home/pi
+$ sudo chown -R pi:pi linux/
+</pre>
+<p>to change back ownership to you (this is necessary unless your username on your build machine is also "pi"...). Now copy /home/pi/linux/lib/modules/* to the correct
+</p>
+<pre>$ sudo cp -R /home/pi/linux/lib/modules/`uname -r`/ /lib/modules/
+</pre>
+<p>Correct the symlinks:
+</p>
+<pre>$ sudo cd /lib/modules/`uname -r`/
+$ sudo rm build source
+$ ln -s /home/pi/linux build
+$ ln -s /home/pi/linux source
+</pre>
+<p>Now, we need to fix one more problem: During the cross-compilation build, a couple scripts were compiled for the host. We also need them for the Raspberry Pi. Still on the Pi, this can be checked with e.g. 
+</p>
+<pre>$ file /home/pi/linux/scripts/recordmcount (returns something with x86-64)
+$ cd /home/pi/linux/
+$ make scripts
+$ file /home/pi/linux/scripts/recordmcount (now returns something with 32-bit and ARM)
+</pre>
+<p><br />
+</p><p><br />
+</p>
+<table cellspacing="0" class="navbox" style="border-spacing:0;width:100%;"><tbody><tr><td style="padding:2px;"><table cellspacing="0" class="nowraplinks navbox-inner" style="border-spacing:0;background:transparent;color:inherit;"><tbody><tr><th scope="col" class="navbox-title" colspan="3" style="background:#00CC00;;"><div class="plainlinks hlist navbar mini"><ul><li class="nv-view"><a href="/Template:Raspberry_Pi" title="Template:Raspberry Pi"><span title="View this template" style="background:#00CC00;;;background:none transparent;border:none;;">v</span></a></li><li class="nv-talk"><a href="/Template_talk:Raspberry_Pi" title="Template talk:Raspberry Pi"><span title="Discuss this template" style="background:#00CC00;;;background:none transparent;border:none;;">t</span></a></li><li class="nv-edit"><a rel="nofollow" class="external text" href="https://elinux.org/index.php?title=Template:Raspberry_Pi&amp;action=edit"><span title="Edit this template" style="background:#00CC00;;;background:none transparent;border:none;;">e</span></a></li></ul></div><span style="float:right;width:6em;">&#160;</span><div style="font-size:110%;"><a href="/R-Pi_Hub" class="mw-redirect" title="R-Pi Hub"><span style="color:#FFFFFF">Raspberry Pi</span></a></div></th></tr><tr style="height:2px;"><td colspan="2"></td></tr><tr><th scope="row" class="navbox-group" style="background:#00CC00;;background:#AA0033;"><b><span style="color:#FFFFFF">Startup</span></b></th><td class="navbox-list navbox-odd hlist" style="text-align:left;border-left-width:2px;border-left-style:solid;width:100%;padding:0px;background:#FFE0FF;;"><div style="padding:0em 0.25em;"><a href="/RPi_Buying_Guide" title="RPi Buying Guide">Buying Guide</a> - <a href="/RPi_Easy_SD_Card_Setup" title="RPi Easy SD Card Setup">SD Card Setup</a> - <a href="/RPi_Hardware_Basic_Setup" title="RPi Hardware Basic Setup">Basic Setup</a> - <a href="/RPi_Advanced_Setup" title="RPi Advanced Setup">Advanced Setup</a> - <a href="/RPi_Beginners" title="RPi Beginners">Beginners Guide</a> - <a href="/R-Pi_Troubleshooting" title="R-Pi Troubleshooting">Troubleshooting</a></div></td><td class="navbox-image" rowspan="9" style="width:0%;padding:0px 0px 0px 2px;"><div><a href="/File:RpiFront.jpg" class="image"><img alt="RpiFront.jpg" src="/images/thumb/9/96/RpiFront.jpg/167px-RpiFront.jpg" width="167" height="119" srcset="/images/thumb/9/96/RpiFront.jpg/251px-RpiFront.jpg 1.5x, /images/thumb/9/96/RpiFront.jpg/334px-RpiFront.jpg 2x" /></a></div></td></tr><tr style="height:2px;"><td colspan="2"></td></tr><tr><th scope="row" class="navbox-group" style="background:#00CC00;;background:#AA0033;"><b><span style="color:#FFFFFF">Hardware</span></b></th><td class="navbox-list navbox-even hlist" style="text-align:left;border-left-width:2px;border-left-style:solid;width:100%;padding:0px;background:#FFE0FF;;"><div style="padding:0em 0.25em;"><a href="/RPi_Hardware" title="RPi Hardware">Hardware</a> - <a href="/RPi_HardwareHistory" title="RPi HardwareHistory">Hardware History</a> - <a href="/RPi_Low-level_peripherals" title="RPi Low-level peripherals">Low-level peripherals</a> - <a href="/RPi_Expansion_Boards" title="RPi Expansion Boards">Expansion Boards</a></div></td></tr><tr style="height:2px;"><td colspan="2"></td></tr><tr><th scope="row" class="navbox-group" style="background:#00CC00;;background:#AA0033;"><b><span style="color:#FFFFFF">Peripherals</span></b></th><td class="navbox-list navbox-odd hlist" style="text-align:left;border-left-width:2px;border-left-style:solid;width:100%;padding:0px;background:#FFE0FF;;"><div style="padding:0em 0.25em;"><a href="/RPi_Screens" title="RPi Screens">Screens</a> - <a href="/RPi_Cases" title="RPi Cases">Cases</a> - <a href="/RPi_VerifiedPeripherals" title="RPi VerifiedPeripherals">Other Peripherals (Keyboard, mouse, hub, wifi...)</a></div></td></tr><tr style="height:2px;"><td colspan="2"></td></tr><tr><th scope="row" class="navbox-group" style="background:#00CC00;;background:#AA0033;"><b><span style="color:#FFFFFF">Software</span></b></th><td class="navbox-list navbox-even hlist" style="text-align:left;border-left-width:2px;border-left-style:solid;width:100%;padding:0px;background:#FFE0FF;;"><div style="padding:0em 0.25em;"><a href="/RPi_Software" title="RPi Software">Software</a> - <a href="/RPi_Distributions" title="RPi Distributions">Distributions</a> - <a href="/RPi_Kernel_Compilation" class="mw-redirect" title="RPi Kernel Compilation">Kernel</a> - <a href="/RPi_Performance" title="RPi Performance">Performance</a> -  <a href="/RPi_Programming" class="mw-redirect" title="RPi Programming">Programming</a> - <a href="/RPi_VideoCore_APIs" class="mw-redirect" title="RPi VideoCore APIs">VideoCore APIs</a> - <a href="/RPi_Utilities" title="RPi Utilities">Utilities</a></div></td></tr><tr style="height:2px;"><td colspan="2"></td></tr><tr><th scope="row" class="navbox-group" style="background:#00CC00;;background:#AA0033;"><b><span style="color:#FFFFFF">Projects</span></b></th><td class="navbox-list navbox-odd hlist" style="text-align:left;border-left-width:2px;border-left-style:solid;width:100%;padding:0px;background:#FFE0FF;;"><div style="padding:0em 0.25em;"><a href="/RPi_Tutorials" title="RPi Tutorials">Tutorials</a> - <a href="/RPi_Guides" title="RPi Guides">Guides</a> - <a href="/RPi_Projects" title="RPi Projects">Projects</a> - <a href="/RPi_Tasks" title="RPi Tasks">Tasks</a> - <a href="/RPi_DatasheetCategories" title="RPi DatasheetCategories">DataSheets</a> - <a href="/RPi_Education" title="RPi Education">Education</a> - <a href="/RPi_Community" title="RPi Community">Communities</a></div></td></tr></tbody></table></td></tr></tbody></table>
+
+<!-- 
+NewPP limit report
+Cached time: 20191012145346
+Cache expiry: 86400
+Dynamic content: false
+CPU time usage: 0.097 seconds
+Real time usage: 0.185 seconds
+Preprocessor visited node count: 457/1000000
+Preprocessor generated node count: 982/1000000
+Post‐expand include size: 13410/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 4/40
+Expensive parser function count: 0/100
+Unstrip recursion depth: 0/20
+Unstrip post‐expand size: 4828/5000000 bytes
+Lua time usage: 0.040/7.000 seconds
+Lua virtual size: 8.48 MB/50 MB
+Lua estimated memory usage: 0 bytes
+-->
+<!--
+Transclusion expansion time report (%,ms,calls,template)
+100.00%  108.526      1 -total
+ 84.97%   92.217      1 Template:Raspberry_Pi
+ 79.91%   86.725      1 Template:Navbox
+ 12.32%   13.372      1 Template:RPi_Software
+  4.40%    4.774      1 Template:TOC_right
+  3.78%    4.103      1 Template:Clear
+-->
+</div>
+<!-- Saved in parser cache with key elinux:pcache:idhash:15998-0!canonical and timestamp 20191012145346 and revision id 451831
+ -->
+</div>					<div class="printfooter">
+						Retrieved from "<a dir="ltr" href="https://elinux.org/index.php?title=Raspberry_Pi_Kernel_Compilation&amp;oldid=451831">https://elinux.org/index.php?title=Raspberry_Pi_Kernel_Compilation&amp;oldid=451831</a>"					</div>
+				<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="/Special:Categories" title="Special:Categories">Categories</a>: <ul><li><a href="/Category:RaspberryPi" title="Category:RaspberryPi">RaspberryPi</a></li><li><a href="/index.php?title=Category:Linux-kernel&amp;action=edit&amp;redlink=1" class="new" title="Category:Linux-kernel (page does not exist)">Linux-kernel</a></li></ul></div></div>				<div class="visualClear"></div>
+							</div>
+		</div>
+		<div id="mw-navigation">
+			<h2>Navigation menu</h2>
+			<div id="mw-head">
+									<div id="p-personal" role="navigation" class="" aria-labelledby="p-personal-label">
+						<h3 id="p-personal-label">Personal tools</h3>
+						<ul>
+							<li id="pt-login"><a href="/index.php?title=Special:UserLogin&amp;returnto=Raspberry+Pi+Kernel+Compilation" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li><li id="pt-createaccount"><a href="/Special:RequestAccount" title="You are encouraged to create an account and log in; however, it is not mandatory">Request account</a></li>						</ul>
+					</div>
+									<div id="left-navigation">
+										<div id="p-namespaces" role="navigation" class="vectorTabs" aria-labelledby="p-namespaces-label">
+						<h3 id="p-namespaces-label">Namespaces</h3>
+						<ul>
+							<li id="ca-nstab-main" class="selected"><span><a href="/Raspberry_Pi_Kernel_Compilation" title="View the content page [c]" accesskey="c">Page</a></span></li><li id="ca-talk"><span><a href="/Talk:Raspberry_Pi_Kernel_Compilation" rel="discussion" title="Discussion about the content page [t]" accesskey="t">Discussion</a></span></li>						</ul>
+					</div>
+										<div id="p-variants" role="navigation" class="vectorMenu emptyPortlet" aria-labelledby="p-variants-label">
+												<input type="checkbox" class="vectorMenuCheckbox" aria-labelledby="p-variants-label" />
+						<h3 id="p-variants-label">
+							<span>Variants</span>
+						</h3>
+						<div class="menu">
+							<ul>
+															</ul>
+						</div>
+					</div>
+									</div>
+				<div id="right-navigation">
+										<div id="p-views" role="navigation" class="vectorTabs" aria-labelledby="p-views-label">
+						<h3 id="p-views-label">Views</h3>
+						<ul>
+							<li id="ca-view" class="collapsible selected"><span><a href="/Raspberry_Pi_Kernel_Compilation">Read</a></span></li><li id="ca-viewsource" class="collapsible"><span><a href="/index.php?title=Raspberry_Pi_Kernel_Compilation&amp;action=edit" title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li><li id="ca-history" class="collapsible"><span><a href="/index.php?title=Raspberry_Pi_Kernel_Compilation&amp;action=history" title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>						</ul>
+					</div>
+										<div id="p-cactions" role="navigation" class="vectorMenu emptyPortlet" aria-labelledby="p-cactions-label">
+						<input type="checkbox" class="vectorMenuCheckbox" aria-labelledby="p-cactions-label" />
+						<h3 id="p-cactions-label"><span>More</span></h3>
+						<div class="menu">
+							<ul>
+															</ul>
+						</div>
+					</div>
+										<div id="p-search" role="search">
+						<h3>
+							<label for="searchInput">Search</label>
+						</h3>
+						<form action="/index.php" id="searchform">
+							<div id="simpleSearch">
+								<input type="search" name="search" placeholder="Search eLinux.org" title="Search eLinux.org [f]" accesskey="f" id="searchInput"/><input type="hidden" value="Special:Search" name="title"/><input type="submit" name="fulltext" value="Search" title="Search the pages for this text" id="mw-searchButton" class="searchButton mw-fallbackSearchButton"/><input type="submit" name="go" value="Go" title="Go to a page with this exact name if it exists" id="searchButton" class="searchButton"/>							</div>
+						</form>
+					</div>
+									</div>
+			</div>
+			<div id="mw-panel">
+				<div id="p-logo" role="banner"><a class="mw-wiki-logo" href="/Main_Page"  title="Visit the main page"></a></div>
+						<div class="portal" role="navigation" id="p-Navigation" aria-labelledby="p-Navigation-label">
+			<h3 id="p-Navigation-label">Navigation</h3>
+			<div class="body">
+								<ul>
+					<li id="n-mainpage"><a href="/Main_Page" title="Visit the main page [z]" accesskey="z">Main Page</a></li><li id="n-portal"><a href="/eLinux.org:Community_portal" title="About the project, what you can do, where to find things">Community portal</a></li><li id="n-currentevents"><a href="/eLinux.org:Current_events" title="Find background information on current events">Current events</a></li><li id="n-recentchanges"><a href="/Special:RecentChanges" title="A list of recent changes in the wiki [r]" accesskey="r">Recent changes</a></li><li id="n-help"><a href="https://www.mediawiki.org/wiki/Special:MyLanguage/Help:Contents" title="The place to find out">Help</a></li><li id="n-Volunteering"><a href="/Sitesupport-url">Volunteering</a></li><li id="n-Bug-Tracker"><a href="http://bugs.elinux.org" rel="nofollow">Bug Tracker</a></li>				</ul>
+							</div>
+		</div>
+			<div class="portal" role="navigation" id="p-Where_else_to_find_us" aria-labelledby="p-Where_else_to_find_us-label">
+			<h3 id="p-Where_else_to_find_us-label">Where else to find us</h3>
+			<div class="body">
+								<ul>
+					<li id="n-Google.2B-Community"><a href="https://plus.google.com/u/0/communities/113852495250648539361" rel="nofollow">Google+ Community</a></li><li id="n-Twitter-.28.40elinux.29"><a href="https://twitter.com/elinux" rel="nofollow">Twitter (@elinux)</a></li><li id="n-.23elinux-on-Freenode"><a href="irc://#elinux@irc.freenode.net" rel="nofollow">#elinux on Freenode</a></li><li id="n-Facebook-.28.40elinux.org.29"><a href="https://www.facebook.com/elinuxorg-750739005020534/" rel="nofollow">Facebook (@elinux.org)</a></li><li id="n-Mailing-Lists"><a href="http://www.elinux.org/ELinuxWiki:Mailing_List" rel="nofollow">Mailing Lists</a></li>				</ul>
+							</div>
+		</div>
+			<div class="portal" role="navigation" id="p-tb" aria-labelledby="p-tb-label">
+			<h3 id="p-tb-label">Tools</h3>
+			<div class="body">
+								<ul>
+					<li id="t-whatlinkshere"><a href="/Special:WhatLinksHere/Raspberry_Pi_Kernel_Compilation" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li><li id="t-recentchangeslinked"><a href="/Special:RecentChangesLinked/Raspberry_Pi_Kernel_Compilation" rel="nofollow" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li><li id="t-specialpages"><a href="/Special:SpecialPages" title="A list of all special pages [q]" accesskey="q">Special pages</a></li><li id="t-print"><a href="/index.php?title=Raspberry_Pi_Kernel_Compilation&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li><li id="t-permalink"><a href="/index.php?title=Raspberry_Pi_Kernel_Compilation&amp;oldid=451831" title="Permanent link to this revision of the page">Permanent link</a></li><li id="t-info"><a href="/index.php?title=Raspberry_Pi_Kernel_Compilation&amp;action=info" title="More information about this page">Page information</a></li>				</ul>
+							</div>
+		</div>
+				</div>
+		</div>
+				<div id="footer" role="contentinfo">
+						<ul id="footer-info">
+								<li id="footer-info-lastmod"> This page was last edited on 1 October 2017, at 13:43.</li>
+								<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="https://creativecommons.org/licenses/by-sa/3.0/">a Creative Commons Attribution-ShareAlike 3.0 Unported License</a> unless otherwise noted.</li>
+							</ul>
+						<ul id="footer-places">
+								<li id="footer-places-privacy"><a href="/eLinux.org:Privacy_policy" title="eLinux.org:Privacy policy">Privacy policy</a></li>
+								<li id="footer-places-about"><a href="/eLinux.org:About" title="eLinux.org:About">About eLinux.org</a></li>
+								<li id="footer-places-disclaimer"><a href="/eLinux.org:General_disclaimer" title="eLinux.org:General disclaimer">Disclaimers</a></li>
+							</ul>
+										<ul id="footer-icons" class="noprint">
+										<li id="footer-copyrightico">
+						<a href="https://creativecommons.org/licenses/by-sa/3.0/"><img src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png" alt="a Creative Commons Attribution-ShareAlike 3.0 Unported License" width="88" height="31"/></a>					</li>
+										<li id="footer-poweredbyico">
+						<a href="//www.mediawiki.org/"><img src="/resources/assets/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" srcset="/resources/assets/poweredby_mediawiki_132x47.png 1.5x, /resources/assets/poweredby_mediawiki_176x62.png 2x" width="88" height="31"/></a>					</li>
+									</ul>
+						<div style="clear: both;"></div>
+		</div>
+		<script>(window.RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgPageParseReport":{"limitreport":{"cputime":"0.097","walltime":"0.185","ppvisitednodes":{"value":457,"limit":1000000},"ppgeneratednodes":{"value":982,"limit":1000000},"postexpandincludesize":{"value":13410,"limit":2097152},"templateargumentsize":{"value":0,"limit":2097152},"expansiondepth":{"value":4,"limit":40},"expensivefunctioncount":{"value":0,"limit":100},"unstrip-depth":{"value":0,"limit":20},"unstrip-size":{"value":4828,"limit":5000000},"timingprofile":["100.00%  108.526      1 -total"," 84.97%   92.217      1 Template:Raspberry_Pi"," 79.91%   86.725      1 Template:Navbox"," 12.32%   13.372      1 Template:RPi_Software","  4.40%    4.774      1 Template:TOC_right","  3.78%    4.103      1 Template:Clear"]},"scribunto":{"limitreport-timeusage":{"value":"0.040","limit":"7.000"},"limitreport-virtmemusage":{"value":8896512,"limit":52428800},"limitreport-estmemusage":0},"cachereport":{"timestamp":"20191012145346","ttl":86400,"transientcontent":false}}});});</script><!-- No web analytics configured. -->
+<script>(window.RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgBackendResponseTime":133});});</script>
+	</body>
+</html>

@@ -1,0 +1,6 @@
+Package: pcre
+Provides: libpcre3, libpcre3-udeb, libpcrecpp0v5, libpcre3-dev, libpcre3-dbg, pcregrep, libpcre16-3, libpcre32-3 
+Version: 2:8.43
+Maintainer: J05HYYY
+Priority: optional
+Description: No description availiable.

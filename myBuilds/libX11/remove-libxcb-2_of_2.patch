@@ -1,0 +1,23 @@
+--- configure.ac.old	2019-06-17 15:47:35.000000000 +0100
++++ configure.ac	2019-07-24 07:58:48.978944000 +0100
+@@ -78,8 +78,8 @@
+ # Checks for pkg-config packages
+ 
+ # Always required
+-X11_REQUIRES='xproto >= 7.0.17 xextproto xtrans xcb >= 1.11.1'
+-X11_EXTRA_DEPS="xcb >= 1.11.1"
++X11_REQUIRES='xproto >= 7.0.17 xextproto xtrans'
++X11_EXTRA_DEPS=""
+ 
+ PKG_PROG_PKG_CONFIG()
+ 
+@@ -417,8 +417,7 @@
+ 		specs/libX11/Makefile
+ 		specs/XIM/Makefile
+ 		specs/XKB/Makefile
+-		x11.pc
+-		x11-xcb.pc])
++		x11.pc])
+ AC_OUTPUT
+ 
+ echo ""

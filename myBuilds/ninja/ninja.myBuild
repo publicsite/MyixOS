@@ -1,0 +1,57 @@
+#!/bin/sh
+version="1.9.0"
+filename="ninja-${version}"
+extension=".tar.gz"
+source="https://github.com/ninja-build/ninja/archive/v${version}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	mv "${myBuildSourceDest}/v${version}${extension}" "${myBuildSourceDest}/${filename}${extension}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+#i'm not sure if this line works
+CC=${TARGET}-cc CXX=${TARGET}-g++ AR=${TARGET}-ar python3 ./configure.py --platform=linux --host=linux --with-python=python3
+
+ninja
+
+#./configure \
+#    --prefix="${PREFIX}/${TARGET}" \
+#    --build=${BUILD} \
+#    --host=${HOST} \
+#    --target=${TARGET}
+
+#make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+cp -a ninja ${SYSROOT}${PREFIX}/${TARGET}/bin
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

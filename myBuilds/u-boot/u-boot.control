@@ -1,0 +1,6 @@
+Package: u-boot, u-boot-amlogic, u-boot-imx, u-boot-qcom, u-boot-tegra, u-boot-omap, u-boot-sunxi, u-boot-exynos, u-boot-mvebu, u-boot-rockchip, u-boot-rpi, u-boot-tools 
+Version: 2019.10
+Maintainer: J05HYYY
+Homepage: http://www.denx.de/wiki/U-Boot/
+Priority: optional
+Description: No description availiable.

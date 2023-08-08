@@ -1,0 +1,123 @@
+#!/bin/sh
+actualname="busybox"
+version="FRP-3244-g48128b9aa"
+filename="${actualname}-w32-${version}"
+extension=".tgz"
+source="https://frippery.org/files/busybox/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	#mv "${myBuildSourceDest}/${version}${extension}" "${myBuildSourceDest}/${filename}${extension}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/busybox-w32"
+if [ "$?" != "0" ]; then return 1; fi #check for errors
+
+if [ "$BITS" = "64" ]; then
+	sed -i "s#CONFIG_EXTRA_CFLAGS=\"\"#CONFIG_EXTRA_CFLAGS=\"-I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include\"#g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+	sed -i "s#CONFIG_EXTRA_LDFLAGS=\"\"#CONFIG_EXTRA_LDFLAGS=\"-B${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib\"#g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+	sed -i "s#CONFIG_SYSROOT=\"\"#CONFIG_SYSROOT=\"${TEMP_SYSROOT}\"\n#g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+
+	sed -i "s/CONFIG_TAR=y/# CONFIG_TAR is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_LONG_OPTIONS=y/# CONFIG_FEATURE_TAR_LONG_OPTIONS is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_CREATE=y/# CONFIG_FEATURE_TAR_CREATE is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_AUTODETECT=y/# CONFIG_FEATURE_TAR_AUTODETECT is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_FROM=y/# CONFIG_FEATURE_TAR_FROM is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_OLDGNU_COMPATIBILITY=y/# CONFIG_FEATURE_TAR_OLDGNU_COMPATIBILITY is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_GNU_EXTENSIONS=y/# CONFIG_FEATURE_TAR_GNU_EXTENSIONS is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_NOPRESERVE_TIME=y/# CONFIG_FEATURE_TAR_NOPRESERVE_TIME is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+	sed -i "s/CONFIG_FEATURE_PREFER_APPLETS=y/# CONFIG_FEATURE_PREFER_APPLETS is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw64_defconfig"
+	sed -i "s/# CONFIG_INSTALL_APPLET_HARDLINKS is not set/CONFIG_INSTALL_APPLET_HARDLINKS=y/g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+
+	make CROSS_COMPILE=${TARGET}- CONFIG_PREFIX="${SYSROOT}" PREFIX="${PREFIX}/${TARGET}" libdir="${PREFIX}/${TARGET}/lib" mingw64_defconfig
+else
+	sed -i "s#CONFIG_EXTRA_CFLAGS=\"\"#CONFIG_EXTRA_CFLAGS=\"-I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include\"#g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+	sed -i "s#CONFIG_EXTRA_LDFLAGS=\"\"#CONFIG_EXTRA_LDFLAGS=\"-B${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib\"#g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+	sed -i "s#CONFIG_SYSROOT=\"\"#CONFIG_SYSROOT=\"${TEMP_SYSROOT}\"\n#g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+
+	sed -i "s/CONFIG_TAR=y/# CONFIG_TAR is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_LONG_OPTIONS=y/# CONFIG_FEATURE_TAR_LONG_OPTIONS is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_CREATE=y/# CONFIG_FEATURE_TAR_CREATE is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_AUTODETECT=y/# CONFIG_FEATURE_TAR_AUTODETECT is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_FROM=y/# CONFIG_FEATURE_TAR_FROM is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_OLDGNU_COMPATIBILITY=y/# CONFIG_FEATURE_TAR_OLDGNU_COMPATIBILITY is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_GNU_EXTENSIONS=y/# CONFIG_FEATURE_TAR_GNU_EXTENSIONS is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+	sed -i "s/CONFIG_FEATURE_TAR_NOPRESERVE_TIME=y/# CONFIG_FEATURE_TAR_NOPRESERVE_TIME is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+	sed -i "s/CONFIG_FEATURE_PREFER_APPLETS=y/# CONFIG_FEATURE_PREFER_APPLETS is not set/g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+	sed -i "s/# CONFIG_INSTALL_APPLET_HARDLINKS is not set/CONFIG_INSTALL_APPLET_HARDLINKS=y/g" "${myBuildExtractDest}/busybox-w32/configs/mingw32_defconfig"
+
+	make CROSS_COMPILE=${TARGET}- CONFIG_PREFIX="${SYSROOT}" PREFIX="${PREFIX}/${TARGET}" libdir="${PREFIX}/${TARGET}/lib" mingw32_defconfig
+fi
+
+make CROSS_COMPILE=${TARGET}- CONFIG_PREFIX="${SYSROOT}" PREFIX="${PREFIX}/${TARGET}" libdir="${PREFIX}/${TARGET}/lib"
+
+return "$?"
+}
+
+do_install(){
+
+mkdir "${SYSROOT}/tmp"
+
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/busybox-w32"
+cp -a "${myBuildHome}"/myBuilds/busybox-w32/busyboxSetPath.sh "${SYSROOT}"
+cp -a "${myBuildHome}"/myBuilds/busybox-w32/run.bat "${SYSROOT}"
+
+cp -a "${myBuildExtractDest}/busybox-w32/busybox.exe" "${SYSROOT}${PREFIX}/${TARGET}/bin"
+
+cd "${SYSROOT}${PREFIX}/${TARGET}/bin"
+for applet in $(cat "${myBuildExtractDest}/busybox-w32/include/applet_tables.h" | grep '"\\0"' | cut -d \" -f 2); do
+	if [ "${applet}" != "busybox" ]; then
+		$MYIXOS_LINK busybox.exe ${applet}.exe
+	fi
+done
+
+##"${myBuildHome}/myBuilds/busybox/fix_mkdir_for_glibc.sh" "/bin/busybox" "${SYSROOT}/bin/mkdir"
+if [ "$?" != "0" ]; then return 1; fi #check for errors
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}-w32/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

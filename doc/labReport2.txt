@@ -1,0 +1,60 @@
+target i686-pc-gnu compiled ok but did not produce windows executables, it produced ELF files
+
+____________________________________________________________________________________________________________________
+
+target i686-w64-gnu compiled ok but did not produce windows executables, it produced ELF files
+
+____________________________________________________________________________________________________________________
+
+gcc says the following:
+	checking target system type... Invalid configuration `i686-pc-windows-gnu': machine `i686-pc-windows' not recognized
+for target i686-pc-windows-gnu
+____________________________________________________________________________________________________________________
+
+target i686-pc-mingw32 gave the following errors when compiling with wine alone:
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-build/./gcc/xgcc -B/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-build/./gcc/ -L/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-build/i686-pc-mingw32/winsup/mingw -L/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-build/i686-pc-mingw32/winsup/w32api/lib -isystem /home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/winsup/mingw/include -isystem /home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/winsup/w32api/include -B/usr/i686-pc-mingw32/bin/ -B/usr/i686-pc-mingw32/usr/i686-pc-mingw32/lib/ -isystem /usr/i686-pc-mingw32/usr/include -isystem /usr/i686-pc-mingw32/sys-include    -g -O2 -O2 -I/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/libgcc/../winsup/w32api/include -g -O2 -DIN_GCC  -DCROSS_DIRECTORY_STRUCTURE  -W -Wall -Wno-narrowing -Wwrite-strings -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes -Wold-style-definition  -isystem ./include   -g -DIN_LIBGCC2 -fbuilding-libgcc -fno-stack-protector   -I. -I. -I../.././gcc -I/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/libgcc -I/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/libgcc/. -I/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/libgcc/../gcc -I/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/libgcc/../include -I/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/libgcc/config/libbid -DENABLE_DECIMAL_BID_FORMAT -DHAVE_CC_TLS -DUSE_EMUTLS -o _powidf2.o -MT _powidf2.o -MD -MP -MF _powidf2.dep -DL_powidf2 -c /home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/libgcc/libgcc2.c 
+In file included from /usr/include/wine/wine/windows/windows.h:64,
+                 from /home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/libgcc/libgcc2.c:2186:
+/usr/include/wine/wine/windows/winsock.h:127:24: error: conflicting types for ‘u_long’
+ typedef ULONG          u_long;
+                        ^~~~~~
+In file included from /home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/libgcc/../gcc/tsystem.h:90,
+                 from /home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/libgcc/libgcc2.c:27:
+/usr/i686-linux-gnu/include/sys/types.h:36:18: note: previous declaration of ‘u_long’ was here
+ typedef __u_long u_long;
+                  ^~~~~~
+In file included from /usr/include/wine/wine/windows/windows.h:64,
+                 from /home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/gcc-8.2.0/gcc-8.2.0/libgcc/libgcc2.c:2186:
+/usr/include/wine/wine/windows/winsock.h:1056:15: error: conflicting types for ‘gethostname’
+
+
+
+__________________________________________________________________________________________________________________
+
+
+I tried using mingw64.myBuild, but both times it gave assembler errors, this was with i686-w64-mingw64 as the target
+
+binutils doesn't understand i686-w64-mingw64 as target
+
+it understands i686-pc-mingw32 as target
+
+also I can set AS environment variable, which I didn't before
+___________________________________________________________________________________________________________________
+
+I tried cygwin-newlib
+	it wanted an i686-pc-cygwin-gcc compiler
+	I changed this using CC_FOR_TARGET="${BUILD}-gcc" before configure in binutils and it gave:
+
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/binutils-2.30/winsup/cygwin/include/machine/types.h:46:8: error: redefinition of ‘struct flock’
+ struct flock {
+        ^~~~~
+In file included from /home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/binutils-2.30/newlib/libc/include/sys/fcntl.h:3,
+                 from /home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/binutils-2.30/winsup/cygwin/include/fcntl.h:12,
+                 from ../../../../.././newlib/libc/stdlib/arc4random.c:26:
+/home/user/My_Stuff_SIX_Kali/bootstrap/winDev/B/extractdest3/binutils-2.30/newlib/libc/include/sys/_default_fcntl.h:186:8: note: originally defined here
+ struct flock {
+        ^~~~~
+
+____________________________________________________________________________________________________________________
+
+I could try mingw32

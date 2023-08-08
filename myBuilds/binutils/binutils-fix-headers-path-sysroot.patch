@@ -1,0 +1,11 @@
+--- configure.old	2019-04-07 19:11:16.375176276 +0100
++++ configure	2019-04-07 19:28:30.954660523 +0100
+@@ -7595,7 +7595,7 @@
+ # being built; programs in there won't even run.
+ if test "${build}" = "${host}" && test -d ${srcdir}/gcc; then
+   # Search for pre-installed headers if nothing else fits.
+-  FLAGS_FOR_TARGET=$FLAGS_FOR_TARGET' -B$(build_tooldir)/bin/ -B$(build_tooldir)/lib/ -isystem $(build_tooldir)/include -isystem $(build_tooldir)/sys-include'
++  FLAGS_FOR_TARGET=$FLAGS_FOR_TARGET' -B${TOOLCHAINDIR}/$(build_tooldir)/bin/ -B${TOOLCHAINDIR}/$(build_tooldir)/usr/$(target)/lib/ -isystem ${TOOLCHAINDIR}/$(build_tooldir)/usr/$(target)/include -isystem $(build_tooldir)/sys-include'
+ fi
+ 
+ if test "x${use_gnu_ld}" = x &&

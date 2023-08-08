@@ -1,0 +1,11 @@
+--- gcc/config/i386/crtdll.h.old	2019-04-18 01:17:36.819399177 +0100
++++ gcc/config/i386/crtdll.h	2019-04-18 01:20:03.651180507 +0100
+@@ -33,7 +33,7 @@
+ 
+ #undef LIBGCC_SPEC
+ #define LIBGCC_SPEC \
+-  "%{mthreads:-lmingwthrd} -lmingw32 -lgcc -lcoldname -libmingwex -lcrtdll"
++  "-lgcc -lcrtdll"
+ 
+ /* Specify a different entry point when linking a DLL */
+ #undef STARTFILE_SPEC

@@ -1,0 +1,7 @@
+Package: zlib1g
+Provides: zlib1g, zlib1g-dev, zlib1g-dbg, zlib1g-udeb, lib64z1, lib64z1-dev, lib32z1, lib32z1-dev, libn32z1, libn32z1-dev 
+Version: 1:1.2.11
+Maintainer: J05HYYY
+Homepage: http://zlib.net/
+Priority: optional
+Description: No description availiable.

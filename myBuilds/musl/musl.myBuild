@@ -1,0 +1,77 @@
+#!/bin/sh
+filename="musl-1.1.21"
+extension=".tar.gz"
+source="https://www.musl-libc.org/releases/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	rm -rf "${myBuildExtractDest}/${filename}"
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+printf "#  define fcntl64() fcntl()\n" >> ./include/fcntl.h
+printf "#  define fcntl64(a,b,...) fcntl(a,b,...)\n" >> ./src/fcntl/fcntl.c
+
+theLibDir="$TARGET"
+
+mkdir "${SYSROOT}/lib/${theLibDir}"
+
+./configure \
+    CROSS_COMPILE=${TARGET}- \
+    --prefix=${PREFIX} \
+    --build=${BUILD} \
+    --host=${HOST} \
+    --target=${TARGET} \
+    --libdir="${PREFIX}/$theLibDir/lib" \
+    --includedir=${PREFIX}/${TARGET}/include
+
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make install-headers DESTDIR=${SYSROOT}
+make install DESTDIR=${SYSROOT}
+
+cd ${SYSROOT}/usr/${TARGET}/lib/
+ln libc.a libpthread.a
+ln libc.a libm.a
+ln libc.so libm.so
+ln libc.so libpthread.so
+ln libc.so libm.so.6
+ln libc.so libc.so.6
+
+cd ${SYSROOT}/usr/${TARGET}/lib/
+
+ln ../../../lib/ld-musl-*.so.1 ld.so
+ln ../../../lib/ld-musl-*.so.1 ld-linux.so
+ln ../../../lib/ld-musl-*.so.1 ld-linux.so.2
+#ln libc.so libpthread.so
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

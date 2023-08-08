@@ -1,0 +1,11 @@
+--- man/Makefile.old	2023-04-30 17:54:55.000000000 +0100
++++ man/Makefile	2023-05-16 18:35:18.582775224 +0100
+@@ -10,7 +10,7 @@
+             --msgid-bugs-address "Jesse <jsmith@resonatingmedia.com>"
+ 
+ all:
+-	sed --in-place=.orig --separate 's/\@VERSION\@/$(VERSION)/g' $(MANPAGES)
++	for man in $(MANPAGES) ; do sed --in-place=.orig 's/\@VERSION\@/$(VERSION)/g' $$man; done
+ ifdef PO4A
+ 	po4a $(PO4A_OPTS) po/po4a.cfg
+ else

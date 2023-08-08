@@ -1,0 +1,66 @@
+#!/bin/sh
+filename="newlib-3.1.0"
+extension=".tar.gz"
+source="ftp://sourceware.org/pub/newlib/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	mkdir "${myBuildExtractDest}/${filename}"
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}/${filename}"
+	return "$?"
+}
+
+do_build(){
+
+mkdir "${myBuildExtractDest}/${filename}/newlib-build"
+cd "${myBuildExtractDest}/${filename}/newlib-build"
+#here you put commands like configure and make
+
+	AS=${TARGET}-as ../${filename}/configure \
+		--prefix=/usr \
+		--build=$BUILD \
+		--host=$HOST \
+		--target=$TARGET
+
+#		--with-arch=$theArch \
+#		--with-headers="$TEMP_SYSROOT"/usr/include \
+#		--cache-file=config.cache \
+#		--enable-add-ons \
+#		--with-tls \
+#		--enable-multilib \
+#		--with-build-sysroot="$TEMP_SYSROOT" \
+#		--exec-prefix=/usr/lib/${TARGET} \
+#		--libdir=/usr/lib \
+#		libc_cv_slibdir=/lib/${newTriplet}
+
+make all $J DESTDIR="${SYSROOT}"
+
+return "$?"
+}
+
+do_install(){
+
+cd "${myBuildExtractDest}/${filename}/newlib-build"
+
+make install $J DESTDIR="${SYSROOT}"
+
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

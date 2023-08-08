@@ -1,0 +1,80 @@
+#!/bin/sh
+actualname="libffi"
+version="3.2"
+filename="${actualname}-${version}"
+extension=".tar.gz"
+source="ftp://sourceware.org/pub/libffi/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+sed -i "s#\$libobjs \$deplibs \$compiler_flags#\$libobjs \$deplibs \$compiler_flags \$LDFLAGS#g" configure
+
+
+./configure \
+    --prefix=${PREFIX} \
+    --build=${BUILD} \
+    --host=${HOST} \
+    --target=${TARGET} \
+CC="${TARGET}-gcc -fPIC --sysroot=${TEMP_SYSROOT} -I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include" \
+CXX="${TARGET}-gcc -fPIC --sysroot=${TEMP_SYSROOT} -I${TEMP_SYSROOT}${PREFIX}/${TARGET}/include" \
+LDFLAGS="-B${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib -B${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib/gcc/${TARGET}/lib" \
+
+make DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make install DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

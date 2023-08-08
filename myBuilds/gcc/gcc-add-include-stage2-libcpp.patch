@@ -1,0 +1,11 @@
+--- Makefile.in.old	2019-09-30 20:44:32.875934000 +0100
++++ Makefile.in	2019-09-30 22:45:08.478943939 +0100
+@@ -23751,7 +23751,7 @@
+ 	$(HOST_EXPORTS) \
+ 	$(POSTSTAGE1_HOST_EXPORTS) \
+ 	CFLAGS="$(STAGE2_CFLAGS)"; export CFLAGS; \
+-	CXXFLAGS="$(STAGE2_CXXFLAGS)"; export CXXFLAGS; \
++	CXXFLAGS="$(STAGE2_CXXFLAGS) -I$(build_tooldir)/usr/${TARGET}/usr/include"; export CXXFLAGS; \
+ 	LIBCFLAGS="$(STAGE2_CFLAGS)"; export LIBCFLAGS;  \
+ 	echo Configuring stage 2 in $(HOST_SUBDIR)/libcpp; \
+ 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/libcpp; \

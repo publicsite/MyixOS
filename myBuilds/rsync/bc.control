@@ -1,0 +1,7 @@
+Package: bc
+Provides: bc, dc 
+Version: 1.07.1
+Maintainer: J05HYYY
+Homepage: http://ftp.gnu.org/gnu/bc/
+Priority: optional
+Description: No description availiable.

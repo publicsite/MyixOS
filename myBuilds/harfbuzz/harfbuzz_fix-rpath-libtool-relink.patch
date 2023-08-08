@@ -1,0 +1,33 @@
+--- src/Makefile.in.old	2019-08-20 03:28:23.771388677 +0100
++++ src/Makefile.in	2019-08-20 03:33:38.974001179 +0100
+@@ -1155,6 +1155,8 @@
+ DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
+ lib_LTLIBRARIES = libharfbuzz.la libharfbuzz-subset.la \
+ 	$(am__append_37) $(am__append_40)
++lib_LTLIBRARIES_INST = ../libharfbuzz.la ../libharfbuzz-subset.la \
++	../$(am__append_37) ../$(am__append_40)
+ HB_BASE_sources = \
+ 	hb-aat-fdsc-table.hh \
+ 	hb-aat-layout-ankr-table.hh \
+@@ -1728,7 +1730,7 @@
+ 
+ install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+ 	@$(NORMAL_INSTALL)
+-	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
++	@list='$(lib_LTLIBRARIES_INST)'; test -n "$(libdir)" || list=; \
+ 	list2=; for p in $$list; do \
+ 	  if test -f $$p; then \
+ 	    list2="$$list2 $$p"; \
+@@ -1768,10 +1770,10 @@
+ 	$(AM_V_CXXLD)$(libharfbuzz_icu_la_LINK) $(am_libharfbuzz_icu_la_rpath) $(libharfbuzz_icu_la_OBJECTS) $(libharfbuzz_icu_la_LIBADD) $(LIBS)
+ 
+ libharfbuzz-subset.la: $(libharfbuzz_subset_la_OBJECTS) $(libharfbuzz_subset_la_DEPENDENCIES) $(EXTRA_libharfbuzz_subset_la_DEPENDENCIES) 
+-	$(AM_V_CXXLD)$(libharfbuzz_subset_la_LINK) -rpath $(libdir) $(libharfbuzz_subset_la_OBJECTS) $(libharfbuzz_subset_la_LIBADD) $(LIBS)
++	$(AM_V_CXXLD)$(libharfbuzz_subset_la_LINK) $(libharfbuzz_subset_la_OBJECTS) $(libharfbuzz_subset_la_LIBADD) $(LIBS)
+ 
+ libharfbuzz.la: $(libharfbuzz_la_OBJECTS) $(libharfbuzz_la_DEPENDENCIES) $(EXTRA_libharfbuzz_la_DEPENDENCIES) 
+-	$(AM_V_GEN)$(libharfbuzz_la_LINK) -rpath $(libdir) $(libharfbuzz_la_OBJECTS) $(libharfbuzz_la_LIBADD) $(LIBS)
++	$(AM_V_GEN)$(libharfbuzz_la_LINK) $(libharfbuzz_la_OBJECTS) $(libharfbuzz_la_LIBADD) $(LIBS)
+ 
+ dump-indic-data$(EXEEXT): $(dump_indic_data_OBJECTS) $(dump_indic_data_DEPENDENCIES) $(EXTRA_dump_indic_data_DEPENDENCIES) 
+ 	@rm -f dump-indic-data$(EXEEXT)

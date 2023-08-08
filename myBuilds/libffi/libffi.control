@@ -1,0 +1,7 @@
+Package: libffi
+Provides: libffi-dev, libffi6, libffi6-dbg, libffi6-udeb
+Version: 3.2
+Maintainer: J05HYYY
+Homepage: https://sourceware.org/libffi/
+Priority: optional
+Description: No description availiable.

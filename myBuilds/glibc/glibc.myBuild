@@ -1,0 +1,290 @@
+#!/bin/sh
+actualname="glibc"
+version="2.37"
+filename="${actualname}-${version}"
+extension=".tar.gz"
+source="http://ftp.gnu.org/gnu/glibc/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	rm -rf "${myBuildExtractDest}/glibc"
+	mkdir "${myBuildExtractDest}/glibc"
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}/glibc"
+	return "$?"
+}
+
+do_build(){
+
+
+cd "${myBuildExtractDest}/glibc/${filename}"
+
+patch -p0 < "${myBuildHome}"/myBuilds/glibc/mount.h.patch
+
+patch -p0 < "${myBuildHome}"/myBuilds/glibc/dont_use_grep_byte_offset.patch
+
+#sed -i "s#LIBS=\"-lselinux  \$LIBS\"#LIBS=\"-lselinux -lpcre2-8 -lsepol  \$LIBS\"#g" configure
+
+sed -i "s%#!/bin/bash%#!/bin/sh%g" nscd/nscd.init
+sed -i "s#selinux-LIBS := -lselinux \$(libaudit) \$(libcap)#selinux-LIBS := -L${TEMP_SYSROOT}${PREFIX}/${TARGET}/usr/lib -lselinux \$(libaudit) \$(libcap)#g" nscd/Makefile
+sed -i "s#LDLIBS-makedb		:= -lselinux#LDLIBS-makedb		:= -L${TEMP_SYSROOT}${PREFIX}/${TARGET}/usr/lib -lselinux -lpcre2-8 -lsepol#g" nss/Makefile
+
+#you must build glibc in a seperate build directory
+mkdir "${myBuildExtractDest}/glibc/build_directory"
+cd "${myBuildExtractDest}/glibc/build_directory"
+#here you put commands like configure and make
+
+#	--with-arch=$theArch \
+
+#-march=$(printf "%s" "$TARGET" | cut -d '-' -f1) -mtune=generic -g 
+#-march=$(printf "%s" "$TARGET" | cut -d '-' -f1) -mtune=generic -g 
+
+if [ "$5" = "m32" ]; then
+	if [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i386" ] || [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i486" ] || [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i586" ] || [ "$(printf "%s" "$TARGET32" | cut -d '-' -f 1)" = "i686" ]; then
+		m32_append="-m32 -Wl,-melf_i386"
+		ld_append="-melf_i386"
+	else
+		m32_append="-m32 -Wl,-melf_$(printf "%s" "$TARGET32" | cut -d '-' -f 1)"
+		ld_append="-melf_$(printf "%s" "$TARGET32" | cut -d '-' -f 1)"
+	fi
+	host_append="--host=${TARGET32}"
+	libdir_append="--libdir "${PREFIX}/${TARGET}/lib" libc_cv_slibdir=${PREFIX}/${TARGET}/lib"
+	libexecdir_append="--libexecdir "${PREFIX}/${TARGET}/lib""
+else
+	m32_append=""
+	ld_append=""
+	host_append="--host=${TARGET}"
+
+	libdir_append="--libdir "${PREFIX}/${TARGET}/lib" libc_cv_slibdir=${PREFIX}/${TARGET}/lib"
+	libexecdir_append="--libexecdir "${PREFIX}/${TARGET}/lib""
+fi
+
+prefix_append="--prefix=${PREFIX}/${TARGET}" #--disable-sanity-checks
+headers_append="--with-headers="${TEMP_SYSROOT}${PREFIX}/${TARGET}/include""
+includedir_append="--includedir="${PREFIX}/${TARGET}/include""
+
+if [ "$with_selinux" = "true" ]; then
+printf "Building with selinux ...\n"
+
+		CFLAGS="$CFLAGS -O2 -Wno-missing-attributes -Wno-attribute-alias" \
+		LDFLAGS="-L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib" \
+		BUILD_CC="${BUILD}-gcc" \
+		CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT} ${m32_append}" \
+		CXX="${TARGET}-g++ --sysroot=${TEMP_SYSROOT} ${m32_append}" \
+		AR="${TARGET}-ar" \
+		AS="${TARGET}-as" \
+		LD="${TARGET}-ld $ld_append" \
+		RANLIB="${TARGET}-ranlib" \
+		../${filename}/configure \
+			$prefix_append \
+			--build=${BUILD} \
+			$host_append \
+			--enable-add-ons \
+			--enable-multilib \
+			--with-tls \
+			--with-build-sysroot="$TEMP_SYSROOT" \
+			$headers_append \
+			$includedir_append \
+			--with-selinux="yes" \
+			--disable-nscd \
+			$libdir_append \
+			$libexecdir_append
+
+else
+printf "Building without selinux...\n"
+		CFLAGS="$CFLAGS -O2 -Wno-missing-attributes -Wno-attribute-alias" \
+		LDFLAGS="-L${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib" \
+		BUILD_CC="${BUILD}-gcc" \
+		CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT} ${m32_append}" \
+		CXX="${TARGET}-g++ --sysroot=${TEMP_SYSROOT} ${m32_append}" \
+		AR="${TARGET}-ar" \
+		AS="${TARGET}-as" \
+		LD="${TARGET}-ld $ld_append" \
+		RANLIB="${TARGET}-ranlib" \
+		../${filename}/configure \
+			$prefix_append \
+			--build=${BUILD} \
+			$host_append \
+			--enable-add-ons \
+			--enable-multilib \
+			--with-tls \
+			--with-build-sysroot="$TEMP_SYSROOT" \
+			$headers_append \
+			$includedir_append \
+			--with-selinux="no" \
+			$libdir_append \
+			$libexecdir_append
+fi
+
+#	--exec-prefix="${PREFIX}/${TARGET}/lib" \
+#	--libdir="${PREFIX}/${TARGET}/lib" \
+#	--libexecdir="${PREFIX}/${TARGET}/lib" \
+#	--includedir="${PREFIX}/${TARGET}/include" \
+#	--oldincludedir="${PREFIX}/${TARGET}/include" \
+#	libc_cv_slibdir="${PREFIX}/${TARGET}/lib"
+
+#CFLAGS="-march=$(printf "%s" "$TARGET" | cut -d '-' -f1) -mtune=generic -g -O2" \       
+#	../${filename}/configure \
+#		--prefix=/usr \
+#		--build=$HOST \
+#		--host=$TARGET \
+#		--with-arch=$theArch \							
+#		--with-headers="$SYSROOT"/usr/include \
+#		--cache-file=config.cache \
+#		--enable-add-ons \
+#		--with-tls \
+#		--enable-multilib \
+#		--with-sysroot="$SYSROOT" \
+#		--with-build-sysroot="$SYSROOT" \
+#		--exec-prefix=${PREFIX} \
+#		--libdir=${PREFIX}/${newTriplet}/lib \
+#		--libexecdir=${PREFIX}/${newTriplet}/lib \
+#   		--includedir=${PREFIX}/${newTriplet}/include \
+#		--with-binutils="${SYSROOT}${PREFIX}/${newTriplet}/bin" \ <
+#		libc_cv_slibdir=${PREFIX}/${newTriplet}/lib \
+#		libc_cv_ctors_header=yes
+
+#fingerprints:
+#exec-prefix contains libexec	which should be in /usr/lib/i386-linux-gnu/libexec
+#slibdir contains libc.so.6 ?	which should be in /lib/i386-linux-gnu/libc.so.6
+#libdir contains crt1.o		which should be in /usr/lib/i386-linux-gnu/crt1.o or /lib/crt1.o
+
+#
+#disable-shared is used as glibc has to be static in order to build gcc, otherwise gcc will complain about stubs
+
+if [ "$4" != "headers" ]; then
+	make $J ARCH=${ARCH} cross-compiling=yes install_root=$SYSROOT
+fi
+
+return "$?"
+}
+
+do_install(){
+
+newTriplet="$TARGET"
+
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/glibc/build_directory"
+
+if [ "$4" = "headers" ]; then
+	if [ "$5" = "m32" ]; then
+		make $J ARCH=${ARCH} cross-compiling=yes install_root=$SYSROOT bootstrap-headers=yes exec_prefix="${PREFIX}/${TARGET32}" install-headers
+	else
+		make $J ARCH=${ARCH} cross-compiling=yes install_root=$SYSROOT bootstrap-headers=yes exec_prefix="${PREFIX}/${TARGET}" install-headers
+	fi
+else
+	make $J ARCH=${ARCH} cross-compiling=yes install_root=$SYSROOT install
+
+	#install locales
+	make localedata/install-locales DESTDIR="${SYSROOT}"
+
+fi
+
+if [ ! -d "${SYSROOT}${PREFIX}/include/gnu" ]; then
+	mkdir -p "${SYSROOT}${PREFIX}/include/gnu"
+fi
+
+if [ ! -f "${SYSROOT}${PREFIX}/include/gnu/stubs.h" ]; then
+	touch "${SYSROOT}${PREFIX}/include/gnu/stubs.h"
+fi
+
+if [ ! -f "${SYSROOT}${PREFIX}/include/gnu/stubs-32.h" ]; then
+	touch "${SYSROOT}${PREFIX}/include/gnu/stubs-32.h"
+fi
+
+
+if [ -f "${SYSROOT}${PREFIX}/${TARGET}/bin/ldd" ]; then
+	#use sh
+	sed -i "1s/.*/\#\!\/bin\/sh/" "${SYSROOT}${PREFIX}/${TARGET}/bin/ldd"
+fi
+
+#make some symlinks
+if [ "${HOST}" = "${TARGET}" ]; then
+	if ! [ -f "$SYSROOT"/lib/ld-linux.so.2 ]; then 
+		$MYIXOS_LINK -f ${PREFIX}/${TARGET}/lib/ld-linux.so.2 "$SYSROOT"/lib/ld-linux.so.2
+	fi
+
+	#we also add a symlink in ${SYSROOT}/lib to ld, if host == target
+	cd "${SYSROOT}${PREFIX}/${TARGET}/lib"
+	tolink="$(find ../lib -name "ld-linux-*.so.2" | head -n 1)"
+	$MYIXOS_LINK $tolink ld-linux.so.2
+	cd "${myBuildExtractDest}/${filename}"
+
+	if [ "$BITS" = "64" ]; then
+		cd "${SYSROOT}${PREFIX}/${TARGET}/lib64"
+		$MYIXOS_LINK "${tolink}"
+		$MYIXOS_LINK "${tolink}" ld-linux.so.2
+	fi
+fi
+
+#if ! [ -f "$SYSROOT"/usr/lib/crt1.o ]; then 
+#$MYIXOS_LINK -f /usr/lib/${TARGET}/crt1.o "$SYSROOT"/usr/lib/crt1.o
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/crti.o ]; then 
+#$MYIXOS_LINK -f /usr/lib/${TARGET}/crti.o "$SYSROOT"/usr/lib/crti.o
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/crtn.o ]; then 
+#$MYIXOS_LINK -f /usr/lib/${TARGET}/crtn.o "$SYSROOT"/usr/lib/crtn.o
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/libm.so ]; then
+#$MYIXOS_LINK -f /usr/lib/${TARGET}/libm.so "$SYSROOT"/usr/lib/libm.so
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/libc.so ]; then
+#cp -a "${SYSROOT}"/usr/lib/${TARGET}/libc.so "$SYSROOT"/usr/lib/libc.so
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/libc.a ]; then
+#$MYIXOS_LINK -f /usr/lib/${TARGET}/libc.a "$SYSROOT"/usr/lib/libc.a
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/libm.a ]; then
+#$MYIXOS_LINK -f /usr/lib/${TARGET}/libm.a "$SYSROOT"/usr/lib/libm.a
+#fi
+#if ! [ -f "$SYSROOT"/usr/lib/libc_nonshared.a ]; then
+#$MYIXOS_LINK -f /usr/lib/${TARGET}/libc_nonshared.a "$SYSROOT"/usr/lib/libc_nonshared.a
+#fi
+
+
+
+return "$?"
+}
+
+do_package(){
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0" "$@"
+fi

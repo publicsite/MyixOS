@@ -1,0 +1,6 @@
+Package: wine, wine32, wine64, wine32-preloader, wine64-preloader, wine32-tools, wine64-tools, libwine, libwine-dev, wine-binfmt, fonts-wine 
+Version: 4.3
+Maintainer: J05HYYY
+Homepage: https://www.winehq.org
+Priority: optional
+Description: No description availiable.

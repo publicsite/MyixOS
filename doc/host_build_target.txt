@@ -1,0 +1,22 @@
+###### Configure with --host, --target and --build options ######
+###### Source: jingfenghanmax.blogspot.com/2010/09/configure-with-host-target-and-build.html #####
+
+When people configure a project like './configure', man often meets these three confusing options, which are more related with cross-compilation
+
+    --host: In which system the generated program will run.
+    --build: In which system the program will be built.
+    --target: this option is only used to build a cross-compiling toolchain. When the tool chain generates executable program, in which target system the program will run.
+
+An example of tslib (a mouse driver library)
+'./configure --host=arm-linux --build=i686-pc-linux-gnu': the dynamically library is built on a x86 linux computer but will be used for a embedded arm linux system.
+
+An example of gcc:
+'./configure --target=i686-pc-linux-gnu --host=arm-linux --build=i686-pc-linux-gnu':
+
+    A gcc compiler is build on x86 linux computer. [--build]
+    The gcc will be executed on an embedded arm linux system.[--host]
+    But the gcc will generate the binary program, which run in a x86 linux system. [--target]
+
+
+Reference:
+http://matrix.wearlab.de/en/wiki/index.php?title=ArmCrossCompiler&redirect=no

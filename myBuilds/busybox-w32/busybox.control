@@ -1,0 +1,7 @@
+Package: busybox
+Provides: busybox, busybox-static, busybox-udeb, busybox-syslogd, udhcpc, udhcpd
+Version: 1:1.28.3
+Maintainer: J05HYYY
+Homepage: http://www.busybox.net
+Priority: optional
+Description: No description availiable.

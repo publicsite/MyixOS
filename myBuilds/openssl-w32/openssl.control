@@ -1,0 +1,7 @@
+Package: openssl
+Provides: openssl, libssl1.1, libcrypto1.1-udeb, libssl1.1-udeb, libssl-dev, libssl-doc 
+Version: 1.1.1c
+Maintainer: J05HYYY
+Homepage: https://www.openssl.org/
+Priority: optional
+Description: No description availiable.

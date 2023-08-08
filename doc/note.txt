@@ -1,0 +1,8 @@
+binutils couldn't find fcntl.h which was in /usr/include
+	we know this because we grepped for fcntl in binutils
+instead we want it to be in /usr/${TARGET}/include, as binutils wants it to be
+so we have changed musl to try and place it in there,
+
+we may also have to change some other stuff to account for this change including,
+	the gcc patch
+	etc.

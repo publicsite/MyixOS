@@ -1,0 +1,26 @@
+--- include/libiberty.h.old	2018-01-03 10:03:58.000000000 +0000
++++ include/libiberty.h	2019-06-08 14:20:43.785682612 +0100
+@@ -104,6 +104,7 @@
+    declaration without arguments.  If it is 0, we checked and failed
+    to find the declaration so provide a fully prototyped one.  If it
+    is 1, we found it so don't provide any declaration at all.  */
++/*
+ #if !HAVE_DECL_BASENAME
+ #if defined (__GNU_LIBRARY__ ) || defined (__linux__) \
+  || defined (__FreeBSD__) || defined (__OpenBSD__) || defined (__NetBSD__) \
+@@ -111,12 +112,15 @@
+  || defined (__DragonFly__) || defined (HAVE_DECL_BASENAME) 
+ extern char *basename (const char *) ATTRIBUTE_RETURNS_NONNULL ATTRIBUTE_NONNULL(1);
+ #else
++*/
+ /* Do not allow basename to be used if there is no prototype seen.  We
+    either need to use the above prototype or have one from
+    autoconf which would result in HAVE_DECL_BASENAME being set.  */
++/*
+ #define basename basename_cannot_be_used_without_a_prototype
+ #endif
+ #endif
++*/
+ 
+ /* A well-defined basename () that is always compiled in.  */
+ 

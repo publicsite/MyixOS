@@ -1,5 +1,7 @@
 #!/bin/sh
-filename="busybox-1.28.3"
+actualname="busybox"
+version="1.36.0" #was 1.35.0
+filename="${actualname}-${version}"
 extension=".tar.bz2"
 source="https://busybox.net/downloads/${filename}${extension}"
 sumUrl=""
@@ -17,32 +19,88 @@ do_extract(){
 }
 
 do_build(){
+old_LD_LIBRARY_PATH="${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib"
+
 #here you put commands like configure and make
 
 cd "${myBuildExtractDest}/${filename}"
 if [ "$?" != "0" ]; then return 1; fi #check for errors
 
-make CROSS_COMPILE="${BUILD}-" defconfig
-make CROSS_COMPILE="${BUILD}-"
+make ARCH="$(printf "${TARGET}" | cut -f 1 -d -)" CROSS_COMPILE="${TARGET}-" CONFIG_SYSROOT="${TEMP_SYSROOT}" defconfig libdir="${PREFIX}/${TARGET}/lib"
+
+#use our sysroot
+sed -i "s#CONFIG_SYSROOT=\"\"#CONFIG_SYSROOT=\"${SYSROOT}\"#g" .config
+
+sed -i "s#CONFIG_BC=y#CONFIG_BC=no#g" .config
+sed -i "s#CONFIG_INIT=y#CONFIG_INIT=no#g" .config
+sed -i "s#CONFIG_DEPMOD=y#CONFIG_DEPMOD=no#g" .config
+
+if [ "${with_selinux}" = "true" ]; then
+	sed -i "s%# CONFIG_SELINUX is not set%CONFIG_SELINUX=y%g" .config
+	sed -i "s%# CONFIG_FEATURE_TAR_SELINUX is not set%CONFIG_FEATURE_TAR_SELINUX=y%g" .config
+	sed -i "s%# CONFIG_SELINUXENABLED is not set%CONFIG_SELINUXENABLED=y%g" .config
+	##sed -i "s%CONFIG_EXTRA_LDLIBS=\"\"%CONFIG_EXTRA_LDLIBS=\"-lpcre\"%g" .config
+fi
+
+make ARCH="$(printf "${TARGET}" | cut -f 1 -d -)" CROSS_COMPILE="${TARGET}-" CONFIG_SYSROOT="${TEMP_SYSROOT}" libdir="${PREFIX}/${TARGET}/lib"
+
+export LD_LIBRARY_PATH="${old_LD_LIBRARY_PATH}"
 
 return "$?"
 }
 
 do_install(){
+old_LD_LIBRARY_PATH="${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib"
 
 mkdir "${SYSROOT}/tmp"
 
 #here you put the installation commands, like make install
 cd "${myBuildExtractDest}/${filename}"
-make CONFIG_PREFIX="${SYSROOT}" install
+make ARCH="$(printf "${TARGET}" | cut -f 1 -d -)" CROSS_COMPILE="${TARGET}-" CONFIG_SYSROOT="${TEMP_SYSROOT}" CONFIG_PREFIX="${SYSROOT}" PREFIX="${PREFIX}${TARGET}" install
 "${myBuildHome}/myBuilds/busybox/fix_mkdir_for_glibc.sh" "/bin/busybox" "${SYSROOT}/bin/mkdir"
-if [ "$?" != "0" ]; then return 1; fi #check for errors
-return "$?"
+
+cp -a examples/mdev_fat.conf ${SYSROOT}/etc/mdev.conf
+
+export LD_LIBRARY_PATH="${old_LD_LIBRARY_PATH}"
+
+rm -f ${SYSROOT}${PREFIX}/${TARGET}/sbin/init
+rm -f ${SYSROOT}${PREFIX}/${TARGET}/bin/bc
+rm -f ${SYSROOT}${PREFIX}/${TARGET}/sbin/depmod
+
+##cd "${SYSROOT}${PREFIX}/${TARGET}/bin"
+###put the symlink to sed in $x/usr/bin rather than $x/bin, this is needed for libepoxy to build properly on the host
+##$MYIXOS_LINK ../../bin/busybox sed
+##delete the old symlink to sed
+##rm ../../bin/sed
 }
 
 do_package(){
 #here you package the files
-echo "package!"
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
 return "$?"
 }
 

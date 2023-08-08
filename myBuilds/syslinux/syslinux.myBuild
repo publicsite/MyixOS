@@ -1,0 +1,118 @@
+#!/bin/sh
+
+#filename="syslinux-458a541"
+filename="syslinux-6.04-pre1"
+extension=".tar.gz"
+source="https://git.kernel.org/pub/scm/boot/syslinux/syslinux.git/snapshot/${filename}${extension}"
+#source="https://repo.or.cz/syslinux.git/snapshot/458a54133ecdf1685c02294d812cb562fe7bf4c3${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	mv "${myBuildSourceDest}/458a54133ecdf1685c02294d812cb562fe7bf4c3${extension}" "${myBuildSourceDest}/syslinux-458a541${extension}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+#busybox xz does not support -0 option, so omit it
+sed -i "s/\$(XZ) -0/\$(XZ)/g" diag/geodsp/Makefile
+
+#busybox xz requires -d option to extract
+sed -i "s#= xz#= xz -d#g" mk/syslinux.mk
+
+cd gnu-efi
+
+ln -s "$(find "${myBuildExtractDest}" -maxdepth 1 -type d -name "gnu-efi-*" | head -n 1)" gnu-efi-3.0
+
+cd ..
+
+#./configure --build=${BUILD} --host=${HOST} --target=${TARGET} \
+#    --prefix=$PREFIX --bindir=/bin --cache-file=config.cache \
+#    --without-bash-malloc --with-installed-readlin
+
+patch -p1 < "${myBuildHome}"/myBuilds/syslinux/0016-strip-gnu-property.patch
+
+patch -p1 < "${myBuildHome}"/myBuilds/syslinux/syslinux-fio-no-VPrint.patch
+
+#patch -p1 < "${myBuildHome}"/myBuilds/syslinux/syslinux-6.04_pre1-fcommon.patch
+
+sed -i "s#CC	 = gcc#CC	 = ${TARGET}-gcc --sysroot=${TEMP_SYSROOT}#g" mk/syslinux.mk
+sed -i "s#LD	 = ld#LD	 = ${TARGET}-ld --no-warn-rwx-segments#g" mk/syslinux.mk
+sed -i "s#OBJDUMP	 = objdump#OBJDUMP	 = ${TARGET}-objdump#g" mk/syslinux.mk
+sed -i "s#OBJCOPY  = objcopy#OBJCOPY  = ${TARGET}-objcopy#g" mk/syslinux.mk
+sed -i "s#STRIP    = strip#STRIP    = ${TARGET}-strip#g" mk/syslinux.mk
+sed -i "s#STRIP	 = strip#STRIP	 = ${TARGET}-strip#g" mk/syslinux.mk
+sed -i "s#AR       = ar#AR       = ${TARGET}-ar#g" mk/syslinux.mk
+sed -i "s#NM       = nm#NM       = ${TARGET}-nm#g" mk/syslinux.mk
+sed -i "s#RANLIB   = ranlib#RANLIB   = ${TARGET}-ranlib#g" mk/syslinux.mk
+
+sed -i "s@#define FILE_LICENCE( _licence ) FILE_LICENCE_ ## _licence@#define FILE_LICENCE( _licence )@g" gpxe/src/include/compiler.h
+sed -i "s@int optind;@@g" gpxe/src/core/exec.c
+sed -i "s@int nextchar;@@g" gpxe/src/core/exec.c
+
+#get rid of python
+sed -i "s%\$(PYTHON) \$(SRC)/menugen.py --input=\$< --output=\$@ --template=\$(SRC)/adv_menu.tpl%echo \"\"%g" com32/cmenu/Makefile
+touch com32/cmenu/test.c
+touch com32/cmenu/test2.c
+
+if [ ! -f "extlinux/main.c.bak" ]; then
+mv extlinux/main.c extlinux/main.c.bak
+fi
+if [ -f "extlinux/main.c" ]; then
+rm -f "extlinux/main.c"
+fi
+echo "#include <sys/sysmacros.h>" > "extlinux/main.c"
+cat "extlinux/main.c.bak" >> "extlinux/main.c"
+
+#sed -i "s@extern int optind;@int optind;@g" gpxe/src/include/getopt.h
+#sed -i "s@extern int nextchar;@int nextchar;@g" gpxe/src/include/getopt.h 
+
+sed -i "s#const char \*const e820_types\[5\];#extern const char \*const e820_types\[5\];#g" com32/gplinclude/memory.h
+
+sed -i "s#char \*optarg;##g" com32/lib/getopt_long.c
+sed -i "s#int optind, opterr, optopt;##g" com32/lib/getopt_long.c
+
+old_LDFLAGS="$LDFLAGS"
+old_EXTRA_CFLAGS="${EXTRA_CFLAGS}"
+
+export LDFLAGS="--no-dynamic-linker"  # workaround for binutils 2.28 http://www.syslinux.org/wiki/index.php?title=Building
+export EXTRA_CFLAGS="-fno-PIE"   # to fix gpxe build
+
+make DESTDIR="${SYSROOT}" INSTALLROOT="${SYSROOT}" bios efi64 efi32
+
+export LDFLAGS="${old_LDFLAGS}"
+export EXTRA_CFLAGS="${old_EXTRA_CFLAGS}"
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make CFLAGS="-fcommon" DESTDIR="${SYSROOT}" INSTALLROOT="${SYSROOT}" htmldir="/usr/share/doc/${filename}" install
+
+echo "install!"
+return "$?"
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

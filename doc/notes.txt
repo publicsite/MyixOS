@@ -1,0 +1,31 @@
+on BUILD, using TARGET toolchain, build cross compiler for CROSS_TARGET, where HOST=TARGET
+on BUILD, using TARGET toolchain, build sysroot for TARGET, where HOST=TARGET
+
+on the system we are building from, using the toolchain we use to compile, build a new cross compiler which can
+build for a different system to that of the toolchain, where the system we will run the compiler on is the same as the toolchain
+we use to compile.
+
+on the system we are building from, using the toolchain we use to compile, build a sysroot that will run on the system we will run the
+compiler on
+
+i686
+
+x86
+
+
+
+for gcc
+build=i686
+host=x86_64
+target=mingw
+
+this will build using an i686 machine and an x86_64 cross compiler, a mingw compiler that runs on x86_64
+
+for sysroot
+build=i686
+host=x86_64
+target=x86_64
+
+
+glibc
+cross

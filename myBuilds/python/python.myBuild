@@ -1,0 +1,92 @@
+#!/bin/sh
+version="3.7.9"
+filename="Python-${version}"
+extension=".tar.xz"
+source="https://www.python.org/ftp/python/${version}/${filename}${extension}"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+#here you put commands like configure and make
+
+cd "${myBuildExtractDest}/${filename}"
+
+#add our library dir to system_lib_dirs
+#shouldn't be needed, but do it anyway
+sed -i "s%system_lib_dirs = \['/lib64', '/usr/lib64', '/lib', '/usr/lib'\]%system_lib_dirs = \['/lib64', '/usr/lib64', '/lib', '/usr/lib', '${PREFIX}/${TARGET}/lib'\]%g" setup.py
+
+#force cross compilation, regardless of whether build == target
+sed -i "s%cross_compiling = \"_PYTHON_HOST_PLATFORM\" in os.environ%cross_compiling = True%g" setup.py
+
+#set libffi_includedir to where libffi is in the sysroot, we'll avoid pkg-config, and set both outcomes to the same value
+sed -i "s#LIBFFI_INCLUDEDIR=\"\`\"\$PKG_CONFIG\" libffi --cflags-only-I 2>/dev/null | sed -e 's/^-I//;s/ \*\$//'\`\"#LIBFFI_INCLUDEDIR=\"$(printf "%s" "${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib/libffi"*"/include")\"#g" configure
+sed -i "s#LIBFFI_INCLUDEDIR=\"\"#LIBFFI_INCLUDEDIR=\"$(printf "%s" "${TEMP_SYSROOT}${PREFIX}/${TARGET}/lib/libffi"*"/include")\"#g" configure
+
+#create a config.site
+printf "ac_cv_file__dev_ptmx=no\n" > config.site
+printf "ac_cv_file__dev_ptc=no\n" >> config.site
+
+CONFIG_SITE=config.site \
+CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}" CFLAGS="-fPIC" \
+./configure \
+    --prefix="${PREFIX}/${TARGET}" \
+    --build=${BUILD} \
+    --host=${HOST} \
+    --target=${TARGET} \
+    --with-openssl="${TEMP_SYSROOT}${PREFIX}/${TARGET}" \
+    --enable-ipv6
+
+make DESTDIR=${SYSROOT} CC="${TARGET}-gcc --sysroot=${TEMP_SYSROOT}"
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make install DESTDIR=${SYSROOT}
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/python/python.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

@@ -1,0 +1,38 @@
+--- mingw-w64-crt/Makefile.am.old	2018-09-14 15:16:43.000000000 +0100
++++ mingw-w64-crt/Makefile.am	2019-07-02 15:12:04.230685708 +0100
+@@ -457,7 +457,7 @@
+ # Compiling 32-bit runtime
+ #
+ 
+-lib32dir=$(prefix)/@LIBX8632SUFFIXDIR@
++lib32dir=$(prefix)/$(target_alias)/@LIBX8632SUFFIXDIR@
+ crt32dir=$(lib32dir)
+ winrt32dir=$(lib32dir)
+ dx32dir=$(lib32dir)
+@@ -843,7 +843,7 @@
+ # Compiling 64-bit runtime
+ # #######################################################################
+ 
+-lib64dir=$(prefix)/@LIBX8664SUFFIXDIR@
++lib64dir=$(prefix)/$(target_alias)/@LIBX8664SUFFIXDIR@
+ crt64dir=$(lib64dir)
+ winrt64dir=$(lib64dir)
+ dx64dir=$(lib64dir)
+@@ -1226,7 +1226,7 @@
+ # Compiling ARM 32-bit runtime
+ #
+ 
+-libarm32dir=$(prefix)/@LIBARM32SUFFIXDIR@
++libarm32dir=$(prefix)/$(target_alias)/@LIBARM32SUFFIXDIR@
+ crt32dir=$(libarm32dir)
+ winrt32dir=$(libarm32dir)
+ dx32dir=$(libarm32dir)
+@@ -1534,7 +1534,7 @@
+ # Compiling ARM 64-bit runtime
+ #
+ 
+-libarm64dir=$(prefix)/@LIBARM64SUFFIXDIR@
++libarm64dir=$(prefix)/$(target_alias)/@LIBARM64SUFFIXDIR@
+ crt64dir=$(libarm64dir)
+ winrt64dir=$(libarm64dir)
+ dx64dir=$(libarm64dir)

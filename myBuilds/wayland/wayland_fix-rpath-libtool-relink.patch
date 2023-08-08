@@ -1,0 +1,21 @@
+--- Makefile.in.old	2019-08-21 12:53:09.813210828 +0100
++++ Makefile.in	2019-08-21 12:54:00.695045730 +0100
+@@ -1012,6 +1012,9 @@
+ @ENABLE_LIBRARIES_TRUE@lib_LTLIBRARIES = libwayland-server.la \
+ @ENABLE_LIBRARIES_TRUE@	libwayland-client.la \
+ @ENABLE_LIBRARIES_TRUE@	libwayland-cursor.la libwayland-egl.la
++@ENABLE_LIBRARIES_TRUE@lib_LTLIBRARIES_INST = ../libwayland-server.la \
++@ENABLE_LIBRARIES_TRUE@	../libwayland-client.la \
++@ENABLE_LIBRARIES_TRUE@	../libwayland-cursor.la ../libwayland-egl.la
+ @ENABLE_LIBRARIES_TRUE@libwayland_private_la_CFLAGS = $(FFI_CFLAGS) $(AM_CFLAGS)
+ @ENABLE_LIBRARIES_TRUE@libwayland_private_la_SOURCES = \
+ @ENABLE_LIBRARIES_TRUE@	src/connection.c			\
+@@ -1266,7 +1269,7 @@
+ 
+ install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+ 	@$(NORMAL_INSTALL)
+-	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
++	@list='$(lib_LTLIBRARIES_INST)'; test -n "$(libdir)" || list=; \
+ 	list2=; for p in $$list; do \
+ 	  if test -f $$p; then \
+ 	    list2="$$list2 $$p"; \

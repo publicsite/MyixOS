@@ -10,7 +10,7 @@ case "$1" in
 	"get")
 		#get the file
 		if type "do_get" > /dev/null; then
-			do_get
+			do_get "$@"
 			if [ "$?" = "0" ]; then
 				exit 0
 			else
@@ -25,7 +25,7 @@ case "$1" in
 	"extract")
 		#extract the file
 		if type "do_extract" > /dev/null; then
-			do_extract
+			do_extract "$@"
 			if [ "$?" = 0 ]; then
 				exit 0
 			else
@@ -39,7 +39,7 @@ case "$1" in
 	;;
 	"build")
 		if type "do_build" > /dev/null; then
-			do_build
+			do_build "$@"
 			if [ "$?" = 0 ]; then
 				exit 0
 			else
@@ -53,7 +53,7 @@ case "$1" in
 	;;
 	"install")
 		if type "do_install" > /dev/null; then
-			do_install
+			do_install "$@"
 			if [ "$?" = 0 ]; then
 				exit 0
 			else
@@ -67,7 +67,7 @@ case "$1" in
 	;;
 	"package")
 		if type "do_package" > /dev/null; then
-			do_package
+			do_package "$@"
 			if [ "$?" = 0 ]; then
 				exit 0
 			else
@@ -81,35 +81,35 @@ case "$1" in
 	;;
 	"all")
 		if type "do_get" > /dev/null; then
-			do_get
+			do_get "$@"
 			if [ "$?" != 0 ]; then
 				printf "Error: There was an error getting the file, cannot continue.\n"
 				exit 1
 			fi
 		fi
 		if type "do_extract" > /dev/null; then
-			do_extract
+			do_extract "$@"
 			if [ "$?" != 0 ]; then
 				printf "Error: There was an error extracting the file, cannot continue.\n"
 				exit 1
 			fi
 		fi
 		if type "do_build" > /dev/null; then
-			do_build
+			do_build "$@"
 			if [ "$?" != 0 ]; then
 				printf "Error: There was an error building, cannot continue.\n"
 				exit 1
 			fi
 		fi
 		if type "do_install" > /dev/null; then
-			do_install
+			do_install "$@"
 			if [ "$?" != 0 ]; then
 				printf "Error: There was an error installing, cannot continue.\n"
 				exit 1
 			fi
 		fi
 		if type "do_package" > /dev/null; then
-			do_package
+			do_package "$@"
 			if [ "$?" != 0 ]; then
 				printf "Error: There was an error packaging.\n"
 				exit 1

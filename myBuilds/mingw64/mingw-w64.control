@@ -1,0 +1,7 @@
+Package: mingw-w64
+Provides: mingw-w64-common, mingw-w64, mingw-w64-tools 
+Version: 6.0.0
+Maintainer: J05HYYY
+Homepage: http://mingw-w64.sf.net
+Priority: optional
+Description: No description availiable.

@@ -1,0 +1,94 @@
+#!/bin/sh
+actualname="myixos-rootfs-skel"
+version="1"
+
+#functions
+
+do_build(){
+	#make the directories then make the symlinks
+
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/bin"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/etc"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/include"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/lib"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/lib64"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/libexec"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/libexec64"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/local"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/sbin"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/share"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/usr"
+	mkdir -p "${SYSROOT}${PREFIX}/${TARGET}/var"
+
+	cd "${SYSROOT}${PREFIX}"
+
+	$MYIXOS_LINK ./${TARGET}/bin bin
+	$MYIXOS_LINK ./${TARGET}/include include
+	$MYIXOS_LINK ./${TARGET}/lib64 lib64
+	$MYIXOS_LINK ./${TARGET}/libexec64 libexec64
+	$MYIXOS_LINK ./${TARGET}/sbin sbin
+	$MYIXOS_LINK ./${TARGET}/var var
+	$MYIXOS_LINK ./${TARGET}/etc etc
+	$MYIXOS_LINK ./${TARGET}/lib lib
+	$MYIXOS_LINK ./${TARGET}/libexec libexec
+	$MYIXOS_LINK ./${TARGET}/local local
+	$MYIXOS_LINK ./${TARGET}/share share
+
+	cd "${SYSROOT}"
+
+	$MYIXOS_LINK .${PREFIX}/${TARGET}/bin bin
+	$MYIXOS_LINK .${PREFIX}/${TARGET}/etc etc
+	$MYIXOS_LINK .${PREFIX}/${TARGET}/lib lib
+	$MYIXOS_LINK .${PREFIX}/${TARGET}/lib64 lib64
+	$MYIXOS_LINK .${PREFIX}/${TARGET}/libexec64 libexec64
+	$MYIXOS_LINK .${PREFIX}/${TARGET}/sbin sbin
+
+	mkdir dev
+
+	##cd "${SYSROOT}${PREFIX}/lib"
+
+	##ln -s ../../..${PREFIX}/${TARGET}/lib ${TARGET}
+
+	cd ${myBuildHome}
+
+}
+
+do_install(){
+#here you put the installation commands, like make install
+cd "${myBuildExtractDest}/${filename}"
+make DESTDIR=${SYSROOT} install
+return "$?"
+}
+
+do_package(){
+#here you package the files
+cp -a "${myBuildHome}"/myBuilds/${actualname}/${actualname}.control "${CONTDIR}/control"
+printf "Architecture: %s\n" "$(printf "%s\n" "${TARGET}" | cut -d "-" -f 1-2)" >> "${CONTDIR}/control"
+
+printf "2.0" > "${BUILDDIR}/debian-binary"
+
+cd "${CONTDIR}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/control.tar" ./*
+
+cd "${SYSROOT}"
+tar --numeric-owner --group=0 --owner=0 -cf "${BUILDDIR}/data.tar" ./*
+
+cd "${BUILDDIR}"
+ar r "${PKGDIR}/${actualname}_${version}.$(printf "%s" "${TARGET}" | cut -d "-" -f 1-2).deb" ./debian-binary ./control.tar ./data.tar
+
+rm -rf "${CONTDIR}"
+rm -rf "${SYSROOT}"
+mkdir -p "${CONTDIR}"
+mkdir -p "${SYSROOT}"
+rm -f "${BUILDDIR}/debian-binary"
+rm -f "${BUILDDIR}/control.tar"
+rm -f "${BUILDDIR}/data.tar"
+
+cd "${myBuildHome}"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0"
+fi

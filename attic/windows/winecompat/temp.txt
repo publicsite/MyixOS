@@ -1,0 +1,28 @@
+In file included from /home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/windows/winecompat/../../extractdest3/wine-4.3/dlls/msvcrt/file.c:30:
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/windows/winecompat/../../extractdest3/wine-4.3/include/wine/port.h:112:10: fatal error: dlfcn.h: No such file or directory
+ #include <dlfcn.h>
+          ^~~~~~~~~
+compilation terminated.
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/windows/winecompat/../../extractdest3/wine-4.3/dlls/msvcrt/exit.c: In function ‘register_onexit_function’:
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/windows/winecompat/../../extractdest3/wine-4.3/dlls/msvcrt/exit.c:85:13: warning: implicit declaration of function ‘WARN’; did you mean ‘FAR’? [-Wimplicit-function-declaration]
+             WARN("failed to allocate initial table.\n");
+             ^~~~
+             FAR
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/windows/winecompat/../../extractdest3/wine-4.3/dlls/msvcrt/exit.c: In function ‘__dllonexit’:
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/windows/winecompat/../../extractdest3/wine-4.3/dlls/msvcrt/exit.c:161:3: warning: implicit declaration of function ‘TRACE’; did you mean ‘TRUE’? [-Wimplicit-function-declaration]
+   TRACE("(%p,%p,%p)\n", func, start, end);
+   ^~~~~
+   TRUE
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/windows/winecompat/../../extractdest3/wine-4.3/dlls/msvcrt/exit.c:165:4: warning: implicit declaration of function ‘FIXME’ [-Wimplicit-function-declaration]
+    FIXME("bad table\n");
+    ^~~~~
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/windows/winecompat/../../extractdest3/wine-4.3/dlls/msvcrt/exit.c: In function ‘DoMessageBoxW’:
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/windows/winecompat/../../extractdest3/wine-4.3/dlls/msvcrt/exit.c:209:27: warning: implicit declaration of function ‘ARRAY_SIZE’; did you mean ‘IDC_SIZE’? [-Wimplicit-function-declaration]
+   MSVCRT__snwprintf(text, ARRAY_SIZE(text), message_format, lead, MSVCRT__wpgmptr, message);
+                           ^~~~~~~~~~
+                           IDC_SIZE
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/windows/winecompat/../../extractdest3/wine-4.3/dlls/msvcrt/exit.c: In function ‘MSVCRT__wassert’:
+/home/user/My_Stuff_SEVEN_Kali/bootstrap2/B/windows/winecompat/../../extractdest3/wine-4.3/dlls/msvcrt/exit.c:306:25: warning: implicit declaration of function ‘debugstr_w’; did you mean ‘wine_dbgstr_w’? [-Wimplicit-function-declaration]
+   TRACE("(%s,%s,%d)\n", debugstr_w(str), debugstr_w(file), line);
+                         ^~~~~~~~~~
+                         wine_dbgstr_w

@@ -1,0 +1,103 @@
+#!/bin/sh
+filename="mingw-w64-v6.0.0"
+extension=".tar.bz2"
+source="https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/${filename}${extension}/download"
+sumUrl=""
+
+#functions
+
+do_get(){
+	"${myBuildHelpersDir}"/myBuildGet.sh "${source}" "${myBuildSourceDest}"
+	mv ${myBuildSourceDest}/download ${myBuildSourceDest}/${filename}${extension}
+	return "$?"
+}
+
+do_extract(){
+	"${myBuildHelpersDir}"/myBuildExtract.sh "${myBuildSourceDest}/${filename}${extension}" "${myBuildExtractDest}"
+	return "$?"
+}
+
+do_build(){
+
+cd "${myBuildExtractDest}/${filename}"
+
+#patch -p0 < "${myBuildHome}"/myBuilds/mingw64/mingw64_fix-installation-path.patch
+
+if [ "$4" = "headers" ]; then
+	#build headers
+	#here you put commands like configure and make
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-headers"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-headers"
+	../mingw-w64-headers/configure --build=$BUILD --host=$TARGET --prefix="${PREFIX}/${TARGET}" --enable-sdk=all --enable-secure-api
+	make DESTDIR=${SYSROOT}
+elif [ "$4" = "runtime" ]; then
+
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-crt"
+
+#build runtime
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-crt"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-crt"
+	if [ "$BITS" = "64" ]; then
+#CFLAGS="-D__x86_64" 
+	CFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/include" ../mingw-w64-crt/configure --build=$BUILD --host=$TARGET --disable-lib32 --enable-lib64 --prefix="${PREFIX}/${TARGET}" --with-sysroot="$SYSROOT"
+	else
+#CFLAGS="-D_X86_" 
+	CFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/include" ../mingw-w64-crt/configure --build=$BUILD --host=$TARGET --disable-lib64 --enable-lib32 --prefix="${PREFIX}/${TARGET}" --with-sysroot="$SYSROOT"
+	fi
+	make DESTDIR=${SYSROOT}
+else
+#build pthread
+
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-pthreads"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-pthreads"
+	CC="${TARGET}-gcc -B${SYSROOT}${PREFIX}/${TARGET}/lib" CFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/include" RCFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/include" LDFLAGS="-L${SYSROOT}${PREFIX}/${TARGET}/lib" ../mingw-w64-libraries/winpthreads/configure --build=$BUILD --host=$TARGET --prefix="${PREFIX}/${TARGET}" --with-sysroot="$SYSROOT"
+
+	make DESTDIR=${SYSROOT}
+
+#build winstorecompat
+
+	mkdir "${myBuildExtractDest}/${filename}/${TARGET}-winstorecompat"
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-winstorecompat"
+	CC="${TARGET}-gcc -B${SYSROOT}${PREFIX}/${TARGET}/lib" CFLAGS="-nostdinc -I${SYSROOT}${PREFIX}/${TARGET}/include" RCFLAGS="-I${SYSROOT}${PREFIX}/${TARGET}/include" LDFLAGS="-L${SYSROOT}${PREFIX}/${TARGET}/lib" ../mingw-w64-libraries/winstorecompat/configure --build=$BUILD --host=$TARGET --prefix="${PREFIX}/${TARGET}" --with-sysroot="$SYSROOT"
+
+	make DESTDIR=${SYSROOT}
+fi
+
+return "$?"
+}
+
+do_install(){
+#here you put the installation commands, like make install
+
+if [ "$4" = "headers" ]; then
+	#install headers
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-headers"
+	make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+elif [ "$4" = "runtime" ]; then
+	#install runtime
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-crt"
+	make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+else
+#install pthread
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-pthreads"
+	make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+	return "$?"
+
+#install winstorecompat
+	cd "${myBuildExtractDest}/${filename}/${TARGET}-winstorecompat"
+	make DESTDIR=${SYSROOT} libdir="${PREFIX}/${TARGET}/lib" install
+	return "$?"
+
+fi
+}
+
+do_package(){
+#here you package the files
+echo "package!"
+return "$?"
+}
+
+if [ "$myBuildDoNotCallMainFunction" != "1" ]; then
+#main code goes here
+"${myBuildHelpersDir}"/argumentHelper.sh "$1" "$0" $@
+fi

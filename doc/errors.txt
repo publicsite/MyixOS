@@ -1,0 +1,57 @@
+pixman cannot find:
+lpng16
+lz
+
+	libxkbfile:
+	cout.c:33:10: fatal error: X11/Xos.h: No such file or directory
+	#maybe fixed by adding /usr/include to debian CPATH
+
+	limits.h
+	#maybe fixed by adding /usr/include to debian CPATH
+	zlib.h
+	#maybe fixed by adding /usr/include to debian CPATH
+
+pkgconfig:
+configure: error: cannot run test program while cross compiling
+See `config.log' for more details
+
+	libpciaccess:
+	sys/endian.h: No such file or directory
+	#maybe fixed by adding /usr/include to debian CPATH
+
+	libepoxy:
+	X11/Xlib.h: No such file or directory
+	#maybe fixed by adding /usr/include to debian CPATH
+
+libXrender:
+configure: error: cannot run test program while cross compiling
+See `config.log' for more details
+
+libXrandr:
+configure: error: cannot run test program while cross compiling
+See `config.log' for more details
+
+libdrm:
+fatal error: sys/ioccom.h: No such file or directory
+
+mesa:
+	configure: error: Building mesa on this platform requires pthreads
+	make: *** No targets specified and no makefile found.  Stop.
+	#maybe fixed by installing libc [musl] headers
+
+xorg-server:
+	configure: error: threaded input requested but no pthread support has been found
+	make: *** No targets specified and no makefile found.  Stop.
+	#maybe fixed by installing libc [musl] headers
+
+wine:
+checking for the directory containing the Wine tools... configure: error: you must use the --with-wine-tools option when cross-compiling.
+make: *** No targets specified and no makefile found.  Stop.
+
+	gettext:
+	undefined reference to `fcntl64'
+	#maybe fixed by patching musl
+
+	make:
+	undefined reference to `fcntl64'
+	#maybe fixed by patching musl

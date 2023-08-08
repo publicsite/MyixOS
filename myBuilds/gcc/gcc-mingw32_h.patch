@@ -1,0 +1,19 @@
+--- gcc/config/i386/mingw32.h.old	2018-01-03 10:03:58.000000000 +0000
++++ gcc/config/i386/mingw32.h	2019-04-21 20:44:23.239084245 +0100
+@@ -140,13 +140,12 @@
+ #endif
+ #undef REAL_LIBGCC_SPEC
+ #define REAL_LIBGCC_SPEC \
+-  "%{mthreads:-lmingwthrd} -lmingw32 \
++  " \
+    " SHARED_LIBGCC_SPEC " \
+-   -lmoldname -lmingwex -lmsvcrt"
++   -lmsvcrt"
+ 
+ #undef STARTFILE_SPEC
+-#define STARTFILE_SPEC "%{shared|mdll:dllcrt2%O%s} \
+-  %{!shared:%{!mdll:crt2%O%s}} %{pg:gcrt2%O%s} \
++#define STARTFILE_SPEC " \
+   crtbegin.o%s \
+   %{fvtable-verify=none:%s; \
+     fvtable-verify=preinit:vtv_start.o%s; \

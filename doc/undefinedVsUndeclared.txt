@@ -1,0 +1,7 @@
+undefined reference is when a variable or method has been declared, for example, in a header file, but the library has not been linked
+
+undeclared is when a variable or method in the code has not been declared
+	for instance
+		y = z;
+	where there is no
+		int z;
